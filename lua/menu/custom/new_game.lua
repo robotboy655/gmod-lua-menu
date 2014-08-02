@@ -1,4 +1,6 @@
 
+CreateConVar( "cl_maxplayers", "1", FCVAR_ARCHIVE )
+
 local PANEL = {}
 
 function PANEL:Init()
@@ -165,7 +167,7 @@ function PANEL:Paint( w, h )
 end
 
 surface.CreateFont( "rb655_MapList", {
-	size = ScreenScale( 6 ),
+	size = 12,
 	font = "Tahoma",
 	outline = true,
 } )

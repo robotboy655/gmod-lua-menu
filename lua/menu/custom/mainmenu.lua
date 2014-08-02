@@ -1,9 +1,6 @@
 
 ScreenScale = function( size ) return size * ( ScrW() / 640 ) end
 
-CreateConVar( "cl_maxplayers", "1", FCVAR_ARCHIVE )
-CreateConVar( "cl_maxplayers2", "1", FCVAR_ARCHIVE )
-
 include( 'addons.lua' )
 include( 'new_game.lua' )
 include( 'main.lua' )
