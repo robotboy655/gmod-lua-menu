@@ -16,6 +16,7 @@ Missing/Broken Features
 * You can't browse through new/top rated/ect addons in main menu. You should use the Open Workshop button anyway.
 * Due to how Material() works, I have to ship a duplicate of all default map icons.
 * Gamemode header image thigny is kind of broken - there's no way to get a size of a .png image
+* No sounds - who needs sounds?
 
 New/Fixed Features
 =============
