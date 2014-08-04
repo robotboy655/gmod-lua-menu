@@ -129,11 +129,11 @@ end
 
 function PANEL:Paint()
 
-	if ( !self.Image && file.Exists( "gamemodes/" .. engine.ActiveGamemode() .. "/logo.png","GAME" ) || self.Image:GetName() != "../gamemodes/" .. engine.ActiveGamemode() .. "/logo" ) then
+	if ( !self.Image || self.Image:GetName() != "../gamemodes/" .. engine.ActiveGamemode() .. "/logo" ) then
 		self.Image = Material( "../gamemodes/" .. engine.ActiveGamemode() .. "/logo.png", "nocull smooth" )
 	end
 
-	if ( self.Image ) then
+	if ( self.Image && !self.Image:IsError() ) then
 		surface.SetMaterial( self.Image )
 		local x, y = self.MenuButtons:GetPos()
 		surface.DrawTexturedRect( x, y - 128, 288, 128 )
