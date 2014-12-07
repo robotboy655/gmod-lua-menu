@@ -12,6 +12,7 @@ surface.CreateFont( "MenuButton", {
 function PANEL:Init()
 	self:SetFont( "MenuButton" )
 	self:SetMouseInputEnabled( true )
+	self:SetTextColor( Color( 255, 255, 255 ) )
 end
 
 function PANEL:SetText( ... )
@@ -19,20 +20,22 @@ function PANEL:SetText( ... )
 	self:SizeToContents()
 end
 
+function PANEL:SetDisabled( b )
+	self.Disabled = b
+end
+
 function PANEL:Paint()
-	if ( self:GetDisabled() ) then self:SetTextColor(  Color( 120, 120, 120 ) ) return end
-	self:SetTextColor( self.Hovered and Color( 255, 255, 128 ) or Color( 255, 255, 255 ) )
+	if ( self.Disabled == true ) then self:SetFGColor( Color( 120, 120, 120 ) ) return end
+	self:SetFGColor( self.Hovered and Color( 255, 255, 128 ) or Color( 255, 255, 255 ) )
 end
 
 function PANEL:OnCursorEntered()
 	self.Hovered = true
-	self:InvalidateLayout( true )
 end
 function PANEL:OnCursorExited()
 	self.Hovered = false
-	self:InvalidateLayout( true )
 end
-	
+
 vgui.Register( "MenuButton", PANEL, "DLabel" )
 
 local PANEL = {}
@@ -136,7 +139,8 @@ function PANEL:Paint()
 	if ( self.Image && !self.Image:IsError() ) then
 		surface.SetMaterial( self.Image )
 		local x, y = self.MenuButtons:GetPos()
-		surface.DrawTexturedRect( x, y - 128, 288, 128 )
+		local w, h = self.Image:GetInt( "$realwidth" ), self.Image:GetInt( "$realheight" )
+		surface.DrawTexturedRect( x, y - h, w, h )
 	end
 
 	if ( self.IsInGame != IsInGame() ) then
