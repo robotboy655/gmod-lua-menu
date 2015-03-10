@@ -33,4 +33,5 @@ To install this, download the ZIP and extract contents of ```gmod-lua-menu-maste
 Uninstalling
 =============
 
-To uninstall this, open ```lua/menu/menu.lua``` and follow instructions inside.
+To uninstall this, open ```SteamApps/common/GarrysMod/garrysmod/lua/menu/menu.lua``` and follow instructions inside.
+Alternatively, you can simply verify game cache integrity of Garry's Mod and the custom menu will be gone.
