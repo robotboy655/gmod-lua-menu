@@ -1,6 +1,9 @@
 
 ScreenScale = function( size ) return size * ( ScrW() / 640 ) end
 
+g_MapsFromGames = {}
+g_MapsFromGamesCats = {}
+
 include( 'addons.lua' )
 include( 'new_game.lua' )
 include( 'main.lua' )
@@ -8,6 +11,22 @@ include( '../background.lua' )
 //include( 'enumdump.lua' )
 
 pnlMainMenu = nil
+
+local PANEL = {}
+
+function PANEL:SetSpecial( b )
+	self.Special = b
+end
+
+function PANEL:Paint( w, h )
+	if ( !self.Special ) then self:SetFGColor( color_black ) else self:SetFGColor( color_white ) end
+	local clr = self.Special && Color( 35, 150, 255 ) or Color( 255, 255, 255 )
+	if ( self.Hovered ) then clr = self.Special && Color( 50, 170, 255 ) or Color( 255, 255, 220 ) end
+	if ( self.Depressed ) then self:SetFGColor( color_white ) clr = self.Special && Color( 50, 100, 200 ) or Color( 35, 150, 255 ) end
+	draw.RoundedBox( 4, 0, 0, w, h, clr )
+end
+
+vgui.Register( "DMenuButton", PANEL, "DButton" )
 
 local PANEL = {}
 
@@ -24,20 +43,28 @@ function PANEL:Init()
 	lowerPanel:SetTall( 50 )
 	lowerPanel:Dock( BOTTOM )
 
-	local BackButton = vgui.Create( "DButton", lowerPanel )
+	local BackButton = vgui.Create( "DMenuButton", lowerPanel )
 	BackButton:Dock( LEFT )
 	BackButton:SetText( "#back_to_main_menu" )
-	//BackButton:SetIcon( "icon16/arrow_left.png" )
+	BackButton:SetIcon( "icon16/arrow_left.png" )
+	BackButton:SetContentAlignment( 6 )
+	BackButton:SetTextInset( BackButton.m_Image:GetWide() + 20, 0 )
 	BackButton:SetVisible( false )
 	BackButton:SizeToContents()
 	BackButton:DockMargin( 5, 5, 5, 5 )
-	BackButton:SetWide( BackButton:GetWide() + 10 )
 	BackButton.DoClick = function()
 		self:Back()
 	end
+	function BackButton:PerformLayout()
+		if ( IsValid( self.m_Image ) ) then
+			self.m_Image:SetPos( 5, ( self:GetTall() - self.m_Image:GetTall() ) * 0.5 )
+			self:SetTextInset( 10, 0 )
+		end
+		DLabel.PerformLayout( self )
+	end
 	self.BackButton = BackButton
 
-	local Gamemodes = vgui.Create( "DButton", lowerPanel )
+	local Gamemodes = vgui.Create( "DMenuButton", lowerPanel )
 	Gamemodes:Dock( RIGHT )
 	Gamemodes:DockMargin( 5, 5, 5, 5 )
 	Gamemodes:SetContentAlignment( 6 )
@@ -46,7 +73,7 @@ function PANEL:Init()
 	end
 	function Gamemodes:PerformLayout()
 		if ( IsValid( self.m_Image ) ) then
-			self.m_Image:SetPos( 5, (self:GetTall() - self.m_Image:GetTall()) * 0.5 )
+			self.m_Image:SetPos( 5, ( self:GetTall() - self.m_Image:GetTall() ) * 0.5 )
 			self:SetTextInset( 10, 0 )
 		end
 		DLabel.PerformLayout( self )
@@ -54,7 +81,7 @@ function PANEL:Init()
 	self.GamemodeList = Gamemodes
 	self:RefreshGamemodes()
 
-	local MountedGames = vgui.Create( "DButton", lowerPanel )
+	local MountedGames = vgui.Create( "DMenuButton", lowerPanel )
 	MountedGames:Dock( RIGHT )
 	MountedGames:DockMargin( 5, 5, 0, 5 )
 	MountedGames:SetText( "" )
@@ -71,13 +98,11 @@ function PANEL:Init()
 	end
 	self.MountedGames = MountedGames
 	
-	local Languages = vgui.Create( "DButton", lowerPanel )
+	local Languages = vgui.Create( "DMenuButton", lowerPanel )
 	Languages:Dock( RIGHT )
 	Languages:DockMargin( 5, 5, 0, 5 )
 	Languages:SetText( "" )
 	Languages:SetWide( 40 )
-	self.Languages = Languages
-	
 	Languages:SetIcon( "../resource/localization/" .. GetConVarString( "gmod_language" ) .. ".png" )
 	Languages.DoClick = function()
 		self:OpenLanguages( Languages )
@@ -89,6 +114,7 @@ function PANEL:Init()
 		end
 		DLabel.PerformLayout( self )
 	end
+	self.Languages = Languages
 
 	self:MakePopup()
 	self:SetPopupStayAtBack( true )
@@ -242,10 +268,14 @@ function PANEL:OpenGamemodesList( pnl )
 
 	for id, t in SortedPairsByMemberValue( engine.GetGamemodes(), "title" ) do
 		if ( !t.menusystem ) then continue end
-		local Gamemode = p:Add( "DButton" )
+		local Gamemode = p:Add( "DMenuButton" )
 		Gamemode:SetContentAlignment( 6 )
 		Gamemode:SetText( t.title )
-		Gamemode:SetIcon( "../gamemodes/" .. t.name .. "/icon24.png" )
+		if ( Material( "../gamemodes/" .. t.name .. "/icon24.png" ):IsError() ) then
+			Gamemode:SetIcon( "../gamemodes/base/icon24.png" )
+		else
+			Gamemode:SetIcon( "../gamemodes/" .. t.name .. "/icon24.png" )
+		end
 		Gamemode:SetTextInset( Gamemode.m_Image:GetWide() + 25, 0 )
 		Gamemode:SizeToContents()
 		Gamemode:SetTall( 40 )
@@ -268,7 +298,7 @@ function PANEL:OpenGamemodesList( pnl )
 	
 	//p:SetWide( w, h )
 	
-	p:SetSize( w, math.min( h, 256 ) )
+	p:SetSize( w, math.min( h, ScrH() / 1.5 ) )
 	p:SetPos( math.min( pnl:GetPos() - p:GetWide() / 2 + pnl:GetWide() / 2, ScrW() - p:GetWide() - 5 ), ScrH() - 55 - p:GetTall() )
 end
 
@@ -277,7 +307,13 @@ function PANEL:RefreshGamemodes( b )
 	for id, gm in pairs( engine.GetGamemodes() ) do
 		if ( gm.name == engine.ActiveGamemode() ) then self.GamemodeList:SetText( gm.title ) end
 	end
-	self.GamemodeList:SetIcon( "../gamemodes/"..engine.ActiveGamemode().."/icon24.png" )
+	
+	if ( Material( "../gamemodes/"..engine.ActiveGamemode().."/icon24.png" ):IsError() ) then
+		self.GamemodeList:SetIcon( "../gamemodes/base/icon24.png" )
+	else
+		self.GamemodeList:SetIcon( "../gamemodes/"..engine.ActiveGamemode().."/icon24.png" )
+	end
+	
 	self.GamemodeList:SetTextInset( self.GamemodeList.m_Image:GetWide() + 25, 0 )
 	self.GamemodeList:SizeToContents()
 
@@ -300,7 +336,27 @@ function PANEL:RefreshAddons()
 
 end
 
+function PANEL:BuildMaps()
+	local gamez = engine.GetGames()
+	table.insert( gamez, { title = "Garry's Mod", depot = 4000, folder = "MOD", mounted = true } )
+
+	for id, g in SortedPairsByMemberValue( gamez, "title" ) do
+		if ( !g.mounted ) then continue end
+		local maps = file.Find( "maps/*.bsp", g.folder )
+		local catname = g.depot .. "maps"
+
+		for id, map in pairs( maps ) do
+			maps[ id ] = string.gsub( map, "%.bsp$", "" )
+		end
+
+		g_MapsFromGamesCats[ catname ] = g.title
+		g_MapsFromGames[ catname ] = maps
+	end
+end
+
 function PANEL:RefreshContent()
+
+	self:BuildMaps()
 
 	self:RefreshGamemodes( true )
 	self:RefreshAddons()
@@ -345,73 +401,41 @@ function PANEL:UpdateBackgroundImages()
 end
 
 vgui.Register( "MainMenuPanel", PANEL, "EditablePanel" )
+
+--
+-- Called from the engine any time the language changes
+--
+function LanguageChanged( lang )
+
+	if ( !IsValid( pnlMainMenu ) ) then return end
+
+	local self = pnlMainMenu
+	if ( IsValid( self.NewGameFrame ) ) then self:OpenNewGameMenu() end
+	if ( IsValid( self.AddonsFrame ) ) then self:OpenAddonsMenu() end
+	if ( IsValid( self.MainMenuPanel ) ) then self:OpenMainMenu() end
+	
+	self.Languages:SetIcon( "../resource/localization/" .. lang .. ".png" )
+
+end
+
+hook.Add( "GameContentChanged", "RefreshMainMenu", function()
+
+	if ( !IsValid( pnlMainMenu ) ) then return end
+
+	pnlMainMenu:RefreshContent()
+end )
+
+timer.Simple( 0, function()
+
+	if ( IsValid( pnlMainMenu ) ) then pnlMainMenu:Remove() end
+
+	pnlMainMenu = vgui.Create( "MainMenuPanel" )
+
+	hook.Run( "GameContentChanged" )
+
+end )
+
 /*
-function UpdateSteamName( id, time )
-
-	if ( !id ) then return end
-
-	if ( !time ) then time = 0.2 end
-
-	local name = steamworks.GetPlayerName( id )
-	if ( name != "" && name != "[unknown]" ) then
-
-		pnlMainMenu:Call( "SteamName( \""..id.."\", \""..name.."\" )" )
-		return
-
-	end
-
-	steamworks.RequestPlayerInfo( id )
-	timer.Simple( time, function() UpdateSteamName( id, time + 0.2 ) end )
-
-end
-
---
--- Called from JS when starting a new game
---
-function UpdateMapList()
-
-	if ( !istable( g_MapListCategorised ) ) then return end
-
-	json = util.TableToJSON( g_MapListCategorised )
-	if ( !isstring( json ) ) then return end
-
-	//pnlMainMenu:Call( "UpdateMaps("..json..")" )
-
-end
-
---
--- Called from JS when starting a new game
---
-function UpdateServerSettings()
-
-	local array =
-	{
-		hostname	= GetConVarString( "hostname" ),
-		sv_lan		= GetConVarString( "sv_lan" )
-	}
-
-	local settings_file = file.Read( "gamemodes/"..engine.ActiveGamemode().."/"..engine.ActiveGamemode()..".txt", true )
-		
-	if ( settings_file ) then
-
-		local Settings = util.KeyValuesToTable( settings_file )
-
-		if ( Settings.settings ) then
-
-			array.settings = Settings.settings
-
-			for k, v in pairs( array.settings ) do
-				v.Value = GetConVarString( v.name )
-			end
-
-		end
-
-	end
-
-	local json = util.TableToJSON( array )
-	//pnlMainMenu:Call( "UpdateServerSettings("..json..")" )
-
-end
 
 --
 -- Get the player list for this server
@@ -421,7 +445,7 @@ function GetPlayerList( serverip )
 	serverlist.PlayerList( serverip, function( tbl )
 
 		local json = util.TableToJSON( tbl )
-		//pnlMainMenu:Call( "SetPlayerList( '"..serverip.."', "..json..")" )
+		pnlMainMenu:Call( "SetPlayerList( '"..serverip.."', "..json..")" )
 
 	end )
 
@@ -449,7 +473,7 @@ function GetServers( type, id )
 			
 			if ( pass ) then pass = "true" else pass = "false" end
 
-			//pnlMainMenu:Call( "AddServer( '"..type.."', '"..id.."', "..ping..", \""..name.."\", \""..desc.."\", \""..map.."\", "..players..", "..maxplayers..", "..botplayers..", "..pass..", "..lastplayed..", \""..address.."\", \""..gamemode.."\", \""..workshopid.."\" )" )
+			pnlMainMenu:Call( "AddServer( '"..type.."', '"..id.."', "..ping..", \""..name.."\", \""..desc.."\", \""..map.."\", "..players..", "..maxplayers..", "..botplayers..", "..pass..", "..lastplayed..", \""..address.."\", \""..gamemode.."\", \""..workshopid.."\" )" )
 
 		end,
 
@@ -458,38 +482,7 @@ function GetServers( type, id )
 		AppID = 4000,
 	}
 
-	serverlist.Query( data )	
+	serverlist.Query( data )
 
 end
 */
-
---
--- Called from the engine any time the language changes
---
-function LanguageChanged( lang )
-	if ( !IsValid( pnlMainMenu ) ) then return end
-
-	local self = pnlMainMenu
-	if ( IsValid( self.NewGameFrame ) ) then self:OpenNewGameMenu() end
-	if ( IsValid( self.AddonsFrame ) ) then self:OpenAddonsMenu() end
-	if ( IsValid( self.MainMenuPanel ) ) then self:OpenMainMenu() end
-	
-	self.Languages:SetIcon( "../resource/localization/" .. lang .. ".png" )
-
-end
-
-hook.Add( "GameContentChanged", "RefreshMainMenu", function()
-	if ( !IsValid( pnlMainMenu ) ) then return end
-
-	pnlMainMenu:RefreshContent()
-end )
-
-timer.Simple( 0, function()
-
-	if ( IsValid( pnlMainMenu ) ) then pnlMainMenu:Remove() end
-
-	pnlMainMenu = vgui.Create( "MainMenuPanel" )
-
-	hook.Run( "GameContentChanged" )
-
-end )

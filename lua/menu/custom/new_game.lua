@@ -3,6 +3,11 @@ CreateConVar( "cl_maxplayers", "1", FCVAR_ARCHIVE )
 
 local PANEL = {}
 
+PANEL.CustomMaps = {}
+
+local BackgroundColor = Color( 200, 200, 200, 128 )
+local BackgroundColor2 = Color( 200, 200, 200, 255 )//Color( 0, 0, 0, 100 )
+
 function PANEL:Init()
 
 	self:Dock( FILL )
@@ -10,16 +15,26 @@ function PANEL:Init()
 	--------------------------------- CATEGORIES ---------------------------------
 	
 	local Categories = vgui.Create( "DListLayout", self )
-	Categories:DockPadding( 5, 5, 5, 5 )
 	Categories:Dock( LEFT )
+	Categories:DockPadding( 5, 0, 5, 5 )
+	Categories:DockMargin( 15, 15, 0, 15 )
 	Categories:SetWide( 200 )
+	function Categories:Paint( w, h )
+		draw.RoundedBoxEx( 4, 0, 0, w, h, BackgroundColor, true, false, true, false )
+		draw.RoundedBoxEx( 4, 0, 0, w, h, BackgroundColor2, true, false, true, false )
+	end
 
 	self.Categories = {}
+
+	local pergamemode = Categories:Add( "DLabel" )
+	pergamemode:SetText( "GAMEMODES" )
+	pergamemode:SetContentAlignment( 5 )
+	pergamemode:SetDark( true )
+	
 	if ( istable( g_MapListCategorised ) ) then
 		local cats = table.GetKeys( g_MapListCategorised )
-		table.sort( cats )
-		for _, cat in pairs( cats ) do
-			local button = Categories:Add( "DButton" )
+		for _, cat in SortedPairsByValue( cats ) do
+			local button = Categories:Add( "DMenuButton" )
 			button:SetText( cat )
 			button.DoClick = function()
 				self:SelectCat( cat )
@@ -29,28 +44,57 @@ function PANEL:Init()
 		end
 	end
 	
+	local games = Categories:Add( "DLabel" )
+	games:SetText( "GAMES" )
+	games:SetContentAlignment( 5 )
+	games:SetDark( true )
+	
+	for cat, nicename in SortedPairsByValue( g_MapsFromGamesCats ) do
+		local button = Categories:Add( "DMenuButton" )
+		button:SetText( nicename )
+		
+		local cat = ""
+		for id, n in pairs( g_MapsFromGamesCats ) do
+			if ( n == nicename ) then cat = id end
+		end
+
+		button.DoClick = function()
+			self:SelectCat( cat )
+		end
+		button:DockMargin( 0, 0, 0, 5 )
+		self.Categories[ cat ] = button
+
+	end
+
+	---------------------------- CONTAINER FOR MAPS ----------------------------
+
 	local Scroll = vgui.Create( "DScrollPanel", self )
 	Scroll:Dock( FILL )
-	Scroll:DockMargin( 0, 5, 0, 5 )
-	
+	Scroll:DockMargin( 0, 15, 0, 15 )
+	function Scroll:Paint( w, h )
+		draw.RoundedBox( 0, 0, 0, w, h, BackgroundColor )
+	end
+
 	local CategoryMaps = vgui.Create( "DIconLayout", Scroll )
 	CategoryMaps:SetSpaceX( 5 )
 	CategoryMaps:SetSpaceY( 5 )
 	CategoryMaps:Dock( TOP )
+	CategoryMaps:DockMargin( 5, 5, 5, 5 )
 	self.CategoryMaps = CategoryMaps
-	
+
 	--------------------------------- SETTINGS ---------------------------------
 	
 	local Settings = vgui.Create( "DListLayout", self )
 	Settings:Dock( RIGHT )
 	Settings:SetWide( ScrW() / 5 )
-	Settings:DockMargin( 5, 5, 5, 0 )
+	Settings:DockMargin( 0, 15, 15, 10 )
 	function Settings:Paint( w, h )
-		draw.RoundedBox( 0, 0, 0, w, h, Color( 200, 200, 200, 150 ) )
+		draw.RoundedBoxEx( 4, 0, 0, w, h, BackgroundColor, false, true, false, true )
+		draw.RoundedBoxEx( 4, 0, 0, w, h, BackgroundColor2, false, true, false, true )
 	end
 	self.Settings = Settings
 	
-	---------------------------------
+	--------------------------------- TOP CONTENT ---------------------------------
 	
 	local ServerName = vgui.Create( "DTextEntry", Settings )
 	ServerName:Dock( TOP )
@@ -77,13 +121,13 @@ function PANEL:Init()
 	PlayerCount:SetDark( true )
 	Settings.PlayerCount = PlayerCount
 	
-	----------------------------------------------------------------------
+	--------------------------------- MIDDLE CONTENT ---------------------------------
 	
 	local GamemodeSettings = vgui.Create( "DScrollPanel", Settings )
 	GamemodeSettings:Dock( FILL )
 	GamemodeSettings:DockMargin( 0, 0, 0, 5 )
 	function GamemodeSettings:Paint( w, h )
-		draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 0, 0, 128 ) )
+		//draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 0, 0, 128 ) )
 	end
 	
 	local settings_file = file.Read( "gamemodes/" .. engine.ActiveGamemode() .. "/" .. engine.ActiveGamemode() .. ".txt", true )
@@ -100,24 +144,27 @@ function PANEL:Init()
 					CheckBox:Dock( TOP )
 					CheckBox:DockMargin( 5, 5, 5, 0 )
 					CheckBox:SetText( "#" .. v.text )
+					CheckBox:SetDark( true )
 					CheckBox:SetChecked( GetConVarNumber( v.name ) == 1 )
 				elseif ( v.type == "Text" ) then
 					local label = vgui.Create( "DLabel", GamemodeSettings )
 					label:Dock( TOP )
 					label:SetText( language.GetPhrase( v.text ) )
 					label:DockMargin( 5, 0, 0, 0 )
+					label:SetDark( true )
 				
 					local DTextEntry = vgui.Create( "DTextEntry", GamemodeSettings )
 					DTextEntry:Dock( TOP )
 					DTextEntry:SetConVar( v.name )
 					DTextEntry:DockMargin( 5, 0, 5, 5 )
 				elseif ( v.type == "Numeric" ) then
-					local DTextEntry = vgui.Create( "DNumSlider", GamemodeSettings )
-					DTextEntry:Dock( TOP )
-					DTextEntry:SetConVar( v.name )
-					DTextEntry:SetText( language.GetPhrase( v.text ) )
-					DTextEntry:SetMinMax( 0, 200 )
-					DTextEntry:DockMargin( 5, 0, 5, 0 )
+					local DNumSlider = vgui.Create( "DNumSlider", GamemodeSettings )
+					DNumSlider:Dock( TOP )
+					DNumSlider:SetConVar( v.name )
+					DNumSlider:SetText( language.GetPhrase( v.text ) )
+					DNumSlider:SetMinMax( 0, 200 )
+					DNumSlider:DockMargin( 5, 0, 5, 0 )
+					DNumSlider:SetDark( true )
 				end
 			end
 			
@@ -131,15 +178,16 @@ function PANEL:Init()
 
 	end
 
-	---------------------------------
+	--------------------------------- END CONTENT ---------------------------------
 
-	local StartGame = Settings:Add("DButton")
+	local StartGame = Settings:Add("DMenuButton")
 	StartGame:Dock( BOTTOM )
 	StartGame:SetText( "Start Game" )
 	StartGame:SetTall( 32 )
 	StartGame.DoClick = function()
 		self:LoadMap()
 	end
+	StartGame:SetSpecial( true )
 	StartGame:DockMargin( 5, 0, 5, 5 )
 
 	--------------------------------- LOAD LAST MAP ---------------------------------
@@ -168,8 +216,7 @@ end
 
 surface.CreateFont( "rb655_MapList", {
 	size = 12,
-	font = "Tahoma",
-	outline = true,
+	font = "Tahoma"
 } )
 
 function PANEL:SelectMap( map )
@@ -179,6 +226,7 @@ end
 gMapIcons = {}
 
 function PANEL:SelectCat( cat )
+
 	if ( self.CurrentCategory ) then self.Categories[ self.CurrentCategory ].Depressed = false end
 	self.CurrentCategory = cat
 
@@ -188,19 +236,23 @@ function PANEL:SelectCat( cat )
 	end
 
 	if ( istable( g_MapListCategorised ) ) then
-		for cate, t in pairs( g_MapListCategorised ) do
+		
+		local maps = table.Copy( g_MapListCategorised )
+		local test = table.Merge( maps, g_MapsFromGames )
+
+		for cate, maps in pairs( test ) do
 			if ( cate != cat ) then continue end
-			local maps = table.GetKeys( t )
-			table.sort( maps )
-			for _, map in pairs( maps ) do
+
+			for _, map in SortedPairs( maps ) do
 
 				local button = self.CategoryMaps:Add( "DImageButton" )
 				button:SetText( map )
 				
 				if ( !gMapIcons[ map ] ) then
 					local mat = Material( "../maps/thumb/" .. map .. ".png" )
-					if ( mat:IsError() ) then mat = Material( "thumb/" .. map .. ".png" ) end
-					if ( mat:IsError() ) then mat = Material( "vgui/avatar_default" ) end
+					//if ( mat:IsError() ) then mat = Material( "maps/thumb/" .. map .. ".png" ) print("Da", AddonMaterial( "maps/thumb/" .. map .. ".png" ) ) end
+					//if ( mat:IsError() ) then mat = Material( "thumb/" .. map .. ".png" ) end
+					if ( mat:IsError() ) then mat = Material( "noicon.png", "nocull smooth" ) end
 					gMapIcons[ map ] = mat
 				end
 				button.m_Image:SetMaterial( gMapIcons[ map ] )
@@ -210,14 +262,24 @@ function PANEL:SelectCat( cat )
 					self:SelectMap( map, cat )
 				end
 				button.PaintOver = function( button, w, h )
+					
 					if ( button:GetText() == self.CurrentMap ) then
-						draw.RoundedBox( 0, 0, 0, w, h, Color( 255, 255, 255, 64 + math.sin( CurTime() * 2 ) * 32 ) )
+						surface.SetDrawColor( Color( 255, 255, 255, 128 + math.sin( CurTime() * 2 ) * 80 ) )
+						for i=0,1 do surface.DrawOutlinedRect( i, i, w - i * 2, h - i * 2 ) end
 					end
+	
+					if ( button.Hovered ) then return end
 
+					draw.RoundedBox( 0, 0, h - 20, w, 20, Color( 0, 0, 0, 150 ) )
+					
 					surface.SetFont( "rb655_MapList" )
 					
 					local tw = surface.GetTextSize( button:GetText() )
-					draw.SimpleText( button:GetText(), "rb655_MapList", w / 2 - tw / 2, h - 16, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+					if ( tw > w ) then
+						draw.SimpleText( button:GetText(), "rb655_MapList", w / 2 - tw / 2 + ( ( w - tw ) * math.sin( CurTime() ) ), h - 16, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+					else
+						draw.SimpleText( button:GetText(), "rb655_MapList", w / 2 - tw / 2, h - 16, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+					end
 
 				end
 
@@ -225,6 +287,9 @@ function PANEL:SelectCat( cat )
 
 		end
 	end
+	
+	// Scroll back to the top of the map list
+	self.CategoryMaps:GetParent():GetParent():GetVBar():SetScroll( 0 )
 
 end
 
@@ -258,4 +323,3 @@ function PANEL:LoadMap()
 end
 
 vgui.Register( "NewGamePanel", PANEL, "EditablePanel" )
-

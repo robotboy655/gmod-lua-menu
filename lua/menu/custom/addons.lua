@@ -84,17 +84,17 @@ end
 
 function PANEL:Paint( w, h )
 
-	if ( IsValid( self.ToggleBut ) ) then	
+	if ( IsValid( self.ToggleBut ) ) then
 		self.ToggleBut:SetWide( 128 )
 		self.ToggleBut:SetPos( self:GetWide() - self.ToggleBut:GetWide() - 5, 5 )
 	end
 	
-	if ( IsValid( self.UninstallBut ) ) then	
+	if ( IsValid( self.UninstallBut ) ) then
 		self.UninstallBut:SetWide( 128 )
 		self.UninstallBut:SetPos( self:GetWide() - self.UninstallBut:GetWide() - 5, 30 )
 	end
 
-	if ( IsValid( self.WorkshopBut ) ) then	
+	if ( IsValid( self.WorkshopBut ) ) then
 		self.WorkshopBut:SetWide( 128 )
 		self.WorkshopBut:SetPos( self:GetWide() - self.WorkshopBut:GetWide() - 5, 55 )
 	end

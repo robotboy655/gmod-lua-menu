@@ -7,7 +7,7 @@ surface.CreateFont( "MenuButton", {
 	font	= "Helvetica",
 	size	= 24,
 	weight	= 600
-})
+} )
 
 function PANEL:Init()
 	self:SetFont( "MenuButton" )
@@ -49,7 +49,7 @@ function PANEL:Init()
 		//draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 0, 0, 200 ) )
 	end
 	mainButtons:SetSize( 250, 320 )
-	mainButtons:SetPos( 50, ScrH() / 2 - mainButtons:GetTall() / 2 )
+	mainButtons:SetPos( ScrW() / 20, ScrH() / 2 - mainButtons:GetTall() / 2 )
 	self.MenuButtons = mainButtons
 
 	local Resume = vgui.Create( "MenuButton", mainButtons )
@@ -130,7 +130,14 @@ function PANEL:Init()
 
 end
 
+local old = 0
 function PANEL:Paint()
+
+	if ScrH() != old then
+		//print("da", self:GetWide(), self:GetTall(), self:IsVisible())
+		//print(self:GetPos())
+		old = ScrH()
+	end
 
 	if ( !self.Image || self.Image:GetName() != "../gamemodes/" .. engine.ActiveGamemode() .. "/logo" ) then
 		self.Image = Material( "../gamemodes/" .. engine.ActiveGamemode() .. "/logo.png", "nocull smooth" )
@@ -146,7 +153,7 @@ function PANEL:Paint()
 	if ( self.IsInGame != IsInGame() ) then
 	
 		self.IsInGame = IsInGame()
-		
+
 		if ( self.IsInGame ) then
 			self.Disconnect:SetVisible( true )
 			self.Resume:SetVisible( true )
