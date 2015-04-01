@@ -104,7 +104,7 @@ function PANEL:Init()
 	local Achievements = vgui.Create( "MenuButton", mainButtons )
 	Achievements:Dock( TOP )
 	Achievements:SetText( "#achievements" )
-	Demos:DockMargin( 5, 0, 5, 0 )
+	Achievements:DockMargin( 5, 0, 5, 0 )
 	Achievements.DoClick = function()
 		self:GetParent():OpenAchievements()
 	end
