@@ -21,6 +21,7 @@ New/Fixed Features
 =============
 
 * I think it's faster then the default one
+* Built-in Achievement viewer
 * Server settings in "new game" menu are working properly
 * Caching - map and workshop icons are cached - you only slowly load them once, and then it's fast
 * No HTML
