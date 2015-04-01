@@ -101,6 +101,14 @@ function PANEL:Init()
 		//self:OpenAddonsMenu()
 	end
 	
+	local Achievements = vgui.Create( "MenuButton", mainButtons )
+	Achievements:Dock( TOP )
+	Achievements:SetText( "#achievements" )
+	Achievements:DockMargin( 5, 20, 5, 20 )
+	Achievements.DoClick = function()
+		self:GetParent():OpenAchievements()
+	end
+	
 	local Options = vgui.Create( "MenuButton", mainButtons )
 	Options:Dock( TOP )
 	Options:SetText( "#options" )

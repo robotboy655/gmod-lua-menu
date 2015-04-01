@@ -2,6 +2,7 @@
 g_MapsFromGames = {}
 g_MapsFromGamesCats = {}
 
+include( 'achievements.lua' )
 include( 'addons.lua' )
 include( 'new_game.lua' )
 include( 'main.lua' )
@@ -245,6 +246,62 @@ function PANEL:OpenMountedGamesList( pnl )
 		end
 	end
 	
+end
+
+function PANEL:OpenAchievements( pnl )
+	if ( IsValid( self.Achievements ) ) then self.Achievements:Remove() return end
+	
+	local frame = vgui.Create( "DFrame" )
+	frame:SetSize( 640, 480 )
+	frame:SetTitle( "#rb655.achievement_viewer.my" )
+	frame:Center()
+	frame:MakePopup()
+	
+	self.Achievements = frame
+	
+	local achieved = 0
+	local count = achievements.Count() - 1
+
+	for achid = 1, count do
+		if ( achievements.IsAchieved( achid ) ) then
+			achieved = achieved + 1
+		end
+	end
+
+	local ach_total = vgui.Create( "DPanel", frame )
+	ach_total:SetPos( 5, 30 )
+	ach_total:SetSize( frame:GetWide() - 10, 40 )
+	function ach_total:Paint()
+		draw.RoundedBox( 4, 0, 0, self:GetWide(), self:GetTall(), Color( 26, 26, 26, 255 ) )
+
+		local text = achieved .. " / " .. count .. " ( " .. math.floor( ( achieved / count ) * 100 ) .. "% )"
+		surface.SetFont( "Default" )
+		local w = surface.GetTextSize( text ) + 4
+
+		draw.SimpleText( "#rb655.achievement_viewer.total", "Default", 4, 4, Color( 217, 217, 217 ) )
+		draw.SimpleText( text, "Default", self:GetWide() - w, 4, Color( 217, 217, 217 ) )
+
+		draw.RoundedBox( 0, 4, 20, self:GetWide() - 8, 16, Color( 78, 78, 78 ) )
+		draw.RoundedBox( 0, 4, 20, math.floor( ( achieved / count ) * self:GetWide() ) - 8, 16, Color( 158, 195, 79, 255 ) )
+	end
+
+	local ach_list = vgui.Create( "DPanelList", frame )
+	ach_list:SetPos( 5, 75 )
+	ach_list:SetSize( frame:GetWide() - 10, frame:GetTall() - 80 )
+	ach_list:SetSpacing( 5 )
+	ach_list:SetPadding( 5 )
+	ach_list:EnableHorizontal( false )
+	ach_list:EnableVerticalScrollbar( true )
+	function ach_list:Paint()
+		draw.RoundedBox( 4, 0, 0, self:GetWide(), self:GetTall(), Color( 16, 16, 16, 255 ) )
+	end
+
+	for achid = 1, count do
+		local ach = vgui.Create( "RAchievement", ach_list )
+		ach:SetAchievementID( achid )
+		ach_list:AddItem( ach )
+	end
+
 end
 
 function PANEL:OpenGamemodesList( pnl )
