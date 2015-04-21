@@ -1,6 +1,4 @@
 
-ScreenScale = function( size ) return size * ( ScrW() / 640.0 ) end
-
 local PANEL = {}
 
 surface.CreateFont( "MenuButton", {

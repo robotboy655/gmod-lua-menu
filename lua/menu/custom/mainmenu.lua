@@ -1,6 +1,4 @@
 
-ScreenScale = function( size ) return size * ( ScrW() / 640 ) end
-
 g_MapsFromGames = {}
 g_MapsFromGamesCats = {}
 
