@@ -44,9 +44,9 @@ function PANEL:Init()
 
 	local mainButtons = vgui.Create( "DPanel", self )
 	function mainButtons:Paint( w, h )
-		//draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 0, 0, 200 ) )
+		-- draw.RoundedBox( 0, 0, 0, w, h, Color( 100, 100, 100, 200 ) )
 	end
-	mainButtons:SetSize( 250, 320 )
+	mainButtons:SetSize( 250, 350 )
 	mainButtons:SetPos( ScrW() / 20, ScrH() / 2 - mainButtons:GetTall() / 2 )
 	self.MenuButtons = mainButtons
 
@@ -99,6 +99,14 @@ function PANEL:Init()
 	Demos:SetDisabled( true )
 	Demos.DoClick = function()
 		//self:OpenAddonsMenu()
+	end
+	
+	local Achievements = vgui.Create( "MenuButton", mainButtons )
+	Achievements:Dock( TOP )
+	Achievements:SetText( "#achievements" )
+	Achievements:DockMargin( 5, 0, 5, 0 )
+	Achievements.DoClick = function()
+		self:GetParent():OpenAchievements()
 	end
 	
 	local Options = vgui.Create( "MenuButton", mainButtons )
