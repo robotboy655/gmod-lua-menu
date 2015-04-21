@@ -249,9 +249,9 @@ function PANEL:SelectCat( cat )
 				button:SetText( map )
 				
 				if ( !gMapIcons[ map ] ) then
-					local mat = Material( "../maps/thumb/" .. map .. ".png" )
-					//if ( mat:IsError() ) then mat = Material( "maps/thumb/" .. map .. ".png" ) print("Da", AddonMaterial( "maps/thumb/" .. map .. ".png" ) ) end
-					//if ( mat:IsError() ) then mat = Material( "thumb/" .. map .. ".png" ) end
+					local mat = Material( "maps/thumb/" .. map .. ".png" )
+					/*if ( mat:IsError() ) then mat = Material( "maps/thumb/" .. map .. ".png" ) print("Da", mat, AddonMaterial( "maps/thumb/" .. map .. ".png" ) ) end
+					//if ( mat:IsError() ) then mat = Material( "thumb/" .. map .. ".png" ) end*/
 					if ( mat:IsError() ) then mat = Material( "noicon.png", "nocull smooth" ) end
 					gMapIcons[ map ] = mat
 				end
