@@ -4,6 +4,7 @@ g_MapsFromGamesCats = {}
 
 include( 'addons.lua' )
 include( 'new_game.lua' )
+include( 'achievements.lua' )
 include( 'main.lua' )
 include( '../background.lua' )
 //include( 'enumdump.lua' )
@@ -123,7 +124,7 @@ end
 
 function PANEL:Paint()
 
-	if ( !IsValid( self.NewGameFrame ) && !IsValid( self.AddonsFrame ) ) then
+	if ( !IsValid( self.NewGameFrame ) && !IsValid( self.AddonsFrame )&& !IsValid( self.AchievementsFrame ) ) then
 		self.BackButton:SetVisible( false )
 	else
 		self.BackButton:SetVisible( true )
@@ -147,17 +148,20 @@ function PANEL:ClosePopups( b )
 	if ( IsValid( self.GamemodesList ) ) then self.GamemodesList:Remove() end
 end
 
-function PANEL:Back()
+function PANEL:CloseAllMenus()
 	if ( IsValid( self.MainMenuPanel ) ) then self.MainMenuPanel:Remove() end
 	if ( IsValid( self.NewGameFrame ) ) then self.NewGameFrame:Remove() end
 	if ( IsValid( self.AddonsFrame ) ) then self.AddonsFrame:Remove() end
+	if ( IsValid( self.AchievementsFrame ) ) then self.AchievementsFrame:Remove() end
+end
+
+function PANEL:Back()
+	self:CloseAllMenus()
 	self:OpenMainMenu()
 end
 
 function PANEL:OpenMainMenu( b )
-	if ( IsValid( self.MainMenuPanel ) ) then self.MainMenuPanel:Remove() end
-	if ( IsValid( self.NewGameFrame ) ) then self.NewGameFrame:Remove() end
-	if ( IsValid( self.AddonsFrame ) ) then self.AddonsFrame:Remove() end
+	self:CloseAllMenus()
 	self:ClosePopups( b )
 
 	local frame = vgui.Create( "MainMenuScreenPanel", self )
@@ -165,19 +169,23 @@ function PANEL:OpenMainMenu( b )
 end
 
 function PANEL:OpenAddonsMenu( b )
-	if ( IsValid( self.MainMenuPanel ) ) then self.MainMenuPanel:Remove() end
-	if ( IsValid( self.NewGameFrame ) ) then self.NewGameFrame:Remove() end
-	if ( IsValid( self.AddonsFrame ) ) then self.AddonsFrame:Remove() end
+	self:CloseAllMenus()
 	self:ClosePopups( b )
 
 	local frame = vgui.Create( "AddonsPanel", self )
 	self.AddonsFrame = frame
 end
 
+function PANEL:OpenAchievementsMenu( b )
+	self:CloseAllMenus()
+	self:ClosePopups( b )
+
+	local frame = vgui.Create( "AchievementsPanel", self )
+	self.AchievementsFrame = frame
+end
+
 function PANEL:OpenNewGameMenu( b )
-	if ( IsValid( self.MainMenuPanel ) ) then self.MainMenuPanel:Remove() end
-	if ( IsValid( self.NewGameFrame ) ) then self.NewGameFrame:Remove() end
-	if ( IsValid( self.AddonsFrame ) ) then self.AddonsFrame:Remove() end
+	self:CloseAllMenus()
 	self:ClosePopups( b )
 
 	local frame = vgui.Create( "NewGamePanel", self )
@@ -322,6 +330,7 @@ function PANEL:RefreshGamemodes( b )
 	if ( IsValid( self.NewGameFrame ) ) then self:OpenNewGameMenu( b ) end
 	if ( IsValid( self.AddonsFrame ) ) then self:OpenAddonsMenu( b ) end
 	if ( IsValid( self.MainMenuPanel ) ) then self:OpenMainMenu( b ) end
+	if ( IsValid( self.AchievementsFrame ) ) then self:OpenAchievementsMenu( b ) end
 
 	if ( IsValid( self.MountedGamesList ) ) then self.MountedGamesList:MoveToFront() end
 
@@ -411,9 +420,19 @@ function LanguageChanged( lang )
 	if ( IsValid( self.NewGameFrame ) ) then self:OpenNewGameMenu() end
 	if ( IsValid( self.AddonsFrame ) ) then self:OpenAddonsMenu() end
 	if ( IsValid( self.MainMenuPanel ) ) then self:OpenMainMenu() end
+	if ( IsValid( self.AchievementsFrame ) ) then self:OpenAchievementsMenu() end
 	
 	self.Languages:SetIcon( "../resource/localization/" .. lang .. ".png" )
 
+end
+
+function UpdateMapList( lang )
+	/*if ( !IsValid( pnlMainMenu ) ) then return end
+	local self = pnlMainMenu
+	if ( IsValid( self.NewGameFrame ) ) then self:OpenNewGameMenu() end
+	if ( IsValid( self.AddonsFrame ) ) then self:OpenAddonsMenu() end
+	if ( IsValid( self.MainMenuPanel ) ) then self:OpenMainMenu() end
+	if ( IsValid( self.AchievementsFrame ) ) then self:OpenAchievementsMenu() end*/
 end
 
 hook.Add( "GameContentChanged", "RefreshMainMenu", function()

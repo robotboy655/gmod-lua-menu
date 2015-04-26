@@ -1,6 +1,8 @@
 
 local PANEL = {}
 
+language.Add( "achievements", "Achievements" )
+
 surface.CreateFont( "MenuButton", {
 	font	= "Helvetica",
 	size	= 24,
@@ -89,7 +91,7 @@ function PANEL:Init()
 	Saves:SetText( "#saves" )
 	Saves:SetDisabled( true )
 	Saves.DoClick = function()
-		//self:OpenAddonsMenu()
+		//self:GetParent():OpenAddonsMenu()
 	end
 
 	local Demos = vgui.Create( "MenuButton", mainButtons )
@@ -98,7 +100,15 @@ function PANEL:Init()
 	Demos:SetText( "#demos" )
 	Demos:SetDisabled( true )
 	Demos.DoClick = function()
-		//self:OpenAddonsMenu()
+		//self:GetParent():OpenAddonsMenu()
+	end
+
+	local Achievements = vgui.Create( "MenuButton", mainButtons )
+	Achievements:Dock( TOP )
+	Achievements:DockMargin( 5, 0, 5, 0 )
+	Achievements:SetText( "#achievements" )
+	Achievements.DoClick = function()
+		self:GetParent():OpenAchievementsMenu()
 	end
 	
 	local Options = vgui.Create( "MenuButton", mainButtons )
