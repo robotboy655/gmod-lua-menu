@@ -48,7 +48,7 @@ function PANEL:Init()
 	function mainButtons:Paint( w, h )
 		//draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 0, 0, 200 ) )
 	end
-	mainButtons:SetSize( 250, 320 )
+	mainButtons:SetSize( 250, 350 )
 	mainButtons:SetPos( ScrW() / 20, ScrH() / 2 - mainButtons:GetTall() / 2 )
 	self.MenuButtons = mainButtons
 
