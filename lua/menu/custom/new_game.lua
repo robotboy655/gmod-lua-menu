@@ -5,6 +5,8 @@ local PANEL = {}
 
 PANEL.CustomMaps = {}
 
+gMapIcons = {}
+
 local BackgroundColor = Color( 200, 200, 200, 128 )
 local BackgroundColor2 = Color( 200, 200, 200, 255 )//Color( 0, 0, 0, 100 )
 
@@ -43,13 +45,19 @@ function PANEL:Init()
 			self.Categories[ cat ] = button
 		end
 	end
-	
+
 	local games = Categories:Add( "DLabel" )
 	games:SetText( "GAMES" )
 	games:SetContentAlignment( 5 )
 	games:SetDark( true )
-	
+
 	for cat, nicename in SortedPairsByValue( g_MapsFromGamesCats ) do
+		for a, b in SortedPairsByValue( g_MapsFromGames[ cat ] ) do
+			if ( nicename == "Left 4 Dead 2" || nicename == "Portal 2"  || nicename == "CS: Global Offensive" ) then
+				gMapIcons[ b ] = Material( "html/img/incompatible.png" ) // INCOMPATIBLEEEE
+			end
+		end
+	
 		local button = Categories:Add( "DMenuButton" )
 		button:SetText( nicename )
 		
@@ -80,13 +88,14 @@ function PANEL:Init()
 	CategoryMaps:SetSpaceY( 5 )
 	CategoryMaps:Dock( TOP )
 	CategoryMaps:DockMargin( 5, 5, 5, 5 )
+	CategoryMaps:DockPadding( 5, 5, 5, 5 )
 	self.CategoryMaps = CategoryMaps
 
 	--------------------------------- SETTINGS ---------------------------------
 	
 	local Settings = vgui.Create( "DListLayout", self )
 	Settings:Dock( RIGHT )
-	Settings:SetWide( ScrW() / 5 )
+	Settings:SetWide( ScrW() / 6 )
 	Settings:DockMargin( 0, 15, 15, 10 )
 	function Settings:Paint( w, h )
 		draw.RoundedBoxEx( 4, 0, 0, w, h, BackgroundColor, false, true, false, true )
@@ -223,8 +232,7 @@ function PANEL:SelectMap( map )
 	self.CurrentMap = map
 end
 
-gMapIcons = {}
-
+gCSMaps = {}
 function PANEL:SelectCat( cat )
 
 	if ( self.CurrentCategory ) then self.Categories[ self.CurrentCategory ].Depressed = false end
@@ -252,10 +260,23 @@ function PANEL:SelectCat( cat )
 					local mat = Material( "maps/thumb/" .. map .. ".png" )
 					/*if ( mat:IsError() ) then mat = Material( "maps/thumb/" .. map .. ".png" ) print("Da", mat, AddonMaterial( "maps/thumb/" .. map .. ".png" ) ) end
 					//if ( mat:IsError() ) then mat = Material( "thumb/" .. map .. ".png" ) end*/
+					if ( mat:IsError() ) then mat = Material( "maps/" .. map .. ".png" ) end -- Stupid ass addons that didn't update yet
 					if ( mat:IsError() ) then mat = Material( "noicon.png", "nocull smooth" ) end
+
 					gMapIcons[ map ] = mat
 				end
 				button.m_Image:SetMaterial( gMapIcons[ map ] )
+	
+				if ( cat == "Counter-Strike" || cat == "240maps" ) then // HACK
+					if ( !gCSMaps[ map ] ) then
+						local mat = Material( "maps/thumb/" .. map .. ".png" )
+						if ( mat:IsError() ) then mat = Material( "maps/" .. map .. ".png" ) end -- Stupid ass addons that didn't update yet
+						if ( mat:IsError() ) then mat = Material( "noicon.png", "nocull smooth" ) end
+
+						gCSMaps[ map ] = mat
+					end
+					button.m_Image:SetMaterial( gCSMaps[ map ] )
+				end
 	
 				button:SetSize( 128, 128 )
 				button.DoClick = function()
@@ -281,6 +302,13 @@ function PANEL:SelectCat( cat )
 						draw.SimpleText( button:GetText(), "rb655_MapList", w / 2 - tw / 2, h - 16, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 					end
 
+				end
+				
+				button.DoRightClick = function()
+					local m = DermaMenu()
+					m:AddOption( "Toggle Favourite", function() ToggleFavourite( map ) end )
+					m:AddOption( "Cancel", function() end )
+					m:Open()
 				end
 
 			end
