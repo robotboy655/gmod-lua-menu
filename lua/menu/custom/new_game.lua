@@ -3,6 +3,16 @@ CreateConVar( "cl_maxplayers", "1", FCVAR_ARCHIVE )
 
 local PANEL = {}
 
+surface.CreateFont( "StartNewGame", {
+	font = "Roboto",
+	size = ScreenScale( 10 ),
+} )
+
+surface.CreateFont( "rb655_MapList", {
+	size = 12,
+	font = "Tahoma"
+} )
+
 PANEL.CustomMaps = {}
 
 gMapIcons = {}
@@ -13,9 +23,9 @@ local BackgroundColor2 = Color( 200, 200, 200, 255 )//Color( 0, 0, 0, 100 )
 function PANEL:Init()
 
 	self:Dock( FILL )
-	
+
 	--------------------------------- CATEGORIES ---------------------------------
-	
+
 	local Categories = vgui.Create( "DListLayout", self )
 	Categories:Dock( LEFT )
 	Categories:DockPadding( 5, 0, 5, 5 )
@@ -26,13 +36,119 @@ function PANEL:Init()
 		draw.RoundedBoxEx( 4, 0, 0, w, h, BackgroundColor2, true, false, true, false )
 	end
 
+	self.CategoriesPanel = Categories
+
+	---------------------------- CONTAINER FOR MAPS ----------------------------
+
+	local Scroll = vgui.Create( "DScrollPanel", self )
+	Scroll:Dock( FILL )
+	Scroll:DockMargin( 0, 15, 0, 15 )
+	function Scroll:Paint( w, h )
+		draw.RoundedBox( 0, 0, 0, w, h, BackgroundColor )
+	end
+
+	local CategoryMaps = vgui.Create( "DIconLayout", Scroll )
+	CategoryMaps:SetSpaceX( 5 )
+	CategoryMaps:SetSpaceY( 5 )
+	CategoryMaps:Dock( TOP )
+	CategoryMaps:DockMargin( 5, 5, 5, 5 )
+	CategoryMaps:DockPadding( 5, 5, 5, 5 )
+	self.CategoryMaps = CategoryMaps
+
+	--------------------------------- SETTINGS ---------------------------------
+
+	local Settings = vgui.Create( "DListLayout", self )
+	Settings:Dock( RIGHT )
+	Settings:SetWide( ScrW() / 6 )
+	Settings:DockMargin( 0, 15, 15, 10 )
+	function Settings:Paint( w, h )
+		draw.RoundedBoxEx( 4, 0, 0, w, h, BackgroundColor, false, true, false, true )
+		draw.RoundedBoxEx( 4, 0, 0, w, h, BackgroundColor2, false, true, false, true )
+	end
+	self.Settings = Settings
+
+	--------------------------------- TOP CONTENT ---------------------------------
+
+	local ServerName = vgui.Create( "DTextEntry", Settings )
+	ServerName:Dock( TOP )
+	ServerName:SetText( GetConVarString( "hostname" ) )
+	ServerName:DockMargin( 5, 5, 5, 0 )
+	Settings.ServerName = ServerName
+
+	local SvLan = vgui.Create( "DCheckBoxLabel", Settings )
+	SvLan:Dock( TOP )
+	SvLan:DockMargin( 5, 5, 5, 0 )
+	SvLan:SetText( "#lan_server" )
+	SvLan:SetDark( true )
+	SvLan:SetChecked( GetConVarNumber( "sv_lan" ) == 1 )
+	Settings.SvLan = SvLan
+
+	local PlayerCount = vgui.Create( "DNumSlider", Settings )
+	PlayerCount:Dock( TOP )
+	PlayerCount:DockMargin( 10, 0, 0, 0 )
+	PlayerCount:SetMinMax( 1, 32 )
+	PlayerCount:SetText( "Max Players" )
+	PlayerCount:SetConVar( "cl_maxplayers" )
+	PlayerCount:SetDecimals( 0 )
+	//PlayerCount:SetValue( GetConVarNumber( "maxplayers" ) )
+	PlayerCount:SetDark( true )
+	Settings.PlayerCount = PlayerCount
+
+	--------------------------------- MIDDLE CONTENT ---------------------------------
+
+	local GamemodeSettings = vgui.Create( "DScrollPanel", Settings )
+	GamemodeSettings:Dock( FILL )
+	GamemodeSettings:DockMargin( 0, 0, 0, 5 )
+	self.GamemodeSettings = GamemodeSettings
+	function GamemodeSettings:Paint( w, h )
+		//draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 0, 0, 128 ) )
+	end
+
+	--------------------------------- END CONTENT ---------------------------------
+
+	local StartGame = Settings:Add("DMenuButton")
+	StartGame:Dock( BOTTOM )
+	StartGame:SetFont( "StartNewGame" )
+	StartGame:SetText( "Start Game" )
+	StartGame:SetTall( 48 )
+	StartGame.DoClick = function()
+		self:LoadMap()
+	end
+	StartGame:SetSpecial( true )
+	StartGame:DockMargin( 5, 0, 5, 5 )
+
+	--------------------------------- BLEH ---------------------------------
+
+	self:Update()
+
+end
+
+function PANEL:Paint( w, h )
+	draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 0, 0, 150 ) )
+	if ( self.CurrentCategory ) then
+		if ( !self.Categories[ self.CurrentCategory ] ) then self:SelectCat( "Sandbox" ) return end
+		self.Categories[ self.CurrentCategory ].Depressed = true
+	end
+end
+
+function PANEL:SelectMap( map )
+	self.CurrentMap = map
+end
+
+function PANEL:Update()
+
+	---------------------------------- Categories ----------------------------------
+
+	local Categories = self.CategoriesPanel
+	Categories:Clear()
+
 	self.Categories = {}
 
 	local pergamemode = Categories:Add( "DLabel" )
 	pergamemode:SetText( "GAMEMODES" )
 	pergamemode:SetContentAlignment( 5 )
 	pergamemode:SetDark( true )
-	
+
 	if ( istable( g_MapListCategorised ) ) then
 		local cats = table.GetKeys( g_MapListCategorised )
 		for _, cat in SortedPairsByValue( cats ) do
@@ -57,10 +173,10 @@ function PANEL:Init()
 				gMapIcons[ b ] = Material( "html/img/incompatible.png" ) // INCOMPATIBLEEEE
 			end
 		end
-	
+
 		local button = Categories:Add( "DMenuButton" )
 		button:SetText( nicename )
-		
+
 		local cat = ""
 		for id, n in pairs( g_MapsFromGamesCats ) do
 			if ( n == nicename ) then cat = id end
@@ -74,73 +190,13 @@ function PANEL:Init()
 
 	end
 
-	---------------------------- CONTAINER FOR MAPS ----------------------------
+	---------------------------------- SERVER SETTIGNS ----------------------------------
 
-	local Scroll = vgui.Create( "DScrollPanel", self )
-	Scroll:Dock( FILL )
-	Scroll:DockMargin( 0, 15, 0, 15 )
-	function Scroll:Paint( w, h )
-		draw.RoundedBox( 0, 0, 0, w, h, BackgroundColor )
-	end
+	local GamemodeSettings = self.GamemodeSettings
+	GamemodeSettings:Clear()
 
-	local CategoryMaps = vgui.Create( "DIconLayout", Scroll )
-	CategoryMaps:SetSpaceX( 5 )
-	CategoryMaps:SetSpaceY( 5 )
-	CategoryMaps:Dock( TOP )
-	CategoryMaps:DockMargin( 5, 5, 5, 5 )
-	CategoryMaps:DockPadding( 5, 5, 5, 5 )
-	self.CategoryMaps = CategoryMaps
-
-	--------------------------------- SETTINGS ---------------------------------
-	
-	local Settings = vgui.Create( "DListLayout", self )
-	Settings:Dock( RIGHT )
-	Settings:SetWide( ScrW() / 6 )
-	Settings:DockMargin( 0, 15, 15, 10 )
-	function Settings:Paint( w, h )
-		draw.RoundedBoxEx( 4, 0, 0, w, h, BackgroundColor, false, true, false, true )
-		draw.RoundedBoxEx( 4, 0, 0, w, h, BackgroundColor2, false, true, false, true )
-	end
-	self.Settings = Settings
-	
-	--------------------------------- TOP CONTENT ---------------------------------
-	
-	local ServerName = vgui.Create( "DTextEntry", Settings )
-	ServerName:Dock( TOP )
-	ServerName:SetText( GetConVarString( "hostname" ) )
-	ServerName:DockMargin( 5, 5, 5, 0 )
-	Settings.ServerName = ServerName
-	
-	local SvLan = vgui.Create( "DCheckBoxLabel", Settings )
-	SvLan:Dock( TOP )
-	SvLan:DockMargin( 5, 5, 5, 0 )
-	SvLan:SetText( "#lan_server" )
-	SvLan:SetDark( true )
-	SvLan:SetChecked( GetConVarNumber( "sv_lan" ) == 1 )
-	Settings.SvLan = SvLan
-
-	local PlayerCount = vgui.Create( "DNumSlider", Settings )
-	PlayerCount:Dock( TOP )
-	PlayerCount:DockMargin( 10, 0, 0, 0 )
-	PlayerCount:SetMinMax( 1, 32 )
-	PlayerCount:SetText( "Max Players" )
-	PlayerCount:SetConVar( "cl_maxplayers" )
-	PlayerCount:SetDecimals( 0 )
-	//PlayerCount:SetValue( GetConVarNumber( "maxplayers" ) )
-	PlayerCount:SetDark( true )
-	Settings.PlayerCount = PlayerCount
-	
-	--------------------------------- MIDDLE CONTENT ---------------------------------
-	
-	local GamemodeSettings = vgui.Create( "DScrollPanel", Settings )
-	GamemodeSettings:Dock( FILL )
-	GamemodeSettings:DockMargin( 0, 0, 0, 5 )
-	function GamemodeSettings:Paint( w, h )
-		//draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 0, 0, 128 ) )
-	end
-	
 	local settings_file = file.Read( "gamemodes/" .. engine.ActiveGamemode() .. "/" .. engine.ActiveGamemode() .. ".txt", true )
-	
+
 	if ( settings_file ) then
 
 		local SettingsFile = util.KeyValuesToTable( settings_file )
@@ -171,6 +227,7 @@ function PANEL:Init()
 					DNumSlider:Dock( TOP )
 					DNumSlider:SetConVar( v.name )
 					DNumSlider:SetText( language.GetPhrase( v.text ) )
+					DNumSlider:SetDecimals( 0 )
 					DNumSlider:SetMinMax( 0, 200 )
 					DNumSlider:DockMargin( 5, 0, 5, 0 )
 					DNumSlider:SetDark( true )
@@ -187,19 +244,13 @@ function PANEL:Init()
 
 	end
 
-	--------------------------------- END CONTENT ---------------------------------
-
-	local StartGame = Settings:Add("DMenuButton")
-	StartGame:Dock( BOTTOM )
-	StartGame:SetText( "Start Game" )
-	StartGame:SetTall( 32 )
-	StartGame.DoClick = function()
-		self:LoadMap()
-	end
-	StartGame:SetSpecial( true )
-	StartGame:DockMargin( 5, 0, 5, 5 )
-
 	--------------------------------- LOAD LAST MAP ---------------------------------
+
+	if ( self.CurrentMap && self.CurrentCategory ) then
+		self:SelectCat( self.CurrentCategory )
+		self:SelectMap( self.CurrentMap )
+		return
+	end
 	
 	local t = string.Explode( ";", cookie.GetString( "lastmap", "" ) )
 
@@ -210,32 +261,16 @@ function PANEL:Init()
 
 	if ( !mapinfo ) then map = "gm_flatgrass" end
 	if ( !g_MapListCategorised[ cat ] ) then cat = mapinfo and mapinfo.Category or "Sandbox" end
-	
+
 	self:SelectCat( cat )
 	self:SelectMap( map )
 
 end
 
-function PANEL:Paint( w, h )
-	draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 0, 0, 150 ) )
-	if ( self.CurrentCategory ) then
-		self.Categories[ self.CurrentCategory ].Depressed = true
-	end
-end
-
-surface.CreateFont( "rb655_MapList", {
-	size = 12,
-	font = "Tahoma"
-} )
-
-function PANEL:SelectMap( map )
-	self.CurrentMap = map
-end
-
 gCSMaps = {}
 function PANEL:SelectCat( cat )
 
-	if ( self.CurrentCategory ) then self.Categories[ self.CurrentCategory ].Depressed = false end
+	if ( self.CurrentCategory && self.Categories[ self.CurrentCategory ] ) then self.Categories[ self.CurrentCategory ].Depressed = false end
 	self.CurrentCategory = cat
 
 	local chld = self.CategoryMaps:GetChildren()
@@ -251,7 +286,7 @@ function PANEL:SelectCat( cat )
 		for cate, maps in pairs( test ) do
 			if ( cate != cat ) then continue end
 
-			for _, map in SortedPairs( maps ) do
+			for _, map in SortedPairsByValue( maps ) do
 
 				local button = self.CategoryMaps:Add( "DImageButton" )
 				button:SetText( map )

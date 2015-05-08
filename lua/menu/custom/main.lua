@@ -5,7 +5,7 @@ language.Add( "achievements", "Achievements" )
 
 surface.CreateFont( "MenuButton", {
 	font	= "Helvetica",
-	size	= 24,
+	size	= ScreenScale( 8 ),
 	weight	= 600
 } )
 

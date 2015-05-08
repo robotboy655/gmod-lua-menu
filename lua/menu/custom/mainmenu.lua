@@ -2,6 +2,8 @@
 g_MapsFromGames = {}
 g_MapsFromGamesCats = {}
 
+ScreenScale = function( size ) return size * ( ScrW() / 640.0 ) end
+
 include( 'addons.lua' )
 include( 'new_game.lua' )
 include( 'achievements.lua' )
@@ -317,7 +319,7 @@ function PANEL:RefreshGamemodes( b )
 	if ( Material( "../gamemodes/"..engine.ActiveGamemode().."/icon24.png" ):IsError() ) then
 		self.GamemodeList:SetIcon( "../gamemodes/base/icon24.png" )
 	else
-		self.GamemodeList:SetIcon( "../gamemodes/"..engine.ActiveGamemode().."/icon24.png" )
+		self.GamemodeList:SetIcon( "../gamemodes/" .. engine.ActiveGamemode() .. "/icon24.png" )
 	end
 	
 	self.GamemodeList:SetTextInset( self.GamemodeList.m_Image:GetWide() + 25, 0 )
@@ -325,12 +327,12 @@ function PANEL:RefreshGamemodes( b )
 
 	self:UpdateBackgroundImages()
 
-	local yes = IsValid( self.MountedGamesList ) // Intelligent variable names
-
-	if ( IsValid( self.NewGameFrame ) ) then self:OpenNewGameMenu( b ) end
-	if ( IsValid( self.AddonsFrame ) ) then self:OpenAddonsMenu( b ) end
-	if ( IsValid( self.MainMenuPanel ) ) then self:OpenMainMenu( b ) end
-	if ( IsValid( self.AchievementsFrame ) ) then self:OpenAchievementsMenu( b ) end
+	if ( IsValid( self.NewGameFrame ) ) then self.NewGameFrame:Update() end
+	if ( IsValid( self.AddonsFrame ) ) then self.AddonsFrame:Update() end
+	//if ( IsValid( self.NewGameFrame ) ) then self:OpenNewGameMenu( b ) end
+	//if ( IsValid( self.AddonsFrame ) ) then self:OpenAddonsMenu( b ) end
+	//if ( IsValid( self.MainMenuPanel ) ) then self:OpenMainMenu( b ) end
+	//if ( IsValid( self.AchievementsFrame ) ) then self:OpenAchievementsMenu( b ) end
 
 	if ( IsValid( self.MountedGamesList ) ) then self.MountedGamesList:MoveToFront() end
 
@@ -344,6 +346,9 @@ function PANEL:RefreshAddons()
 end
 
 function PANEL:BuildMaps()
+	g_MapsFromGamesCats = {}
+	g_MapsFromGames = {}
+
 	local gamez = engine.GetGames()
 	table.insert( gamez, { title = "Garry's Mod", depot = 4000, folder = "MOD", mounted = true } )
 
@@ -413,7 +418,6 @@ vgui.Register( "MainMenuPanel", PANEL, "EditablePanel" )
 -- Called from the engine any time the language changes
 --
 function LanguageChanged( lang )
-
 	if ( !IsValid( pnlMainMenu ) ) then return end
 
 	local self = pnlMainMenu
@@ -421,35 +425,37 @@ function LanguageChanged( lang )
 	if ( IsValid( self.AddonsFrame ) ) then self:OpenAddonsMenu() end
 	if ( IsValid( self.MainMenuPanel ) ) then self:OpenMainMenu() end
 	if ( IsValid( self.AchievementsFrame ) ) then self:OpenAchievementsMenu() end
-	
+	/*if ( IsValid( self.NewGameFrame ) ) then self.NewGameFrame:Update() end
+	if ( IsValid( self.AddonsFrame ) ) then self.AddonsFrame:Update() end*/
+
 	self.Languages:SetIcon( "../resource/localization/" .. lang .. ".png" )
 
 end
 
-function UpdateMapList( lang )
-	/*if ( !IsValid( pnlMainMenu ) ) then return end
+function UpdateMapList()
+	if ( !IsValid( pnlMainMenu ) ) then return end
+
 	local self = pnlMainMenu
-	if ( IsValid( self.NewGameFrame ) ) then self:OpenNewGameMenu() end
+
+	if ( IsValid( self.NewGameFrame ) ) then self.NewGameFrame:Update() end
+	/*if ( IsValid( self.NewGameFrame ) ) then self:OpenNewGameMenu() end
 	if ( IsValid( self.AddonsFrame ) ) then self:OpenAddonsMenu() end
 	if ( IsValid( self.MainMenuPanel ) ) then self:OpenMainMenu() end
 	if ( IsValid( self.AchievementsFrame ) ) then self:OpenAchievementsMenu() end*/
 end
 
 hook.Add( "GameContentChanged", "RefreshMainMenu", function()
-
 	if ( !IsValid( pnlMainMenu ) ) then return end
 
 	pnlMainMenu:RefreshContent()
 end )
 
 timer.Simple( 0, function()
-
 	if ( IsValid( pnlMainMenu ) ) then pnlMainMenu:Remove() end
 
 	pnlMainMenu = vgui.Create( "MainMenuPanel" )
 
 	hook.Run( "GameContentChanged" )
-
 end )
 
 /*

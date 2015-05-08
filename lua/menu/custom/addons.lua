@@ -1,6 +1,4 @@
 
-local ScreenScale = function( size ) return size * ( ScrW() / 640.0 ) end
-
 surface.CreateFont( "rb655_AddonName", {
 	size = ScreenScale( 12 ),
 	font = "Tahoma"
@@ -39,8 +37,8 @@ function PANEL:OnMouseReleased( mousecode )
 		end
 		
 		m:AddOption( "Open Workshop Page", function() steamworks.ViewFile( self.Addon.wsid ) end )
-		m:AddOption( "Toggle Mounted", function() steamworks.SetShouldMountAddon( self.Addon.wsid, !steamworks.ShouldMountAddon( self.Addon.wsid ) ) end )
-		m:AddOption( "Uninstall", function() steamworks.Unsubscribe( self.Addon.wsid ) end )
+		m:AddOption( "Toggle Mounted", function() steamworks.SetShouldMountAddon( self.Addon.wsid, !steamworks.ShouldMountAddon( self.Addon.wsid ) ) steamworks.ApplyAddons() end )
+		m:AddOption( "Uninstall", function() steamworks.Unsubscribe( self.Addon.wsid ) steamworks.ApplyAddons() end ) -- Do we need ApplyAddons here?
 		m:AddOption( "Cancel", function() end )
 		m:Open()
 	end
@@ -61,7 +59,6 @@ end
 gDataTable = gDataTable or {}
 function PANEL:SetAddon( data )
 	self.Addon = data
-	
 	if ( gDataTable[ data.wsid ] ) then self.AdditionalData = gDataTable[ data.wsid ] return end
 
 	steamworks.FileInfo( data.wsid, function( result )
@@ -119,6 +116,7 @@ function PANEL:Paint( w, h )
 		surface.DrawTexturedRect( 5, 5, imageSize, imageSize )
 	end
 	
+	//size,created,ownername, title
 	if ( gDataTable[ self.Addon.wsid ] && gDataTable[ self.Addon.wsid ].VoteData ) then
 		local ratio = gDataTable[ self.Addon.wsid ].VoteData.score
 		local w = math.floor( ( self:GetWide() - 10 ) * ratio )
@@ -134,6 +132,11 @@ function PANEL:Paint( w, h )
 
 	if ( self.Addon && !steamworks.ShouldMountAddon( self.Addon.wsid ) ) then
 		draw.RoundedBox( 4, 0, 0, w, h, Color( 0, 0, 0, 180 ) )
+	end
+
+	if ( self.Addon && self.Hovered ) then
+		draw.RoundedBox( 0, 5, h - 25, w - 10, 15, Color( 0, 0, 0, 180 ) )
+		draw.SimpleText( self.Addon.title,"Default", 10, h - 25, Color( 255, 255, 255 ))
 	end
 
 end
@@ -202,6 +205,7 @@ function PANEL:Init()
 	ToggleMounted:Dock( TOP )
 	ToggleMounted:SetText( "#Toggle Selected" )
 	ToggleMounted:SetTall( 30 )
+	ToggleMounted:DockMargin( 0, 0, 0, 40 )
 	ToggleMounted.DoClick = function() self:ToggleSelected() end
 	self.ToggleMounted = ToggleMounted
 
@@ -277,6 +281,10 @@ function PANEL:MountAll()
 		steamworks.SetShouldMountAddon( line.Addon.wsid, true )
 	end
 	steamworks.ApplyAddons()
+end
+
+function PANEL:Update()
+	self:RefreshAddons()
 end
 
 function PANEL:RefreshAddons()
