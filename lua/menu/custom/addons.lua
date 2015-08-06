@@ -14,9 +14,9 @@ local PANEL = {}
 function PANEL:Init()
 	self:SetTall( 200 )
 	self:SetWide( 200 )
-	
+
 	self.Selected = false
-	
+
 	local DermaCheckbox = vgui.Create( "DCheckBox", self )
 	DermaCheckbox:SetPos( 10, 10 )
 	DermaCheckbox:SetValue( 0 )
@@ -31,14 +31,20 @@ function PANEL:OnMouseReleased( mousecode )
 		local m = DermaMenu()
 
 		if ( !self.panel.ToggleMounted:GetDisabled() ) then
-			m:AddOption( "Toggle Selected", function() self.panel:ToggleSelected() end )
-			
+			m:AddOption( "Invert Selection", function() self.panel:InvertSelection() end )
+
 			m:AddSpacer()
 		end
-		
+
 		m:AddOption( "Open Workshop Page", function() steamworks.ViewFile( self.Addon.wsid ) end )
-		m:AddOption( "Toggle Mounted", function() steamworks.SetShouldMountAddon( self.Addon.wsid, !steamworks.ShouldMountAddon( self.Addon.wsid ) ) steamworks.ApplyAddons() end )
+		m:AddSpacer()
+		if ( steamworks.ShouldMountAddon( self.Addon.wsid ) ) then
+			m:AddOption( "Disable", function() steamworks.SetShouldMountAddon( self.Addon.wsid, false ) steamworks.ApplyAddons() end )
+		else
+			m:AddOption( "Enable", function() steamworks.SetShouldMountAddon( self.Addon.wsid, true ) steamworks.ApplyAddons() end )
+		end
 		m:AddOption( "Uninstall", function() steamworks.Unsubscribe( self.Addon.wsid ) steamworks.ApplyAddons() end ) -- Do we need ApplyAddons here?
+		m:AddSpacer()
 		m:AddOption( "Cancel", function() end )
 		m:Open()
 	end
@@ -62,27 +68,22 @@ function PANEL:SetAddon( data )
 	if ( gDataTable[ data.wsid ] ) then self.AdditionalData = gDataTable[ data.wsid ] return end
 
 	steamworks.FileInfo( data.wsid, function( result )
-		gDataTable[ data.wsid ] = result
-
-		if ( !IsValid( self ) ) then return end
-
-		self.AdditionalData = result
-
 		steamworks.VoteInfo( data.wsid, function( result )
 			if ( gDataTable[ data.wsid ] ) then
 				gDataTable[ data.wsid ].VoteData = result
 			end
 		end )
-		
-		if ( file.Exists( 'cache/workshop/' .. result.previewid .. '.cache',"GAME" ) ) then
-			return
+
+		gDataTable[ data.wsid ] = result
+
+		if ( !file.Exists( 'cache/workshop/' .. result.previewid .. '.cache',"GAME" ) ) then
+			steamworks.Download( result.previewid, false, function( name ) end )
 		end
 
-		steamworks.Download( result.previewid, false, function( name )
+		if ( !IsValid( self ) ) then return end
 
-			if ( !name ) then return end -- Download failed
-
-		end )
+		self.panel:RefreshAddons()
+		self.AdditionalData = result
 
 	end )
 end
@@ -92,9 +93,8 @@ function PANEL:Paint( w, h )
 	if ( IsValid( self.DermaCheckbox ) ) then
 		self.DermaCheckbox:SetVisible( self.Hovered || self.DermaCheckbox.Hovered || self:GetSelected() )
 	end
-	
-	if ( !self.Image && self.AdditionalData && file.Exists( 'cache/workshop/' .. self.AdditionalData.previewid .. '.cache',"GAME" ) ) then
-		//self.Image = Material( "../cache/workshop/" .. self.AdditionalData.previewid .. ".cache", "nocull smooth" )
+
+	if ( !self.Image && self.AdditionalData && file.Exists( "cache/workshop/" .. self.AdditionalData.previewid .. ".cache", "GAME" ) ) then
 		self.Image = AddonMaterial( "cache/workshop/" .. self.AdditionalData.previewid .. ".cache" )
 	end
 
@@ -115,28 +115,27 @@ function PANEL:Paint( w, h )
 		surface.SetMaterial( Material( "../html/img/addonpreview.png", "nocull smooth" ) )
 		surface.DrawTexturedRect( 5, 5, imageSize, imageSize )
 	end
-	
-	//size,created,ownername, title
+
 	if ( gDataTable[ self.Addon.wsid ] && gDataTable[ self.Addon.wsid ].VoteData ) then
 		local ratio = gDataTable[ self.Addon.wsid ].VoteData.score
 		local w = math.floor( ( self:GetWide() - 10 ) * ratio )
-	
-		for i=-5,-1 do
+
+		for i = -5, -1 do
 			surface.SetDrawColor( Color( 255, 0, 0, 128 ) )
 			surface.DrawLine( 5 + w, self:GetTall() - 5 + i, 4 + ( self:GetWide() - 10 ), self:GetTall() - 5 + i )
-		
+
 			surface.SetDrawColor( Color( 0, 255, 0, 128 ) )
 			surface.DrawLine( 5, self:GetTall() - 5 + i, 5 + w, self:GetTall() - 5 + i )
 		end
 	end
 
-	if ( self.Addon && !steamworks.ShouldMountAddon( self.Addon.wsid ) ) then
+	/*if ( self.Addon && !steamworks.ShouldMountAddon( self.Addon.wsid ) ) then
 		draw.RoundedBox( 4, 0, 0, w, h, Color( 0, 0, 0, 180 ) )
-	end
+	end*/
 
 	if ( self.Addon && self.Hovered ) then
 		draw.RoundedBox( 0, 5, h - 25, w - 10, 15, Color( 0, 0, 0, 180 ) )
-		draw.SimpleText( self.Addon.title,"Default", 10, h - 25, Color( 255, 255, 255 ))
+		draw.SimpleText( self.Addon.title, "Default", 8, h - 24, Color( 255, 255, 255 ) )
 	end
 
 end
@@ -144,6 +143,50 @@ end
 vgui.Register( "MenuAddon", PANEL, "Panel" )
 
 --------------------------------------------------------------------------------------------------------------------------------
+
+/*
+disabled	=	true
+fileid	=	37500202565065109
+id	=	460887847
+installed	=	true
+owner	=	76561197971870930
+ownername	=	Jerry
+previewid	=	37500202565065231
+previewsize	=	223128
+size	=	678048
+tags	=	Addon,map
+title	=	PHYS_Tower
+updated	=	1434256768
+VoteData:
+		down	=	137
+		score	=	0.80042690038681
+		total	=	837
+		up	=	700
+banned	=	false
+created	=	1357573632
+description	=
+*/
+
+local AddonFilters = {
+	none = {
+		label = "None",
+		func = function( mod )
+			return true
+		end
+	},
+	enabled = {
+		label = "Enabled",
+		func = function( mod )
+			return mod.mounted
+		end
+	},
+	disabled = {
+		label = "Disabled",
+		func = function( mod )
+			return !mod.mounted
+		end
+	},
+}
 
 local Grouping = {
 	none = {
@@ -165,18 +208,77 @@ local Grouping = {
 					addons = {}
 				}
 			}
-		
-			for id, addon in pairs( engine.GetAddons() ) do
+
+			for _, addon in pairs( engine.GetAddons() ) do
 				if ( addon.mounted ) then
 					table.insert( t.enabled.addons, addon )
 				else
 					table.insert( t.disabled.addons, addon )
 				end
 			end
-		
+
 			return t
 		end
-	}
+	},
+	ptags = {
+		label = "Primary Tags",
+		func = function( addons )
+			local t = {
+				noinfo = {
+					title = "Information not loaded yet!",
+					addons = {}
+				}
+			}
+
+			for _, addon in pairs( engine.GetAddons() ) do
+				if ( !gDataTable[ addon.wsid ] ) then
+					table.insert( t.noinfo.addons, addon )
+				else
+					local Ptags = { "effects", "model", "gamemode", "npc", "tool", "vehicle", "weapon" }
+					local tags = string.Explode( ",", gDataTable[ addon.wsid ].tags )
+					for _, tag in pairs( tags ) do
+						if ( tag == "Addon" || !table.HasValue( Ptags, tag:lower() ) ) then continue end -- Don't duplicate ALL addons
+						if ( !t[ tag ] ) then
+							t[ tag ] = {
+								title = tag,
+								addons = {}
+							}
+						end
+
+						table.insert( t[ tag ].addons, addon )
+
+					end
+				end
+			end
+
+			return t
+		end
+	},
+	/*models = {
+		label = "Models",
+		func = function( addons )
+			local t = {
+				models = {
+					title = "Has Models",
+					addons = {}
+				},
+				nomodels = {
+					title = "Doesn't Have Models",
+					addons = {}
+				}
+			}
+
+			for _, addon in pairs( engine.GetAddons() ) do
+				if ( addon.models > 0 ) then
+					table.insert( t.models.addons, addon )
+				else
+					table.insert( t.nomodels.addons, addon )
+				end
+			end
+
+			return t
+		end
+	}*/ -- Disabled models are reported as "no models" :(
 }
 
 local BackgroundColor = Color( 200, 200, 200, 128 )
@@ -193,42 +295,83 @@ function PANEL:Init()
 	Categories:Dock( LEFT )
 	Categories:SetWide( 200 )
 
+	// ------------------------------------------------------------------------- //
+
 	local Groups = vgui.Create( "DComboBox", Categories )
 	Groups:Dock( TOP )
 	Groups:SetTall( 30 )
-	Groups:DockMargin( 0, 0, 0, 40 )
+	Groups:DockMargin( 0, 0, 0, 5 )
 	for id, group in pairs( Grouping ) do Groups:AddChoice( "Group by: " .. group.label, id, !Groups:GetSelectedID() ) end
 	Groups.OnSelect = function( index, value, data ) self:RefreshAddons() end
 	self.Groups = Groups
+
+	local Filters = vgui.Create( "DComboBox", Categories )
+	Filters:Dock( TOP )
+	Filters:SetTall( 30 )
+	Filters:DockMargin( 0, 0, 0, 40 )
+	for id, f in pairs( AddonFilters ) do Filters:AddChoice( "Filter by: " .. f.label, id, !Filters:GetSelectedID() ) end
+	Filters.OnSelect = function( index, value, data ) self:RefreshAddons() end
+	self.Filters = Filters
+
+	// ------------------------------------------------------------------------- //
 
 	local ToggleMounted = vgui.Create( "DButton", Categories )
 	ToggleMounted:Dock( TOP )
 	ToggleMounted:SetText( "#Toggle Selected" )
 	ToggleMounted:SetTall( 30 )
-	ToggleMounted:DockMargin( 0, 0, 0, 40 )
+	ToggleMounted:DockMargin( 0, 0, 0, 5 )
 	ToggleMounted.DoClick = function() self:ToggleSelected() end
 	self.ToggleMounted = ToggleMounted
 
-	local UnmountAll = vgui.Create( "DButton", Categories )
-	UnmountAll:Dock( TOP )
-	UnmountAll:SetText( "#Disable All" )
-	UnmountAll:SetTall( 30 )
-	UnmountAll:DockMargin( 0, 5, 0, 0 )
-	UnmountAll.DoClick = function() self:UnmountAll() end
+	local EnableSelection = vgui.Create( "DButton", Categories )
+	EnableSelection:Dock( TOP )
+	EnableSelection:SetText( "#Enable Selected" )
+	EnableSelection:SetTall( 30 )
+	EnableSelection:DockMargin( 0, 0, 0, 5 )
+	EnableSelection.DoClick = function() self:EnableSelected() end
+	self.EnableSelection = EnableSelection
 
-	local MountAll = vgui.Create( "DButton", Categories )
-	MountAll:Dock( TOP )
-	MountAll:SetText( "#Enable All" )
-	MountAll:SetTall( 30 )
-	MountAll:DockMargin( 0, 5, 0, 0 )
-	MountAll.DoClick = function() self:MountAll() end
+	local DisableSelection = vgui.Create( "DButton", Categories )
+	DisableSelection:Dock( TOP )
+	DisableSelection:SetText( "#Disable Selected" )
+	DisableSelection:SetTall( 30 )
+	DisableSelection:DockMargin( 0, 0, 0, 5 )
+	DisableSelection.DoClick = function() self:DisableSelected() end
+	self.DisableSelection = DisableSelection
 
-	local MountAll = vgui.Create( "DButton", Categories )
-	MountAll:Dock( TOP )
-	MountAll:SetText( "#Open Workshop" )
-	MountAll:SetTall( 30 )
-	MountAll:DockMargin( 0, 40, 0, 0 )
-	MountAll.DoClick = function() steamworks.OpenWorkshop() end
+	----
+
+	local SelectAll = vgui.Create( "DButton", Categories )
+	SelectAll:Dock( TOP )
+	SelectAll:SetText( "#Select All" )
+	SelectAll:SetTall( 16 )
+	SelectAll:DockMargin( 0, 0, 0, 5 )
+	SelectAll.DoClick = function() self:SelectAll() end
+	self.SelectAllButton = SelectAll
+
+	local DeselectAll = vgui.Create( "DButton", Categories )
+	DeselectAll:Dock( TOP )
+	DeselectAll:SetText( "#Deselect All" )
+	DeselectAll:SetTall( 16 )
+	DeselectAll:DockMargin( 0, 0, 0, 5 )
+	DeselectAll.DoClick = function() self:DeselectAll() end
+	self.DeselectAllButton = DeselectAll
+
+	local InvertAll = vgui.Create( "DButton", Categories )
+	InvertAll:Dock( TOP )
+	InvertAll:SetText( "#Invert Selection" )
+	InvertAll:SetTall( 16 )
+	InvertAll:DockMargin( 0, 0, 0, 40 )
+	InvertAll.DoClick = function() self:InvertSelection() end
+
+	// ------------------------------------------------------------------------- //
+
+	local OpenWorkshop = vgui.Create( "DButton", Categories )
+	OpenWorkshop:Dock( TOP )
+	OpenWorkshop:SetText( "#Open Workshop" )
+	OpenWorkshop:SetTall( 30 )
+	OpenWorkshop:DockMargin( 0, 40, 0, 0 )
+	OpenWorkshop.DoClick = function() steamworks.OpenWorkshop() end
 
 	------------------- Addon List
 
@@ -242,12 +385,12 @@ function PANEL:Init()
 	AddonList:Dock( FILL )
 	AddonList:DockMargin( 5, 5, 5, 5 )
 	AddonList:DockPadding( 5, 5, 5, 10 )
-	
+
 	function Scroll:Paint( w, h )
 		draw.RoundedBoxEx( 4, 0, 0, w, h, BackgroundColor, false, true, false, true )
 		draw.RoundedBoxEx( 4, 0, 0, w, h, BackgroundColor2, false, true, false, true )
 	end
-	
+
 	self.AddonList = AddonList
 	self:RefreshAddons()
 
@@ -255,10 +398,21 @@ end
 
 function PANEL:Think()
 	local anySelected = false
+	local allSelected = true
+	local onlyEnabled = true
+	local onlyDisabled = true
 	for id, pnl in pairs( self.AddonList:GetChildren() ) do
 		if ( pnl.GetSelected && pnl:GetSelected() ) then anySelected = true end
+		if ( pnl.GetSelected && !pnl:GetSelected() ) then allSelected = false end
+		if ( pnl.Addon && !steamworks.ShouldMountAddon( pnl.Addon.wsid ) ) then onlyEnabled = false end
+		if ( pnl.Addon && steamworks.ShouldMountAddon( pnl.Addon.wsid ) ) then onlyDisabled = false end
 	end
 	self.ToggleMounted:SetDisabled( !anySelected )
+	self.EnableSelection:SetDisabled( !anySelected || onlyEnabled )
+	self.DisableSelection:SetDisabled( !anySelected || onlyDisabled )
+
+	self.SelectAllButton:SetDisabled( allSelected )
+	self.DeselectAllButton:SetDisabled( !anySelected )
 end
 
 function PANEL:ToggleSelected()
@@ -269,18 +423,38 @@ function PANEL:ToggleSelected()
 	steamworks.ApplyAddons()
 end
 
-function PANEL:UnmountAll()
-	for id, line in pairs( self.AddonList:GetChildren() ) do
-		steamworks.SetShouldMountAddon( line.Addon.wsid, false )
+function PANEL:DisableSelected()
+	for id, pnl in pairs( self.AddonList:GetChildren() ) do
+		if ( !pnl.GetSelected || !pnl:GetSelected() ) then continue end
+		steamworks.SetShouldMountAddon( pnl.Addon.wsid, false )
 	end
 	steamworks.ApplyAddons()
 end
 
-function PANEL:MountAll()
-	for id, line in pairs( self.AddonList:GetChildren() ) do
-		steamworks.SetShouldMountAddon( line.Addon.wsid, true )
+function PANEL:EnableSelected()
+	for id, pnl in pairs( self.AddonList:GetChildren() ) do
+		if ( !pnl.GetSelected || !pnl:GetSelected() ) then continue end
+		steamworks.SetShouldMountAddon( pnl.Addon.wsid, true )
 	end
 	steamworks.ApplyAddons()
+end
+
+function PANEL:InvertSelection()
+	for id, line in pairs( self.AddonList:GetChildren() ) do
+		line:SetSelected( !line:GetSelected() )
+	end
+end
+
+function PANEL:DeselectAll()
+	for id, line in pairs( self.AddonList:GetChildren() ) do
+		line:SetSelected( false )
+	end
+end
+
+function PANEL:SelectAll()
+	for id, line in pairs( self.AddonList:GetChildren() ) do
+		line:SetSelected( true )
+	end
 end
 
 function PANEL:Update()
@@ -292,11 +466,21 @@ function PANEL:RefreshAddons()
 	self.AddonList:Clear()
 
 	local group = self.Groups:GetOptionData( self.Groups:GetSelectedID() )
+	local filter = self.Filters:GetOptionData( self.Filters:GetSelectedID() )
 
 	local addons = Grouping[ group ].func( engine.GetAddons() )
 
 	for id, group in SortedPairsByMemberValue( addons, "title" ) do
-	
+		if ( #group.addons < 1 ) then continue end
+		
+		local addns = {}
+		for id, mod in pairs( group.addons ) do
+			if ( !AddonFilters[ filter ].func( mod ) ) then continue end
+			table.insert( addns, mod )
+		end
+
+		if ( #addns < 1 ) then continue end
+
 		if ( group.title ) then
 			local pnl = self.AddonList:Add( "DLabel" )
 			pnl.OwnLine = true
@@ -305,26 +489,17 @@ function PANEL:RefreshAddons()
 			pnl:SetDark( true )
 			pnl:SizeToContents()
 		end
-		
-		for id, add in SortedPairsByMemberValue( group.addons, "title" ) do
+
+		for id, mod in SortedPairsByMemberValue( addns, "title" ) do
 
 			local pnl = self.AddonList:Add( "MenuAddon" )
 			pnl.panel = self
-			pnl:SetAddon( add )
+			pnl:SetAddon( mod )
 			pnl:DockMargin( 0, 0, 5, 5 )
-	
+
 		end
-		
+
 	end
-
-	/*for id, add in SortedPairsByMemberValue( engine.GetAddons(), "title" ) do
-
-		local pnl = self.AddonList:Add( "MenuAddon" )
-		//if ( id==1 ) then pnl.OwnLine = true end
-		pnl:SetAddon( add )
-		pnl:DockMargin( 0, 0, 5, 5 )
-	
-	end*/
 
 end
 

