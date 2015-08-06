@@ -14,7 +14,6 @@ Missing/Broken Features
 * Demos and Saves - I never use those so I didn't bother adding them. Who uses them anyway?
 * Good looks
 * You can't browse through new/top rated/ect addons in main menu. You should use the Open Workshop button anyway.
-* No sounds - who needs sounds?
 
 New/Fixed Features
 =============
@@ -29,7 +28,7 @@ New/Fixed Features
 Installing
 =============
 
-To install this, download the ZIP and extract contents of ```gmod-lua-menu-master``` folder ( folders ```lua``` and ```materials``` ) to your ```SteamApps/common/GarrysMod/garrysmod/``` folder.
+**To avoid some errors, you must be on the [Dev Branch](http://wiki.garrysmod.com/page/Dev_Branch)!** To install this, download the ZIP and extract contents of ```gmod-lua-menu-master``` folder ( folders ```lua``` and ```materials``` ) to your ```SteamApps/common/GarrysMod/garrysmod/``` folder.
 
 Uninstalling
 =============
