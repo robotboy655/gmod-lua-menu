@@ -14,7 +14,6 @@ Missing/Broken Features
 * Demos and Saves - I never use those so I didn't bother adding them. Who uses them anyway?
 * Good looks
 * You can't browse through new/top rated/ect addons in main menu. You should use the Open Workshop button anyway.
-* No sounds - who needs sounds?
 
 New/Fixed Features
 =============

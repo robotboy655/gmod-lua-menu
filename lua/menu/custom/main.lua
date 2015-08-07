@@ -9,8 +9,11 @@ surface.CreateFont( "MenuButton", {
 	weight	= 600
 } )
 
+local DLabel = baseclass.Get( "DLabel" )
+
 function PANEL:Init()
 	self:SetFont( "MenuButton" )
+	self:SetCursor( "hand" )
 	self:SetMouseInputEnabled( true )
 	self:SetTextColor( Color( 255, 255, 255 ) )
 end
@@ -22,18 +25,26 @@ end
 
 function PANEL:SetDisabled( b )
 	self.Disabled = b
+	self:SetCursor( b && "none" || "hand" )
 end
 
 function PANEL:Paint()
 	if ( self.Disabled == true ) then self:SetFGColor( Color( 120, 120, 120 ) ) return end
-	self:SetFGColor( self.Hovered and Color( 255, 255, 128 ) or Color( 255, 255, 255 ) )
+	self:SetFGColor( self.Hovered && Color( 255, 255, 128 ) || Color( 255, 255, 255 ) )
 end
 
 function PANEL:OnCursorEntered()
 	self.Hovered = true
+	if !self.Disabled then surface.PlaySound( "garrysmod/ui_hover.wav" ) end
 end
 function PANEL:OnCursorExited()
 	self.Hovered = false
+end
+
+function PANEL:OnMousePressed()
+	if self.Disabled then return end
+	DLabel.OnMousePressed( self )
+	surface.PlaySound( "garrysmod/ui_click.wav" )
 end
 
 vgui.Register( "MenuButton", PANEL, "DLabel" )
