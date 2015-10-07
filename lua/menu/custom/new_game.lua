@@ -19,6 +19,11 @@ surface.CreateFont( "rb655_MapSubCat", {
 	font = "Tahoma"
 } )
 
+// Dev-beta compatibility
+GetMapList = GetMapList or function()
+	return g_MapListCategorised or {}
+end
+
 PANEL.CustomMaps = {}
 
 gMapIcons = {}
@@ -155,8 +160,8 @@ function PANEL:Update()
 	pergamemode:SetContentAlignment( 5 )
 	pergamemode:SetDark( true )
 
-	if ( istable( g_MapListCategorised ) ) then
-		local cats = table.GetKeys( g_MapListCategorised )
+	if ( istable( GetMapList() ) ) then
+		local cats = table.GetKeys( GetMapList() )
 		for _, cat in SortedPairsByValue( cats ) do
 			local button = Categories:Add( "DMenuButton" )
 			button:SetText( cat )
@@ -263,10 +268,11 @@ function PANEL:Update()
 	local map = t[ 1 ] or "gm_construct"
 	local cat = t[ 2 ] or "Sandbox"
 
-	local mapinfo = g_MapList[ map .. ".bsp" ]
-
-	if ( !mapinfo ) then map = "gm_flatgrass" end
-	if ( !g_MapListCategorised[ cat ] ) then cat = mapinfo and mapinfo.Category or "Sandbox" end
+	for category, maps in pairs( GetMapList() ) do
+		if ( table.HasValue( maps, map ) ) then
+			cat = category
+		end
+	end
 
 	self:SelectCat( cat )
 	self:SelectMap( map )
@@ -316,10 +322,12 @@ local subCategories = {
 	[ "^pl_" ] = "Payload",
 	[ "^plr_" ] = "Payload Race",
 	[ "^rd_" ] = "Robot Destruction",
+	[ "^pd_" ] = "Player Destruction",
 	[ "^tr_" ] = "Training",
 	[ "^cp_" ] = "Control Point",
 	[ "^trade_" ] = "Trade",
 	[ "^tc_" ] = "Territorial Control",
+	[ "^pass_" ] = "PASS Time",
 
 	// Left 4 Dead 1
 	[ "^l4d_hospital0" ] = "a. No Mercy",
@@ -463,9 +471,9 @@ function PANEL:SelectCat( cat )
 
 	for k, v in pairs( self.CategoryMaps:GetChildren() ) do v:Remove() end
 
-	if ( istable( g_MapListCategorised ) ) then
+	if ( istable( GetMapList() ) ) then
 
-		local mapss = table.Merge( table.Copy( g_MapListCategorised ), g_MapsFromGames )
+		local mapss = table.Merge( table.Copy( GetMapList() ), g_MapsFromGames )
 		local maps = mapss[ cat ]
 
 		local categories = {}
