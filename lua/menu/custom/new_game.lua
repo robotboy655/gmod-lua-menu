@@ -19,11 +19,6 @@ surface.CreateFont( "rb655_MapSubCat", {
 	font = "Tahoma"
 } )
 
-// Dev-beta compatibility
-GetMapList = GetMapList or function()
-	return g_MapListCategorised or {}
-end
-
 PANEL.CustomMaps = {}
 
 gMapIcons = {}
