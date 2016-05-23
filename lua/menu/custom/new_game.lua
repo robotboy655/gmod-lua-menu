@@ -89,6 +89,14 @@ function PANEL:Init()
 	SvLan:SetChecked( GetConVarNumber( "sv_lan" ) == 1 )
 	Settings.SvLan = SvLan
 
+	local p2p_enabled = vgui.Create( "DCheckBoxLabel", Settings )
+	p2p_enabled:Dock( TOP )
+	p2p_enabled:DockMargin( 5, 5, 5, 0 )
+	p2p_enabled:SetText( "#p2p_server" )
+	p2p_enabled:SetDark( true )
+	p2p_enabled:SetChecked( GetConVarNumber( "p2p_enabled" ) == 1 )
+	Settings.p2p_enabled = p2p_enabled
+
 	local PlayerCount = vgui.Create( "DNumSlider", Settings )
 	PlayerCount:Dock( TOP )
 	PlayerCount:DockMargin( 10, 0, 0, 0 )
@@ -573,6 +581,9 @@ function PANEL:LoadMap()
 	local sv_lan = 0
 	if ( self.Settings.SvLan:GetChecked() ) then sv_lan = 1 end
 
+	local p2p_enabled = 0
+	if ( self.Settings.p2p_enabled:GetChecked() ) then p2p_enabled = 1 end
+
 	SaveLastMap( self.CurrentMap, self.CurrentCategory )
 
 	hook.Run( "StartGame" )
@@ -588,6 +599,7 @@ function PANEL:LoadMap()
 	end
 
 	RunConsoleCommand( "sv_lan", sv_lan )
+	RunConsoleCommand( "p2p_enabled", p2p_enabled )
 	RunConsoleCommand( "maxplayers", maxplayers )
 	RunConsoleCommand( "map", self.CurrentMap )
 	RunConsoleCommand( "hostname", self.Settings.ServerName:GetText() )
