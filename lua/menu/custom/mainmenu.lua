@@ -8,6 +8,7 @@ include( 'addons.lua' )
 include( 'new_game.lua' )
 include( 'achievements.lua' )
 include( 'main.lua' )
+include( '_errors.lua' )
 include( '../background.lua' )
 //include( 'enumdump.lua' )
 
