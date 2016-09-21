@@ -53,7 +53,7 @@ local PANEL = {}
 function PANEL:Init()
 
 	self:Dock( FILL )
-	
+
 	--------------------------------- CATEGORIES ---------------------------------
 
 	local frame = vgui.Create( "DPanel", self )

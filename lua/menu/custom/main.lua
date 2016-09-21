@@ -1,4 +1,7 @@
 
+-- Developer stuff
+concommand.Add( "lua", function( ply, cmd, args, str ) RunString( str ) end )
+
 local PANEL = {}
 
 language.Add( "achievements", "Achievements" )
@@ -71,7 +74,7 @@ function PANEL:Init()
 		RunGameUICommand( "engine gameui_hide" )
 	end
 	self.Resume = Resume
-	
+
 	local NewGame = vgui.Create( "MenuButton", mainButtons )
 	NewGame:Dock( TOP )
 	NewGame:DockMargin( 5, 5, 5, 0 )
@@ -79,7 +82,7 @@ function PANEL:Init()
 	NewGame.DoClick = function()
 		self:GetParent():OpenNewGameMenu()
 	end
-	
+
 	local PlayMP = vgui.Create( "MenuButton", mainButtons )
 	PlayMP:Dock( TOP )
 	PlayMP:DockMargin( 5, 0, 5, 0 )
@@ -121,7 +124,7 @@ function PANEL:Init()
 	Achievements.DoClick = function()
 		self:GetParent():OpenAchievementsMenu()
 	end
-	
+
 	local Options = vgui.Create( "MenuButton", mainButtons )
 	Options:Dock( TOP )
 	Options:SetText( "#options" )
@@ -170,7 +173,7 @@ function PANEL:Paint()
 	end
 
 	if ( self.IsInGame != IsInGame() ) then
-	
+
 		self.IsInGame = IsInGame()
 
 		if ( self.IsInGame ) then
@@ -180,7 +183,7 @@ function PANEL:Paint()
 			self.Disconnect:SetVisible( false )
 			self.Resume:SetVisible( false )
 		end
-		
+
 	end
 
 end

@@ -19,12 +19,13 @@ surface.CreateFont( "rb655_MapSubCat", {
 	font = "Tahoma"
 } )
 
-PANEL.CustomMaps = {}
-
 gMapIcons = {}
+gCSMaps = {}
 
 local BackgroundColor = Color( 200, 200, 200, 128 )
-local BackgroundColor2 = Color( 200, 200, 200, 255 )//Color( 0, 0, 0, 100 )
+local BackgroundColor2 = Color( 200, 200, 200, 255 )
+local matIncompat = Material( "html/img/incompatible.png" )
+local matNoIcon = Material( "noicon.png", "nocull smooth" )
 
 function PANEL:Init()
 
@@ -32,17 +33,16 @@ function PANEL:Init()
 
 	--------------------------------- CATEGORIES ---------------------------------
 
-	local Categories = vgui.Create( "DListLayout", self )
-	Categories:Dock( LEFT )
-	Categories:DockPadding( 5, 0, 5, 5 )
-	Categories:DockMargin( 15, 15, 0, 15 )
-	Categories:SetWide( 200 )
-	function Categories:Paint( w, h )
+	local CategoriesScroll = vgui.Create( "DScrollPanel", self )
+	CategoriesScroll:Dock( LEFT )
+	CategoriesScroll:SetWide( 200 )
+	CategoriesScroll:DockMargin( 15, 15, 0, 15 )
+	function CategoriesScroll:Paint( w, h )
 		draw.RoundedBoxEx( 4, 0, 0, w, h, BackgroundColor, true, false, true, false )
 		draw.RoundedBoxEx( 4, 0, 0, w, h, BackgroundColor2, true, false, true, false )
 	end
 
-	self.CategoriesPanel = Categories
+	self.CategoriesPanel = CategoriesScroll
 
 	---------------------------- CONTAINER FOR MAPS ----------------------------
 
@@ -108,6 +108,14 @@ function PANEL:Init()
 	PlayerCount:SetDark( true )
 	Settings.PlayerCount = PlayerCount
 
+	--------------------------------- MIDDLE CONTENT - LABEL ---------------------------------
+
+	local GamemodesLabel = Settings:Add( "DLabel" )
+	GamemodesLabel:Dock( TOP )
+	GamemodesLabel:SetText( "GAMEMODE SETTINGS" )
+	GamemodesLabel:SetContentAlignment( 5 )
+	GamemodesLabel:SetDark( true )
+
 	--------------------------------- MIDDLE CONTENT ---------------------------------
 
 	local GamemodeSettings = vgui.Create( "DScrollPanel", Settings )
@@ -131,7 +139,7 @@ function PANEL:Init()
 	StartGame:SetSpecial( true )
 	StartGame:DockMargin( 5, 0, 5, 5 )
 
-	--------------------------------- BLEH ---------------------------------
+	--------------------------------- Update Content ---------------------------------
 
 	self:Update()
 
@@ -149,9 +157,20 @@ function PANEL:SelectMap( map )
 	self.CurrentMap = map
 end
 
+function PANEL:AddCategoryButton( Categories, cat, name )
+	local button = Categories:Add( "DMenuButton" )
+	button:Dock( TOP )
+	button:DockMargin( 5, 5, 5, 0 )
+	button:SetText( name )
+	button.DoClick = function()
+		self:SelectCat( cat )
+	end
+	self.Categories[ cat ] = button
+end
+
 function PANEL:Update()
 
-	---------------------------------- Categories ----------------------------------
+	---------------------------------- Build Categories ----------------------------------
 
 	local Categories = self.CategoriesPanel
 	Categories:Clear()
@@ -159,52 +178,42 @@ function PANEL:Update()
 	self.Categories = {}
 
 	local pergamemode = Categories:Add( "DLabel" )
+	pergamemode:Dock( TOP )
 	pergamemode:SetText( "GAMEMODES" )
 	pergamemode:SetContentAlignment( 5 )
 	pergamemode:SetDark( true )
+	pergamemode:DockMargin( 0, 0, 0, -5 ) -- This actually works
 
 	if ( istable( GetMapList() ) ) then
-		local cats = table.GetKeys( GetMapList() )
-		for _, cat in SortedPairsByValue( cats ) do
-			local button = Categories:Add( "DMenuButton" )
-			button:SetText( cat )
-			button.DoClick = function()
-				self:SelectCat( cat )
-			end
-			button:DockMargin( 0, 0, 0, 5 )
-			self.Categories[ cat ] = button
+		for _, cat in SortedPairsByValue( table.GetKeys( GetMapList() ) ) do
+			self:AddCategoryButton( Categories, cat, cat )
 		end
 	end
 
 	local games = Categories:Add( "DLabel" )
+	games:Dock( TOP )
 	games:SetText( "GAMES" )
 	games:SetContentAlignment( 5 )
 	games:SetDark( true )
+	games:DockMargin( 0, 0, 0, -5 ) -- This actually works
 
 	for cat, nicename in SortedPairsByValue( g_MapsFromGamesCats ) do
-		for a, b in SortedPairsByValue( g_MapsFromGames[ cat ] ) do
-			if ( nicename == "Left 4 Dead 2" || nicename == "Portal 2"  || nicename == "CS: Global Offensive" ) then
-				gMapIcons[ b ] = Material( "html/img/incompatible.png" ) // INCOMPATIBLEEEE
+		for a, b in SortedPairsByValue( g_MapsFromGames[ cat ] ) do // Hack
+			if ( nicename == "Left 4 Dead 2" || nicename == "Portal 2" || nicename == "CS: Global Offensive" ) then
+				gMapIcons[ b ] = matIncompat // INCOMPATIBLE
 			end
 		end
 
-		local button = Categories:Add( "DMenuButton" )
-		button:SetText( nicename )
-
-		local cat = ""
-		for id, n in pairs( g_MapsFromGamesCats ) do
-			if ( n == nicename ) then cat = id end
-		end
-
-		button.DoClick = function()
-			self:SelectCat( cat )
-		end
-		button:DockMargin( 0, 0, 0, 5 )
-		self.Categories[ cat ] = button
-
+		self:AddCategoryButton( Categories, cat, nicename )
 	end
 
-	---------------------------------- SERVER SETTIGNS ----------------------------------
+	//Hack, to make the bottom 5 px appear - This really needs to be fixed ( Bottom Dock Padding )
+	local label = vgui.Create( "DLabel", Categories )
+	label:Dock( TOP )
+	label:SetText( "" )
+	label:SetTall( 5 )
+
+	---------------------------------- Build server settigns ----------------------------------
 
 	local GamemodeSettings = self.GamemodeSettings
 	GamemodeSettings:Clear()
@@ -216,7 +225,8 @@ function PANEL:Update()
 		local SettingsFile = util.KeyValuesToTable( settings_file )
 
 		if ( SettingsFile.settings ) then
-			
+			local zOrder = 0
+
 			for k, v in pairs( SettingsFile.settings ) do
 				if ( v.type == "CheckBox" ) then
 					local CheckBox = vgui.Create( "DCheckBoxLabel", GamemodeSettings )
@@ -225,17 +235,21 @@ function PANEL:Update()
 					CheckBox:SetText( "#" .. v.text )
 					CheckBox:SetDark( true )
 					CheckBox:SetChecked( GetConVarNumber( v.name ) == 1 )
+					CheckBox:SetZPos( zOrder )
 				elseif ( v.type == "Text" ) then
 					local label = vgui.Create( "DLabel", GamemodeSettings )
 					label:Dock( TOP )
 					label:SetText( language.GetPhrase( v.text ) )
 					label:DockMargin( 5, 0, 0, 0 )
 					label:SetDark( true )
-				
+					label:SetZPos( zOrder )
+					zOrder = zOrder + 1
+
 					local DTextEntry = vgui.Create( "DTextEntry", GamemodeSettings )
 					DTextEntry:Dock( TOP )
 					DTextEntry:SetConVar( v.name )
 					DTextEntry:DockMargin( 5, 0, 5, 5 )
+					DTextEntry:SetZPos( zOrder )
 				elseif ( v.type == "Numeric" ) then
 					local DNumSlider = vgui.Create( "DNumSlider", GamemodeSettings )
 					DNumSlider:Dock( TOP )
@@ -245,17 +259,18 @@ function PANEL:Update()
 					DNumSlider:SetMinMax( 0, 200 )
 					DNumSlider:DockMargin( 5, 0, 5, 0 )
 					DNumSlider:SetDark( true )
+					DNumSlider:SetZPos( zOrder )
 				end
+
+				zOrder = zOrder + 1
 			end
-			
-			//Hack, to make the bottom 5 px appear
+
+			//Hack, to make the bottom 5 px appear - This really needs to be fixed ( Bottom Dock Padding )
 			local label = vgui.Create( "DLabel", GamemodeSettings )
 			label:Dock( TOP )
 			label:SetText( "" )
 			label:SetTall( 1 )
-
 		end
-
 	end
 
 	--------------------------------- LOAD LAST MAP ---------------------------------
@@ -265,7 +280,7 @@ function PANEL:Update()
 		self:SelectMap( self.CurrentMap )
 		return
 	end
-	
+
 	local t = string.Explode( ";", cookie.GetString( "lastmap", "" ) )
 
 	local map = t[ 1 ] or "gm_construct"
@@ -281,8 +296,6 @@ function PANEL:Update()
 	self:SelectMap( map )
 
 end
-
-concommand.Add("lua", function(ply, cmd, args, str ) RunString( str ) end)
 
 local subCategories = {
 	[ "^gm_" ] = "Sandbox",
@@ -433,7 +446,7 @@ local subCategories = {
 	[ "^background" ] = 'Backgrounds',
 	[ "^ep1_background" ] = 'Backgrounds',
 	[ "^ep2_background" ] = 'Backgrounds',
-	
+
 	// Half-Life 2: Episode 1
 	[ "^ep1_citadel_0" ] = "a. Undue Alarm",
 	[ "ep1_citadel_03" ] = "b. Direct Intervention",
@@ -466,68 +479,65 @@ local subCategories = {
 	[ "ep2_outland_12a" ] = "g. T-Minus One",
 }
 
-gCSMaps = {}
+function PANEL:CacheIcon( map )
+	map = map:Trim() // Duplicate CS:GO maps have spaces on the end!
+	local mat = Material( "maps/thumb/" .. map .. ".png" )
+	if ( mat:IsError() ) then mat = Material( "maps/" .. map .. ".png" ) end -- Stupid ass addons that didn't update yet
+	if ( mat:IsError() ) then mat = matNoIcon end
+	return mat
+end
+
 function PANEL:SelectCat( cat )
-	//print("selecting", cat)
+
 	if ( self.CurrentCategory && self.Categories[ self.CurrentCategory ] ) then self.Categories[ self.CurrentCategory ].Depressed = false end
 	self.CurrentCategory = cat
 
-	for k, v in pairs( self.CategoryMaps:GetChildren() ) do v:Remove() end
+	self.CategoryMaps:Clear()
 
-	if ( istable( GetMapList() ) ) then
+	local mapsListCategories = g_MapsFromGames
+	if ( istable( GetMapList()) ) then mapsListCategories = table.Merge( mapsListCategories, table.Copy( GetMapList() ) ) end
+	local maps = mapsListCategories[ cat ]
 
-		local mapss = table.Merge( table.Copy( GetMapList() ), g_MapsFromGames )
-		local maps = mapss[ cat ]
+	local categories = {}
+	for _, map in SortedPairs( maps ) do
+		local c = "Other"
 
-		local categories = {}
-		for _, map in SortedPairs( maps ) do
-			local c =  "Other"
-		
-			for pattern, cate in SortedPairs( subCategories ) do
-				if ( subCategories[ map:lower() ] ) then c = subCategories[ map:lower() ] break end
-				if ( string.find( map:lower(), pattern ) ) then
-					c = cate
-				end
+		for pattern, cate in SortedPairs( subCategories ) do
+			if ( subCategories[ map:lower() ] ) then c = subCategories[ map:lower() ] break end
+			if ( string.find( map:lower(), pattern ) ) then
+				c = cate
 			end
-
-			categories[ c ] = categories[ c ] or {}
-			table.insert( categories[ c ], map )
 		end
 
-		for ca, ma in SortedPairs( categories ) do
-			
-			local catText = ca
-			if ( catText:sub( 2, 3 ) == ". " ) then catText = catText:sub( 4 ) end
-			
-			local label = self.CategoryMaps:Add( "DLabel" )
-			label.OwnLine = true
-			label:SetText( catText )
-			label:SetFont( "rb655_MapSubCat" )
-			label:SizeToContents()
-			label:SetBright( true )
+		categories[ c ] = categories[ c ] or {}
+		table.insert( categories[ c ], map )
+	end
+
+	for ca, ma in SortedPairs( categories ) do
+
+		local catText = ca
+		if ( catText:sub( 2, 3 ) == ". " ) then catText = catText:sub( 4 ) end
+
+		local label = self.CategoryMaps:Add( "DLabel" )
+		label.OwnLine = true
+		label:SetText( catText )
+		label:SetFont( "rb655_MapSubCat" )
+		label:SizeToContents()
+		label:SetBright( true )
 
 		for _, map in SortedPairsByValue( ma ) do
 			local button = self.CategoryMaps:Add( "DImageButton" )
 			button:SetText( map )
+			//button.m_Image:SetMaterial( matNoIcon )
 
 			if ( !gMapIcons[ map ] ) then
-				local mat = Material( "maps/thumb/" .. map .. ".png" )
-				/*if ( mat:IsError() ) then mat = Material( "maps/thumb/" .. map .. ".png" ) print("Da", mat, AddonMaterial( "maps/thumb/" .. map .. ".png" ) ) end
-				if ( mat:IsError() ) then mat = Material( "thumb/" .. map .. ".png" ) end*/
-				if ( mat:IsError() ) then mat = Material( "maps/" .. map .. ".png" ) end -- Stupid ass addons that didn't update yet
-				if ( mat:IsError() ) then mat = Material( "noicon.png", "nocull smooth" ) end
-
-				gMapIcons[ map ] = mat
+				gMapIcons[ map ] = self:CacheIcon( map )
 			end
 			button.m_Image:SetMaterial( gMapIcons[ map ] )
 
 			if ( cat == "Counter-Strike" || cat == "240maps" ) then // HACK
 				if ( !gCSMaps[ map ] ) then
-					local mat = Material( "maps/thumb/" .. map .. ".png" )
-					if ( mat:IsError() ) then mat = Material( "maps/" .. map .. ".png" ) end -- Stupid ass addons that didn't update yet
-					if ( mat:IsError() ) then mat = Material( "noicon.png", "nocull smooth" ) end
-
-					gCSMaps[ map ] = mat
+					gCSMaps[ map ] = self:CacheIcon( map )
 				end
 				button.m_Image:SetMaterial( gCSMaps[ map ] )
 			end
@@ -537,18 +547,18 @@ function PANEL:SelectCat( cat )
 				self:SelectMap( map, cat )
 			end
 			button.PaintOver = function( button, w, h )
-				
+
 				if ( button:GetText() == self.CurrentMap ) then
 					surface.SetDrawColor( Color( 255, 255, 255, 128 + math.sin( CurTime() * 2 ) * 80 ) )
-					for i=0,1 do surface.DrawOutlinedRect( i, i, w - i * 2, h - i * 2 ) end
+					for i = 0, 1 do surface.DrawOutlinedRect( i, i, w - i * 2, h - i * 2 ) end
 				end
 
 				if ( button.Hovered ) then return end
 
 				draw.RoundedBox( 0, 0, h - 20, w, 20, Color( 0, 0, 0, 150 ) )
-				
+
 				surface.SetFont( "rb655_MapList" )
-				
+
 				local tw = surface.GetTextSize( button:GetText() )
 				if ( tw > w ) then
 					draw.SimpleText( button:GetText(), "rb655_MapList", w / 2 - tw / 2 + ( ( w - tw ) * math.sin( CurTime() ) ), h - 16, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
@@ -557,7 +567,7 @@ function PANEL:SelectCat( cat )
 				end
 
 			end
-			
+
 			button.DoRightClick = function()
 				local m = DermaMenu()
 				m:AddOption( "Toggle Favourite", function() ToggleFavourite( map ) end )
@@ -566,8 +576,6 @@ function PANEL:SelectCat( cat )
 			end
 
 		end
-		end
-
 	end
 
 	// Scroll back to the top of the map list
@@ -584,7 +592,7 @@ function PANEL:LoadMap()
 	local p2p_enabled = 0
 	if ( self.Settings.p2p_enabled:GetChecked() ) then p2p_enabled = 1 end
 
-	SaveLastMap( self.CurrentMap, self.CurrentCategory )
+	SaveLastMap( self.CurrentMap:Trim(), self.CurrentCategory )
 
 	hook.Run( "StartGame" )
 	RunConsoleCommand( "progress_enable" )
@@ -601,7 +609,7 @@ function PANEL:LoadMap()
 	RunConsoleCommand( "sv_lan", sv_lan )
 	RunConsoleCommand( "p2p_enabled", p2p_enabled )
 	RunConsoleCommand( "maxplayers", maxplayers )
-	RunConsoleCommand( "map", self.CurrentMap )
+	RunConsoleCommand( "map", self.CurrentMap:Trim() )
 	RunConsoleCommand( "hostname", self.Settings.ServerName:GetText() )
 
 	pnlMainMenu:Back()

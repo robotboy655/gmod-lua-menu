@@ -472,7 +472,7 @@ function PANEL:RefreshAddons()
 
 	for id, group in SortedPairsByMemberValue( addons, "title" ) do
 		if ( #group.addons < 1 ) then continue end
-		
+
 		local addns = {}
 		for id, mod in pairs( group.addons ) do
 			if ( !AddonFilters[ filter ].func( mod ) ) then continue end

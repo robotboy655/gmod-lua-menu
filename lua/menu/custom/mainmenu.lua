@@ -99,7 +99,7 @@ function PANEL:Init()
 		DLabel.PerformLayout( self )
 	end
 	self.MountedGames = MountedGames
-	
+
 	local Languages = vgui.Create( "DMenuButton", lowerPanel )
 	Languages:Dock( RIGHT )
 	Languages:DockMargin( 5, 5, 0, 5 )
@@ -122,7 +122,7 @@ function PANEL:Init()
 	self:SetPopupStayAtBack( true )
 
 	self:OpenMainMenu()
-	
+
 end
 
 function PANEL:Paint()
@@ -134,9 +134,9 @@ function PANEL:Paint()
 	end
 
 	if ( self.IsInGame != IsInGame() ) then
-	
+
 		self.IsInGame = IsInGame()
-		
+
 		self:OpenMainMenu() -- To update the buttons
 
 	end
@@ -200,7 +200,7 @@ end
 function PANEL:OpenLanguages( pnl )
 	if ( IsValid( self.LanguageList ) ) then self.LanguageList:Remove() return end
 	self:ClosePopups()
-	
+
 	local panel = vgui.Create( "DScrollPanel", self )
 	panel:SetSize( 157, 90 )
 	panel:SetPos( pnl:GetPos() - panel:GetWide() / 2 + pnl:GetWide() / 2, ScrH() - 55 - panel:GetTall() )
@@ -235,19 +235,19 @@ function PANEL:OpenMountedGamesList( pnl )
 	p:SetSize( 276, 256 )
 	p:SetPos( math.min( pnl:GetPos() - p:GetWide() / 2 + pnl:GetWide() / 2, ScrW() - p:GetWide() - 5 ), ScrH() - 55 - p:GetTall() )
 	p:SetSpacing( 5 )
-	p:SetPadding( 5 ) 
+	p:SetPadding( 5 )
 	self.MountedGamesList = p
-	
+
 	function p:Paint( w, h )
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 0, 0, 220 ) )
 	end
-	
+
 	for id, t in SortedPairsByMemberValue( engine.GetGames(), "title" ) do
 		local a = p:Add( "DCheckBoxLabel" )
 		a:SetText( t.title )
 		if ( !t.installed ) then a:SetText( t.title .. " ( not installed )" ) end
 		if ( !t.owned ) then a:SetText( t.title .. " ( not owned )" ) end
-			
+
 		p:AddItem( a )
 		a:SetChecked( t.mounted )
 		a.OnChange = function( panel ) engine.SetMounted( t.depot, a:GetChecked() ) end
@@ -255,7 +255,7 @@ function PANEL:OpenMountedGamesList( pnl )
 			a:SetDisabled( true )
 		end
 	end
-	
+
 end
 
 function PANEL:OpenGamemodesList( pnl )
@@ -265,7 +265,7 @@ function PANEL:OpenGamemodesList( pnl )
 	local p = vgui.Create( "DPanelList", self )
 	p:EnableVerticalScrollbar( true )
 	p:SetSpacing( 5 )
-	p:SetPadding( 5 ) 
+	p:SetPadding( 5 )
 	self.GamemodesList = p
 
 	function p:Paint( w, h )
@@ -290,6 +290,7 @@ function PANEL:OpenGamemodesList( pnl )
 		Gamemode:SetTall( 40 )
 		Gamemode.DoClick = function()
 			RunConsoleCommand( "gamemode", t.name )
+			self:ClosePopups()
 		end
 		function Gamemode:PerformLayout()
 			if ( IsValid( self.m_Image ) ) then
@@ -298,15 +299,15 @@ function PANEL:OpenGamemodesList( pnl )
 			end
 			DLabel.PerformLayout( self )
 		end
-		
+
 		p:AddItem( Gamemode )
-		
+
 		w = math.max( w, Gamemode:GetWide() + 20 )
 		h = h + 45
 	end
-	
+
 	//p:SetWide( w, h )
-	
+
 	p:SetSize( w, math.min( h, ScrH() / 1.5 ) )
 	p:SetPos( math.min( pnl:GetPos() - p:GetWide() / 2 + pnl:GetWide() / 2, ScrW() - p:GetWide() - 5 ), ScrH() - 55 - p:GetTall() )
 end
@@ -316,13 +317,13 @@ function PANEL:RefreshGamemodes( b )
 	for id, gm in pairs( engine.GetGamemodes() ) do
 		if ( gm.name == engine.ActiveGamemode() ) then self.GamemodeList:SetText( gm.title ) end
 	end
-	
+
 	if ( Material( "../gamemodes/"..engine.ActiveGamemode().."/icon24.png" ):IsError() ) then
 		self.GamemodeList:SetIcon( "../gamemodes/base/icon24.png" )
 	else
 		self.GamemodeList:SetIcon( "../gamemodes/" .. engine.ActiveGamemode() .. "/icon24.png" )
 	end
-	
+
 	self.GamemodeList:SetTextInset( self.GamemodeList.m_Image:GetWide() + 25, 0 )
 	self.GamemodeList:SizeToContents()
 
@@ -385,7 +386,7 @@ function PANEL:ScreenshotScan( folder )
 
 		AddBackgroundImage( folder .. v )
 		bReturn = true
-	
+
 	end
 
 	return bReturn
@@ -401,7 +402,7 @@ function PANEL:UpdateBackgroundImages()
 	-- If there's screenshots in gamemodes/<gamemode>/backgrounds/*.jpg use them
 	--
 	if ( !self:ScreenshotScan( "gamemodes/" .. engine.ActiveGamemode() .. "/backgrounds/" ) ) then
-	
+
 		--
 		-- If there's no gamemode specific here we'll use the default backgrounds
 		--
@@ -483,7 +484,7 @@ function GetServers( type, id )
 	local data =
 	{
 		Finished = function()
-			
+
 		end,
 
 		Callback = function( ping , name, desc, map, players, maxplayers, botplayers, pass, lastplayed, address, gamemode, workshopid )
@@ -494,7 +495,7 @@ function GetServers( type, id )
 			address = string.JavascriptSafe( address )
 			gamemode = string.JavascriptSafe( gamemode )
 			workshopid = string.JavascriptSafe( workshopid )
-			
+
 			if ( pass ) then pass = "true" else pass = "false" end
 
 			pnlMainMenu:Call( "AddServer( '"..type.."', '"..id.."', "..ping..", \""..name.."\", \""..desc.."\", \""..map.."\", "..players..", "..maxplayers..", "..botplayers..", "..pass..", "..lastplayed..", \""..address.."\", \""..gamemode.."\", \""..workshopid.."\" )" )
