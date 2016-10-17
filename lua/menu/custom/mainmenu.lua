@@ -22,7 +22,7 @@ end
 
 function PANEL:Paint( w, h )
 	if ( !self.Special ) then self:SetFGColor( color_black ) else self:SetFGColor( color_white ) end
-	local clr = self.Special && Color( 35, 150, 255 ) or Color( 255, 255, 255 )
+	local clr = self.Special && Color( 35, 150, 255 ) or color_white
 	if ( self.Hovered ) then clr = self.Special && Color( 50, 170, 255 ) or Color( 255, 255, 220 ) end
 	if ( self.Depressed ) then self:SetFGColor( color_white ) clr = self.Special && Color( 50, 100, 200 ) or Color( 35, 150, 255 ) end
 	draw.RoundedBox( 4, 0, 0, w, h, clr )
@@ -241,8 +241,8 @@ function PANEL:OpenMountedGamesList( pnl )
 	function p:Paint( w, h )
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 0, 0, 220 ) )
 	end
-
-	for id, t in SortedPairsByMemberValue( engine.GetGames(), "title" ) do
+	
+	local function add( t )
 		local a = p:Add( "DCheckBoxLabel" )
 		a:SetText( t.title )
 		if ( !t.installed ) then a:SetText( t.title .. " ( not installed )" ) end
@@ -255,6 +255,21 @@ function PANEL:OpenMountedGamesList( pnl )
 			a:SetDisabled( true )
 		end
 	end
+
+	for id, t in SortedPairsByMemberValue( engine.GetGames(), "title" ) do
+		add( t )
+	end
+	/*for id, t in SortedPairsByMemberValue( engine.GetGames(), "title" ) do
+		if ( t.installed && t.owned ) then add( t ) end
+	end
+
+	for id, t in SortedPairsByMemberValue( engine.GetGames(), "title" ) do
+		if ( !t.installed && t.owned ) then add( t ) end
+	end
+
+	for id, t in SortedPairsByMemberValue( engine.GetGames(), "title" ) do
+		if ( !t.installed && !t.owned ) then add( t ) end
+	end*/
 
 end
 

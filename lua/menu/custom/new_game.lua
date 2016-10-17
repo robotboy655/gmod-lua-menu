@@ -1,6 +1,58 @@
 
 CreateConVar( "cl_maxplayers", "1", FCVAR_ARCHIVE )
 
+local SearchText
+
+local PANEL = {}
+
+function PANEL:CountMaps( maps )
+	if ( SearchText ) then
+		local n = 0
+		for id, map in pairs( maps ) do
+			if ( map:lower():find( SearchText:lower() ) ) then n = n + 1 end
+		end
+		return n
+	end
+	return #maps
+end
+
+function PANEL:GetMapCount()
+	if ( !self.Category ) then return end
+
+	if ( self.AltCount ) then return self:CountMaps( g_MapsFromGames[ self.Category ] ) end
+	return self:CountMaps( GetMapList()[ self.Category ] )
+end
+
+function PANEL:SetCategory( cat, alt )
+	self.Category = cat
+	self.AltCount = alt
+end
+
+function PANEL:Paint( w, h )
+	self:SetFGColor( color_black )
+	local clr = color_white
+	if ( self.Hovered ) then
+		clr = Color( 255, 255, 220 )
+	end
+	if ( self.Depressed ) then
+		self:SetFGColor( color_white )
+		clr = Color( 35, 150, 255 )
+	end
+	draw.RoundedBox( 3, 0, 0, w, h, clr )
+
+	if ( self:GetMapCount() && self:GetMapCount() > 0 ) then
+		surface.SetFont( "Default" )
+		local tW, tH = surface.GetTextSize( tostring( self:GetMapCount() ) )
+		local bW = math.max( tW ) + 6
+		local tX = w - bW - 4 + bW / 2
+
+		draw.RoundedBox( 0, w - bW - 4, 4, bW, h - 8, Vector( 1, 1, 1 ) * 240 )
+		draw.SimpleText( self:GetMapCount(), "Default", tX, h / 2, Vector( 1, 1, 1 ) * 100, 1, 1 )
+	end
+end
+
+vgui.Register( "DCategoryButton", PANEL, "DButton" )
+
 local PANEL = {}
 
 surface.CreateFont( "StartNewGame", {
@@ -79,6 +131,7 @@ function PANEL:Init()
 	ServerName:Dock( TOP )
 	ServerName:SetText( GetConVarString( "hostname" ) )
 	ServerName:DockMargin( 5, 5, 5, 0 )
+	ServerName:SetZPos( -1 )
 	Settings.ServerName = ServerName
 
 	local SvLan = vgui.Create( "DCheckBoxLabel", Settings )
@@ -96,6 +149,14 @@ function PANEL:Init()
 	p2p_enabled:SetDark( true )
 	p2p_enabled:SetChecked( GetConVarNumber( "p2p_enabled" ) == 1 )
 	Settings.p2p_enabled = p2p_enabled
+
+	local p2p_friendsonly = vgui.Create( "DCheckBoxLabel", Settings )
+	p2p_friendsonly:Dock( TOP )
+	p2p_friendsonly:DockMargin( 5, 5, 5, 0 )
+	p2p_friendsonly:SetText( "#p2p_server_friendsonly" )
+	p2p_friendsonly:SetDark( true )
+	p2p_friendsonly:SetChecked( GetConVarNumber( "p2p_friendsonly" ) == 1 )
+	Settings.p2p_friendsonly = p2p_friendsonly
 
 	local PlayerCount = vgui.Create( "DNumSlider", Settings )
 	PlayerCount:Dock( TOP )
@@ -157,15 +218,27 @@ function PANEL:SelectMap( map )
 	self.CurrentMap = map
 end
 
-function PANEL:AddCategoryButton( Categories, cat, name )
-	local button = Categories:Add( "DMenuButton" )
+function PANEL:AddCategoryButton( Categories, cat, name, alt )
+	local button = Categories:Add( "DCategoryButton" )
 	button:Dock( TOP )
 	button:DockMargin( 5, 5, 5, 0 )
 	button:SetText( name )
 	button.DoClick = function()
 		self:SelectCat( cat )
 	end
+	button:SetContentAlignment( 4 )
+	button:SetTextInset( 5, 0 )
+	button:SetCategory( cat, alt )
+
 	self.Categories[ cat ] = button
+end
+
+function PANEL:DoSearch( txt )
+	self.SearchText = txt
+	if ( txt:Trim() == "" ) then self.SearchText = nil end
+	SearchText = self.SearchText
+
+	self:SelectCat( self.CurrentCategory )
 end
 
 function PANEL:Update()
@@ -176,6 +249,19 @@ function PANEL:Update()
 	Categories:Clear()
 
 	self.Categories = {}
+
+	local searchBar = Categories:Add( "DTextEntry" )
+	searchBar:Dock( TOP )
+	searchBar:DockMargin( 5, 5, 5, 0 )
+	searchBar:SetUpdateOnType( true )
+	searchBar.OnValueChange = function() self:DoSearch( searchBar:GetText() ) end
+	searchBar.Paint = function( s, w, h ) // Hack
+		s:GetSkin():PaintTextEntry( s, w, h )
+
+		if ( !s:GetText() || s:GetText():len() < 1 ) then
+			draw.SimpleText( "Search", s:GetFont(), 5,  h / 2, Vector( 1, 1, 1 ) * 128, nil, 1 )
+		end
+	end
 
 	local pergamemode = Categories:Add( "DLabel" )
 	pergamemode:Dock( TOP )
@@ -204,7 +290,7 @@ function PANEL:Update()
 			end
 		end
 
-		self:AddCategoryButton( Categories, cat, nicename )
+		self:AddCategoryButton( Categories, cat, nicename, true )
 	end
 
 	//Hack, to make the bottom 5 px appear - This really needs to be fixed ( Bottom Dock Padding )
@@ -236,6 +322,7 @@ function PANEL:Update()
 					CheckBox:SetDark( true )
 					CheckBox:SetChecked( GetConVarNumber( v.name ) == 1 )
 					CheckBox:SetZPos( zOrder )
+					if ( v.help ) then CheckBox:SetTooltip( v.help ) end
 				elseif ( v.type == "Text" ) then
 					local label = vgui.Create( "DLabel", GamemodeSettings )
 					label:Dock( TOP )
@@ -250,6 +337,7 @@ function PANEL:Update()
 					DTextEntry:SetConVar( v.name )
 					DTextEntry:DockMargin( 5, 0, 5, 5 )
 					DTextEntry:SetZPos( zOrder )
+					if ( v.help ) then DTextEntry:SetTooltip( v.help ) end
 				elseif ( v.type == "Numeric" ) then
 					local DNumSlider = vgui.Create( "DNumSlider", GamemodeSettings )
 					DNumSlider:Dock( TOP )
@@ -260,6 +348,7 @@ function PANEL:Update()
 					DNumSlider:DockMargin( 5, 0, 5, 0 )
 					DNumSlider:SetDark( true )
 					DNumSlider:SetZPos( zOrder )
+					if ( v.help ) then DNumSlider:SetTooltip( v.help ) end
 				end
 
 				zOrder = zOrder + 1
@@ -489,19 +578,22 @@ end
 
 function PANEL:SelectCat( cat )
 
+	local searchText = self.SearchText
+
 	if ( self.CurrentCategory && self.Categories[ self.CurrentCategory ] ) then self.Categories[ self.CurrentCategory ].Depressed = false end
 	self.CurrentCategory = cat
 
 	self.CategoryMaps:Clear()
 
 	local mapsListCategories = g_MapsFromGames
-	if ( istable( GetMapList()) ) then mapsListCategories = table.Merge( mapsListCategories, table.Copy( GetMapList() ) ) end
+	if ( istable( GetMapList() ) ) then mapsListCategories = table.Merge( mapsListCategories, table.Copy( GetMapList() ) ) end
 	local maps = mapsListCategories[ cat ]
 
 	local categories = {}
 	for _, map in SortedPairs( maps ) do
-		local c = "Other"
+		if ( searchText && !map:lower():find( searchText:lower() ) ) then continue end
 
+		local c = "Other"
 		for pattern, cate in SortedPairs( subCategories ) do
 			if ( subCategories[ map:lower() ] ) then c = subCategories[ map:lower() ] break end
 			if ( string.find( map:lower(), pattern ) ) then
@@ -549,8 +641,11 @@ function PANEL:SelectCat( cat )
 			button.PaintOver = function( button, w, h )
 
 				if ( button:GetText() == self.CurrentMap ) then
-					surface.SetDrawColor( Color( 255, 255, 255, 128 + math.sin( CurTime() * 2 ) * 80 ) )
-					for i = 0, 1 do surface.DrawOutlinedRect( i, i, w - i * 2, h - i * 2 ) end
+					local max = 5
+					for i = 0, max - 1 do
+						surface.SetDrawColor( Color( 255, 255, 255, (128 + math.sin( CurTime() * 2 ) * 80 ) * ( (max-(i + 1)) / max ) ))
+						surface.DrawOutlinedRect( i, i, w - i * 2, h - i * 2 )
+					end
 				end
 
 				if ( button.Hovered ) then return end
@@ -591,6 +686,8 @@ function PANEL:LoadMap()
 
 	local p2p_enabled = 0
 	if ( self.Settings.p2p_enabled:GetChecked() ) then p2p_enabled = 1 end
+	local p2p_friendsonly = 0
+	if ( self.Settings.p2p_friendsonly:GetChecked() ) then p2p_friendsonly = 1 end
 
 	SaveLastMap( self.CurrentMap:Trim(), self.CurrentCategory )
 
@@ -608,6 +705,7 @@ function PANEL:LoadMap()
 
 	RunConsoleCommand( "sv_lan", sv_lan )
 	RunConsoleCommand( "p2p_enabled", p2p_enabled )
+	RunConsoleCommand( "p2p_friendsonly", p2p_friendsonly )
 	RunConsoleCommand( "maxplayers", maxplayers )
 	RunConsoleCommand( "map", self.CurrentMap:Trim() )
 	RunConsoleCommand( "hostname", self.Settings.ServerName:GetText() )
