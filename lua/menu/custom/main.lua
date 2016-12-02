@@ -8,7 +8,7 @@ language.Add( "achievements", "Achievements" )
 
 surface.CreateFont( "MenuButton", {
 	font	= "Helvetica",
-	size	= ScreenScale( 8 ),
+	size	= 24,
 	weight	= 600
 } )
 
@@ -38,7 +38,7 @@ end
 
 function PANEL:OnCursorEntered()
 	self.Hovered = true
-	if !self.Disabled then surface.PlaySound( "garrysmod/ui_hover.wav" ) end
+	if ( !self.Disabled ) then surface.PlaySound( "garrysmod/ui_hover.wav" ) end
 end
 function PANEL:OnCursorExited()
 	self.Hovered = false
@@ -61,9 +61,9 @@ function PANEL:Init()
 	local mainButtons = vgui.Create( "DPanel", self )
 	function mainButtons:Paint( w, h )
 		//draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 0, 0, 200 ) )
+		self:SetPos( ScrW() / 20, math.max( ScrH() / 2 - self:GetTall() / 2, 150 ) )
 	end
 	mainButtons:SetSize( 250, 350 )
-	mainButtons:SetPos( ScrW() / 20, ScrH() / 2 - mainButtons:GetTall() / 2 )
 	self.MenuButtons = mainButtons
 
 	local Resume = vgui.Create( "MenuButton", mainButtons )
@@ -156,8 +156,6 @@ local old = 0
 function PANEL:Paint()
 
 	if ScrH() != old then
-		//print("da", self:GetWide(), self:GetTall(), self:IsVisible())
-		//print(self:GetPos())
 		old = ScrH()
 	end
 

@@ -1,9 +1,12 @@
 
-g_MapsFromGames = {}
-g_MapsFromGamesCats = {}
+/*
+lua_run for i=0, 64 do for j=0,70 do local a = ents.Create("prop_physics") a:SetPos(Vector(i*70, j*70, 0)) a:SetModel("models/hunter/plates/plate1x1.mdl") a:Spawn() a:PhysicsDestroy() end end
+lua_run Awd = 0 for i=0, 24 do for j=0,24 do local a = ents.Create("prop_physics") a:SetPos(Vector(-1500 + i*128, j*128-1000, -12735)) a:SetModel("models/hunter/plates/plate1x1.mdl") a:Spawn() a:PhysicsDestroy() Awd = (Awd or 0)+1 end end print(Awd)
+*/
 
 ScreenScale = function( size ) return size * ( ScrW() / 640.0 ) end
 
+include( 'getmaps.lua' )
 include( 'addons.lua' )
 include( 'new_game.lua' )
 include( 'achievements.lua' )
@@ -20,12 +23,45 @@ function PANEL:SetSpecial( b )
 	self.Special = b
 end
 
+local matGradientUp = Material( "gui/gradient_up" )
 function PANEL:Paint( w, h )
-	if ( !self.Special ) then self:SetFGColor( color_black ) else self:SetFGColor( color_white ) end
-	local clr = self.Special && Color( 35, 150, 255 ) or color_white
-	if ( self.Hovered ) then clr = self.Special && Color( 50, 170, 255 ) or Color( 255, 255, 220 ) end
-	if ( self.Depressed ) then self:SetFGColor( color_white ) clr = self.Special && Color( 50, 100, 200 ) or Color( 35, 150, 255 ) end
-	draw.RoundedBox( 4, 0, 0, w, h, clr )
+	if ( !self.Special ) then
+		self:SetFGColor( color_black )
+		local clr =  color_white
+		if ( self.Hovered ) then clr =  Color( 255, 255, 220 ) end
+		if ( self.Depressed ) then self:SetFGColor( color_white ) clr = Color( 35, 150, 255 ) end
+		draw.RoundedBox( 4, 0, 0, w, h, clr )
+	else
+		self:SetFGColor( color_white )
+		local clr = Color( 0, 134, 204 )
+		if ( self.Hovered ) then clr = Color( 34, 168, 238 ) end
+		if ( self.Depressed ) then clr = Color( 0, 134, 204 ) end
+		//draw.RoundedBox( 4, 0, 0, w, h, clr )
+
+		surface.SetDrawColor( clr )
+		surface.DrawRect( 1, 1, w - 2, h - 2 )
+
+		surface.SetDrawColor( Color( 0, 85, 204 ) )
+		if ( self.Hovered ) then clr = surface.SetDrawColor( Color( 34, 119, 238 ) ) end
+		surface.SetMaterial( matGradientUp )
+		surface.DrawTexturedRect( 1, 1, w - 2, h - 2 )
+
+		surface.SetDrawColor( Color( 0, 85, 204 ) )
+		//surface.DrawOutlinedRect( 0, 0, w, h )
+
+		surface.DrawLine( 1, 0, w-1, 0 ) -- top
+		surface.DrawLine( 0, 1, 0, h - 1 ) -- left
+		surface.DrawLine( w - 1, 1, w - 1, h - 1 ) -- right
+
+		surface.SetDrawColor( Color( 0, 53, 128 ) )
+		surface.DrawLine( 1, h - 1, w-1, h - 1 ) -- bottom
+
+		local clr = Color( 52, 160, 214 )
+		if ( self.Hovered ) then clr = Color( 79, 187, 241 ) end
+		if ( self.Depressed ) then clr = Color( 52, 160, 214 ) end
+		surface.SetDrawColor( clr )
+		surface.DrawLine( 1, 1, w - 1, 1 )
+	end
 end
 
 vgui.Register( "DMenuButton", PANEL, "DButton" )
@@ -362,30 +398,7 @@ function PANEL:RefreshAddons()
 
 end
 
-function PANEL:BuildMaps()
-	g_MapsFromGamesCats = {}
-	g_MapsFromGames = {}
-
-	local gamez = engine.GetGames()
-	table.insert( gamez, { title = "Garry's Mod", depot = 4000, folder = "MOD", mounted = true } )
-
-	for id, g in SortedPairsByMemberValue( gamez, "title" ) do
-		if ( !g.mounted ) then continue end
-		local maps = file.Find( "maps/*.bsp", g.folder )
-		local catname = g.depot .. "maps"
-
-		for id, map in pairs( maps ) do
-			maps[ id ] = string.gsub( map, "%.bsp$", "" )
-		end
-
-		g_MapsFromGamesCats[ catname ] = g.title
-		g_MapsFromGames[ catname ] = maps
-	end
-end
-
 function PANEL:RefreshContent()
-
-	self:BuildMaps()
 
 	self:RefreshGamemodes( true )
 	self:RefreshAddons()
@@ -438,15 +451,12 @@ function LanguageChanged( lang )
 	if ( !IsValid( pnlMainMenu ) ) then return end
 
 	local self = pnlMainMenu
-	if ( IsValid( self.NewGameFrame ) ) then self:OpenNewGameMenu() end
+	if ( IsValid( self.NewGameFrame ) ) then self.NewGameFrame:UpdateLanguage() end
 	if ( IsValid( self.AddonsFrame ) ) then self:OpenAddonsMenu() end
 	if ( IsValid( self.MainMenuPanel ) ) then self:OpenMainMenu() end
 	if ( IsValid( self.AchievementsFrame ) ) then self:OpenAchievementsMenu() end
-	/*if ( IsValid( self.NewGameFrame ) ) then self.NewGameFrame:Update() end
-	if ( IsValid( self.AddonsFrame ) ) then self.AddonsFrame:Update() end*/
 
 	self.Languages:SetIcon( "../resource/localization/" .. lang .. ".png" )
-
 end
 
 function UpdateMapList()
@@ -473,6 +483,11 @@ timer.Simple( 0, function()
 	pnlMainMenu = vgui.Create( "MainMenuPanel" )
 
 	hook.Run( "GameContentChanged" )
+end )
+
+// A hack to bring the console to front when menu_reload is ran
+timer.Simple( 1, function()
+	if ( gui.IsConsoleVisible() ) then gui.ShowConsole() end
 end )
 
 /*

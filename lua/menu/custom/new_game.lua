@@ -1,63 +1,39 @@
 
+include( "new_game_panels.lua" )
+
 CreateConVar( "cl_maxplayers", "1", FCVAR_ARCHIVE )
+CreateConVar( "cl_hidebadmaps", "1", FCVAR_ARCHIVE )
 
-local SearchText
+/*
+TODO:
+make sure the text of categories / multiplayer settings does not overflow, especially on lower resolutions
+Fix reloading the panels resetting the scrolling for categories and server settings?
 
-local PANEL = {}
+Auto scroll to select map on first open or something?
 
-function PANEL:CountMaps( maps )
-	if ( SearchText ) then
-		local n = 0
-		for id, map in pairs( maps ) do
-			if ( map:lower():find( SearchText:lower() ) ) then n = n + 1 end
-		end
-		return n
-	end
-	return #maps
-end
+Better map icon visuals?
+Allow people to create their own categories?
+Figure out fonts? The current ones look neat but blurry
+*/
 
-function PANEL:GetMapCount()
-	if ( !self.Category ) then return end
+surface.CreateFont( "StartNewGameFont", {
+	font = "Roboto Lt",
+	size = 18,
+} )
 
-	if ( self.AltCount ) then return self:CountMaps( g_MapsFromGames[ self.Category ] ) end
-	return self:CountMaps( GetMapList()[ self.Category ] )
-end
+surface.CreateFont( "SingleMultiPlayer", {
+	font = "Roboto Lt",
+	size = 17,
+} )
 
-function PANEL:SetCategory( cat, alt )
-	self.Category = cat
-	self.AltCount = alt
-end
-
-function PANEL:Paint( w, h )
-	self:SetFGColor( color_black )
-	local clr = color_white
-	if ( self.Hovered ) then
-		clr = Color( 255, 255, 220 )
-	end
-	if ( self.Depressed ) then
-		self:SetFGColor( color_white )
-		clr = Color( 35, 150, 255 )
-	end
-	draw.RoundedBox( 3, 0, 0, w, h, clr )
-
-	if ( self:GetMapCount() && self:GetMapCount() > 0 ) then
-		surface.SetFont( "Default" )
-		local tW, tH = surface.GetTextSize( tostring( self:GetMapCount() ) )
-		local bW = math.max( tW ) + 6
-		local tX = w - bW - 4 + bW / 2
-
-		draw.RoundedBox( 0, w - bW - 4, 4, bW, h - 8, Vector( 1, 1, 1 ) * 240 )
-		draw.SimpleText( self:GetMapCount(), "Default", tX, h / 2, Vector( 1, 1, 1 ) * 100, 1, 1 )
-	end
-end
-
-vgui.Register( "DCategoryButton", PANEL, "DButton" )
-
-local PANEL = {}
+surface.CreateFont( "DermaRobotoDefault", {
+	font = "Roboto Lt",
+	size = 13
+} )
 
 surface.CreateFont( "StartNewGame", {
 	font = "Roboto",
-	size = ScreenScale( 10 ),
+	size = 30,
 } )
 
 surface.CreateFont( "rb655_MapList", {
@@ -66,33 +42,171 @@ surface.CreateFont( "rb655_MapList", {
 } )
 
 surface.CreateFont( "rb655_MapSubCat", {
-	size = ScreenScale( 10 ),
-	weight = 900,
-	font = "Tahoma"
+	size = 30,
+	//weight = 900,
+	font = "Roboto Lt"
 } )
+
+local noise = Material( "gui/noise.png", "nocull noclamp smooth" )
+local function DrawHUDBox( x, y, w, h, mat, clr )
+	surface.SetDrawColor( clr or Color( 255, 255, 255, 255 ) )
+
+	surface.SetMaterial( mat or noise )
+	surface.DrawTexturedRectUV( x, y, w, h, 0, 0, w / 128, h / 128 )
+end
+
+local EnableMouseScrollEnabled = false
+local function EnableMouseScroll( s )
+	local mousePressed = input.IsMouseDown( MOUSE_RIGHT ) || input.IsMouseDown( MOUSE_LEFT )
+	if ( !mousePressed ) then s.start = nil s.EnableMouseScrollEnabled = false return end
+
+	if ( !s.start && s:IsChildHovered() && !s:GetVBar():IsChildHovered() && !s.EnableMouseScrollEnabled ) then
+		s.start = s:GetVBar():GetScroll()
+		local x, y = input.GetCursorPos()
+		s.startY = y
+		s.EnableMouseScrollEnabled = true
+	end
+	s.EnableMouseScrollEnabled = true
+
+	if ( s.start ) then
+		local x, y = input.GetCursorPos()
+		s:GetVBar():SetScroll( s.start + ( s.startY - y ) )
+	end
+end
+
+local matGradientUp = Material( "gui/gradient_up" )
+local function DrawScrollDarkGradients( self, w, h )
+	if ( self.VBar:GetScroll() + self:GetTall() < self.pnlCanvas:GetTall() ) then
+		local height = math.min( ( self.pnlCanvas:GetTall() - ( self.VBar:GetScroll() + self:GetTall() ) ) / 3, 30 )
+		height = math.floor( height )
+
+		surface.SetMaterial( matGradientUp )
+		surface.SetDrawColor( Color( 0, 0, 0, 200 ) )
+		surface.DrawTexturedRect( 0, h - height, w, height )
+	end
+
+	if ( self.VBar:GetScroll() > 0 ) then
+		local height = math.min( self.VBar:GetScroll() / 3, 30 )
+		height = math.floor( height )
+
+		surface.SetMaterial( matGradientUp )
+		surface.SetDrawColor( Color( 0, 0, 0, 200 ) )
+		surface.DrawTexturedRectUV( 0, 0, w, height, 0, 1, 1, 0 )
+	end
+end
+
+local LocalizedShit = {}
+local function SetLocalizedString( self, txt )
+	self:SetText( language.GetPhrase( txt ) )
+	table.insert( LocalizedShit, { panel = self, text = txt } )
+end
+
+local HeaderColor = color_black
+local HeaderColor_mid = HeaderColor
+
+local g_SearchText
+local g_CurrentScroll
+
+function GetMapsFromCategory( cat )
+	local mapsListCategories = table.Copy( GetGameMapList() )
+	if ( istable( GetMapList() ) ) then mapsListCategories = table.Merge( mapsListCategories, GetMapList() ) end
+
+	local maps = mapsListCategories[ cat ]
+	if ( !maps || #maps < 1 ) then return {} end
+
+	local output = {}
+	for _, map in SortedPairs( maps ) do
+		if ( g_SearchText && !map:lower():find( g_SearchText:lower() ) ) then continue end
+
+		table.insert( output, map )
+	end
+
+	return output
+end
+
+
+-- TODO: Localisation
+local function DrawToolTip( self, w, h )
+	if ( !self:GetTooltip() ) then return end
+	if ( !( self.Hovered || self.IsHovered && self:IsHovered() ) ) then return end
+
+	local font = self.GetFont && self:GetFont() or "DermaRobotoDefault"
+	surface.SetFont( font )
+
+	local tW, tH = surface.GetTextSize( tostring( self:GetTooltip() ) )
+	local x = -tW - 25
+	local screenX = self:LocalToScreen( x, 0 )
+	local texts = { tostring( self:GetTooltip() ) }
+
+	surface.SetDrawColor( Color( 0, 128, 255 ) )
+	if ( screenX < ScrW() / 4 ) then
+		surface.SetDrawColor( Color( 255, 128, 0 ) )
+	end
+
+	DisableClipping( true )
+	draw.NoTexture()
+	surface.DrawPoly( {
+		{ x = -15, y = 0 },
+		{ x = -5, y = h / 2 },
+		{ x = -15, y = h }
+	} )
+
+	surface.SetDrawColor( Color( 0, 128, 255 ) )
+
+	local boxH = math.max( h, ( h - tH ) + tH * #texts )
+	surface.DrawRect( x, 0, -15 - x, boxH )
+	for id, txt in pairs( texts ) do
+		draw.SimpleText( txt, font, x + 5, h / 2 + ( id - 1 ) * tH, color_white, 0, 1 )
+	end
+	DisableClipping( false )
+end
+
+local PANEL = {}
 
 gMapIcons = {}
 gCSMaps = {}
 
-local BackgroundColor = Color( 200, 200, 200, 128 )
-local BackgroundColor2 = Color( 200, 200, 200, 255 )
 local matIncompat = Material( "html/img/incompatible.png" )
-local matNoIcon = Material( "noicon.png", "nocull smooth" )
+local matNoIcon = Material( "gui/noicon.png", "nocull smooth" )
 
 function PANEL:Init()
+
+	g_CurrentScroll = nil
+	g_SearchText = nil
 
 	self:Dock( FILL )
 
 	--------------------------------- CATEGORIES ---------------------------------
 
-	local CategoriesScroll = vgui.Create( "DScrollPanel", self )
-	CategoriesScroll:Dock( LEFT )
-	CategoriesScroll:SetWide( 200 )
-	CategoriesScroll:DockMargin( 15, 15, 0, 15 )
-	function CategoriesScroll:Paint( w, h )
-		draw.RoundedBoxEx( 4, 0, 0, w, h, BackgroundColor, true, false, true, false )
-		draw.RoundedBoxEx( 4, 0, 0, w, h, BackgroundColor2, true, false, true, false )
+	local MapCategories = vgui.Create( "DPanel", self )
+	MapCategories:Dock( LEFT )
+	MapCategories:SetWide( math.Clamp( ScrW() / 6, 150, 200 ) )
+	MapCategories:DockMargin( 5, 5, 0, 5 )
+	MapCategories:DockPadding( 5, 5, 0, 5 )
+	function MapCategories:Paint( w, h )
+		DrawHUDBox( 0, 0, w, h )
 	end
+
+	local searchBar = vgui.Create( "DFancyTextEntry", MapCategories )
+	searchBar:Dock( TOP )
+	searchBar:SetFont( "DermaRobotoDefault" )
+	searchBar:SetPlaceholderText( "searchbar_placeholer" )
+	searchBar:DockMargin( 0, 0, 0, 0 )
+	searchBar:SetZPos( -1 )
+	searchBar:SetHeight( 24 )
+	searchBar:SetUpdateOnType( true )
+	searchBar.OnValueChange = function() self:DoSearch( searchBar:GetText() ) end
+
+	self.Categories = {}
+	local cat_pnl = self:AddCategoryButton( MapCategories, "Favourites", "Favourites" )
+	cat_pnl:SetZPos( 0 )
+
+	local CategoriesScroll = vgui.Create( "DScrollPanel", MapCategories )
+	CategoriesScroll:Dock( FILL )
+	CategoriesScroll:DockMargin( 0, 5, 0, 0 )
+	CategoriesScroll:GetVBar():SetWide( 0 )
+	CategoriesScroll.Think = EnableMouseScroll
+	CategoriesScroll.PaintOver = DrawScrollDarkGradients
 
 	self.CategoriesPanel = CategoriesScroll
 
@@ -100,9 +214,30 @@ function PANEL:Init()
 
 	local Scroll = vgui.Create( "DScrollPanel", self )
 	Scroll:Dock( FILL )
-	Scroll:DockMargin( 0, 15, 0, 15 )
+	Scroll:DockMargin( 0, 5, 5, 5 )
 	function Scroll:Paint( w, h )
-		draw.RoundedBox( 0, 0, 0, w, h, BackgroundColor )
+		DrawHUDBox( 0, 0, w, h )
+	end
+	Scroll.Think = EnableMouseScroll
+
+	local sbar = Scroll:GetVBar()
+	sbar:SetWide( 8 )
+	sbar:SetHideButtons( true )
+
+	// HACK!!!!
+	sbar.OldSetScroll = sbar.SetScroll
+	function sbar:SetScroll( scroll )
+		g_CurrentScroll = scroll
+		self:OldSetScroll( scroll )
+	end
+
+	function sbar:Paint( w, h )
+		surface.SetDrawColor( 100, 100, 100, 100 )
+		surface.DrawRect( 0, 0, w, h )
+	end
+	function sbar.btnGrip:Paint( w, h )
+		surface.SetDrawColor( 0, 0, 0, 128 )
+		surface.DrawRect( 0, 0, w, h )
 	end
 
 	local CategoryMaps = vgui.Create( "DIconLayout", Scroll )
@@ -117,88 +252,239 @@ function PANEL:Init()
 
 	local Settings = vgui.Create( "DListLayout", self )
 	Settings:Dock( RIGHT )
-	Settings:SetWide( ScrW() / 6 )
-	Settings:DockMargin( 0, 15, 15, 10 )
+	Settings:SetWide( math.max( ScrW() / 6, 180 ) )
+	Settings:DockMargin( 0, 5, 5, 5 )
+	Settings:DockPadding( 5, 5, 5, 5 )
 	function Settings:Paint( w, h )
-		draw.RoundedBoxEx( 4, 0, 0, w, h, BackgroundColor, false, true, false, true )
-		draw.RoundedBoxEx( 4, 0, 0, w, h, BackgroundColor2, false, true, false, true )
+		DrawHUDBox( 0, 0, w, h )
 	end
 	self.Settings = Settings
 
+	--------------------------------- SINGLE / MULTIPLAYER ---------------------------------
+
+	local SingleMultiPlayer = vgui.Create( "DButton", Settings )
+	SingleMultiPlayer:SetFont( "SingleMultiPlayer" )
+	SingleMultiPlayer:SetTall( 32 )
+	SingleMultiPlayer:SetZPos( -3 )
+	SingleMultiPlayer:Dock( TOP )
+	SingleMultiPlayer:DockMargin( 0, 0, 0, 5 )
+	SingleMultiPlayer:SetColor( color_white )
+
+	SingleMultiPlayer.SetTextGenerated = function( s, n ) s:SetText( language.GetPhrase( "maxplayers_" .. n ) ) end
+
+	SingleMultiPlayer.SetValue = function( s, n ) s.PlayerCount = tonumber( n ) RunConsoleCommand( "cl_maxplayers", n ) s:DoUpdateText() end
+	SingleMultiPlayer.GetValue = function( s ) return s.PlayerCount or 1 end
+
+	SingleMultiPlayer.DoUpdateText = function( s )
+		s:SetTextGenerated( s:GetValue() )
+		s:DoUpdatePanels( Settings )
+		if ( self.GamemodeSettings ) then
+			s:DoUpdatePanels( self.GamemodeSettings:GetCanvas() )
+
+			// Hack
+			local hasVisibleChildren = false
+			for id, pnl in pairs( self.GamemodeSettings:GetCanvas():GetChildren() ) do
+				if ( pnl:IsVisible() ) then hasVisibleChildren = true break end
+			end
+			self.GamemodeSettingsLabel:SetVisible( hasVisibleChildren )
+		end
+	end
+	SingleMultiPlayer.DoUpdatePanels = function( s, parent )
+		if ( !IsValid( parent ) ) then return end
+		for id, pnl in pairs( parent:GetChildren() ) do
+			if ( pnl.Singleplayer == nil ) then continue end
+
+			pnl:SetVisible( ( s:GetValue() < 2 ) == pnl.Singleplayer || pnl.Singleplayer )
+			if ( !pnl.OldHeight ) then pnl.OldHeight = pnl:GetTall() end
+			pnl:SetHeight( pnl:IsVisible() && pnl.OldHeight || 0 )
+		end
+		parent:InvalidateLayout( true )
+	end
+	SingleMultiPlayer.CloseDropDown = function( s )
+		if ( s.Butts && #s.Butts > 0 ) then
+			for id, p in pairs( s.Butts ) do p:Remove() end
+			s.Butts = {}
+			return true
+		end
+	end
+
+	hook.Add( "VGUIMousePressed", "NewGameMenu_FuyckingHack", function( pnl, mc )
+		if ( !IsValid( SingleMultiPlayer ) || !SingleMultiPlayer.Butts || vgui.GetHoveredPanel() == SingleMultiPlayer ) then return end
+		for id, p in pairs( SingleMultiPlayer.Butts ) do if ( vgui.GetHoveredPanel() == p ) then return end end
+
+		SingleMultiPlayer:CloseDropDown()
+	end )
+
+	SingleMultiPlayer.DoClick = function( s )
+		if ( s:CloseDropDown() ) then return end
+
+		s.Butts = {}
+		local alt = false
+		local x, y = s:LocalToScreen( 0, 0 )
+		for id, v in pairs( { 1, 2, 4, 8, 16, 32, 64 } ) do
+			alt = !alt
+			y = y + s:GetTall()
+			local but = vgui.Create( "DButton", self )
+			but:SetPos( x, y )
+			but:SetSize( s:GetSize() )
+			s.SetTextGenerated( but, v )
+			but.Bottom = (v == 64)
+			but.Value = v
+			but.Alt = alt
+			but:SetFont( "SingleMultiPlayer" )
+			but:SetColor( color_white )
+			but.DoClick = function( buttt ) s:SetValue( buttt.Value ) s:CloseDropDown() end
+			but.Paint = function( buttt, w, h )
+				local clr = Color( 30, 190, 30 )
+				if ( but.Alt ) then clr = Color( 32, 196, 32 ) end
+				if ( but.Hovered ) then clr = Color( 48, 210, 48 ) end
+				if ( but.Depressed ) then clr = Color( 24, 180, 24 ) end
+				surface.SetDrawColor( clr )
+				if ( !buttt.Bottom ) then
+					surface.DrawRect( 0, 0, w, h )
+				else
+					surface.DrawRect( 0, 0, w, h - 1 )
+				end
+
+				surface.SetDrawColor( Color( 34, 170, 34 ) )
+				if ( !buttt.Bottom ) then
+					//surface.DrawLine( 0, 0, 0, h ) -- left
+					//surface.DrawLine( w - 1, 0, w - 1, h ) -- right -- Doesn't show bottom pixel??
+					surface.DrawRect( 0, 0, 1, h )
+					surface.DrawRect( w - 1, 0, 1, h )
+				else
+					surface.DrawLine( 0, 0, 0, h - 1 ) -- left
+					surface.DrawLine( w - 1, 0, w - 1, h - 1 ) -- right
+
+					surface.SetDrawColor( Color( 17, 136, 17 ) )
+					surface.DrawLine( 1, h - 1, w - 1, h - 1 ) -- bottom
+				end
+			end
+			table.insert( s.Butts, but )
+		end
+	end
+	SingleMultiPlayer.Paint = function( s, w, h )
+		local menuOpen = s.Butts && #s.Butts > 0
+
+		local clr = Color( 82, 204, 82 )
+		if ( s.Hovered ) then clr = Color( 86, 210, 86 ) end
+		if ( s.Depressed ) then clr = Color( 82, 204, 82 ) end
+
+		surface.SetDrawColor( clr )
+		surface.DrawRect( 1, 1, w-2, h-2 )
+
+		surface.SetDrawColor( Color( 30, 190, 30 ) )
+		if ( s.Hovered ) then surface.SetDrawColor( Color( 36, 200, 36 ) ) end
+		surface.SetMaterial( matGradientUp )
+		surface.DrawTexturedRect( 1, 1, w-2, h-2 )
+
+		surface.SetDrawColor( Color( 34, 170, 34 ) )
+		surface.DrawLine( 1, 0, w-1, 0 ) -- top
+		if ( menuOpen ) then
+			surface.DrawRect( 0, 1, 1, h ) -- left
+			surface.DrawRect( w - 1, 1, 1, h ) -- right
+
+			surface.SetDrawColor( Color( 30, 190, 30 ) )
+			if ( s.Hovered ) then surface.SetDrawColor( Color( 36, 200, 36 ) ) end
+			surface.DrawRect( 1, h-2, w-2, 2 )
+		else
+			surface.DrawLine( 0, 1, 0, h - 1 ) -- left
+			surface.DrawLine( w - 1, 1, w - 1, h - 1 ) -- right
+
+		end
+
+		surface.SetDrawColor( Color( 17, 136, 17 ) )
+		surface.DrawLine( 1, h - 1, w - 1, h - 1 ) -- bottom
+
+		local clr = Color( 118, 214, 118 )
+		if ( s.Hovered ) then clr = Color( 128, 220, 128 ) end
+		//if ( s.Depressed ) then clr = Color( 118, 214, 118 ) end
+		surface.SetDrawColor( clr )
+		surface.DrawLine( 1, 1, w - 1, 1 )
+
+		local size = 9
+		surface.SetDrawColor( Color( 255, 255, 255 ) )
+		draw.NoTexture()
+		surface.DrawPoly( {
+			{ x = w - ( h / 2 + size / 2 ), y = ( h / 2 - size / 4 ) },
+			{ x = w - ( h / 2 - size / 2 ), y = ( h / 2 - size / 4 ) },
+			{ x = w - ( h / 2 ), y = ( h / 2 + size / 4 ) }
+		} )
+	end
+	self.SingleMultiPlayer = SingleMultiPlayer
+
 	--------------------------------- TOP CONTENT ---------------------------------
 
-	local ServerName = vgui.Create( "DTextEntry", Settings )
-	ServerName:Dock( TOP )
-	ServerName:SetText( GetConVarString( "hostname" ) )
-	ServerName:DockMargin( 5, 5, 5, 0 )
-	ServerName:SetZPos( -1 )
+	local ServerName = self:ServerSettings_AddTextEntry( {
+		name = "hostname",
+		text = "server_name",
+		zOrder = -2,
+		help = "The name of your server that will appear in the server browser"
+	}, Settings )
 	Settings.ServerName = ServerName
 
-	local SvLan = vgui.Create( "DCheckBoxLabel", Settings )
-	SvLan:Dock( TOP )
-	SvLan:DockMargin( 5, 5, 5, 0 )
-	SvLan:SetText( "#lan_server" )
-	SvLan:SetDark( true )
-	SvLan:SetChecked( GetConVarNumber( "sv_lan" ) == 1 )
-	Settings.SvLan = SvLan
+	local Password = self:ServerSettings_AddTextEntry( {
+		name = "sv_password",
+		text = "server_password",
+		zOrder = -1,
+		help = "The password for your server that other people have to enter before they can join your server"
+	}, Settings )
 
-	local p2p_enabled = vgui.Create( "DCheckBoxLabel", Settings )
-	p2p_enabled:Dock( TOP )
-	p2p_enabled:DockMargin( 5, 5, 5, 0 )
-	p2p_enabled:SetText( "#p2p_server" )
-	p2p_enabled:SetDark( true )
-	p2p_enabled:SetChecked( GetConVarNumber( "p2p_enabled" ) == 1 )
-	Settings.p2p_enabled = p2p_enabled
+	local SvLan = self:ServerSettings_AddCheckbox( {
+		text = "lan_server",
+		name = "sv_lan",
+		help = "Only people on your Local Area Network can connect to the server",
+	}, Settings )
 
-	local p2p_friendsonly = vgui.Create( "DCheckBoxLabel", Settings )
-	p2p_friendsonly:Dock( TOP )
-	p2p_friendsonly:DockMargin( 5, 5, 5, 0 )
-	p2p_friendsonly:SetText( "#p2p_server_friendsonly" )
-	p2p_friendsonly:SetDark( true )
-	p2p_friendsonly:SetChecked( GetConVarNumber( "p2p_friendsonly" ) == 1 )
-	Settings.p2p_friendsonly = p2p_friendsonly
+	local p2p_enabled = self:ServerSettings_AddCheckbox( {
+		text = "p2p_server",
+		name = "p2p_enabled",
+		help = "Allow people to connect to your Listen Server using Steam P2P netoworking",
+	}, Settings )
 
-	local PlayerCount = vgui.Create( "DNumSlider", Settings )
-	PlayerCount:Dock( TOP )
-	PlayerCount:DockMargin( 10, 0, 0, 0 )
-	PlayerCount:SetMinMax( 1, 32 )
-	PlayerCount:SetText( "Max Players" )
-	PlayerCount:SetConVar( "cl_maxplayers" )
-	PlayerCount:SetDecimals( 0 )
-	//PlayerCount:SetValue( GetConVarNumber( "maxplayers" ) )
-	PlayerCount:SetDark( true )
-	Settings.PlayerCount = PlayerCount
+	local p2p_friendsonly = self:ServerSettings_AddCheckbox( {
+		text = "p2p_server_friendsonly",
+		name = "p2p_friendsonly",
+		help = "Only allow people on your friends list to join your P2P server",
+	}, Settings )
 
 	--------------------------------- MIDDLE CONTENT - LABEL ---------------------------------
 
-	local GamemodesLabel = Settings:Add( "DLabel" )
-	GamemodesLabel:Dock( TOP )
-	GamemodesLabel:SetText( "GAMEMODE SETTINGS" )
-	GamemodesLabel:SetContentAlignment( 5 )
-	GamemodesLabel:SetDark( true )
+	local GamemodeSettingsLabel = Settings:Add( "DLabel" )
+	GamemodeSettingsLabel:Dock( TOP )
+	GamemodeSettingsLabel:SetText( "Gamemode Settings" )
+	GamemodeSettingsLabel:SetFont( "StartNewGameFont" )
+	GamemodeSettingsLabel:SetContentAlignment( 5 )
+	GamemodeSettingsLabel:DockMargin( 0, 4, 0, 4 )
+	GamemodeSettingsLabel:SetTextColor( HeaderColor )
+	self.GamemodeSettingsLabel = GamemodeSettingsLabel
 
 	--------------------------------- MIDDLE CONTENT ---------------------------------
 
 	local GamemodeSettings = vgui.Create( "DScrollPanel", Settings )
 	GamemodeSettings:Dock( FILL )
-	GamemodeSettings:DockMargin( 0, 0, 0, 5 )
+	GamemodeSettings:DockMargin( -5, 0, -5, 5 )
+	GamemodeSettings:GetCanvas():DockPadding( 5, 0, 5, 0 )
+	GamemodeSettings:GetVBar():SetWide( 0 )
 	self.GamemodeSettings = GamemodeSettings
 	function GamemodeSettings:Paint( w, h )
-		//draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 0, 0, 128 ) )
+		//surface.SetDrawColor( 0, 0, 0, 32 )
+		//surface.DrawRect( 0, 0, w, h )
 	end
+	GamemodeSettings.Think = EnableMouseScroll
+	GamemodeSettings.PaintOver = DrawScrollDarkGradients
 
 	--------------------------------- END CONTENT ---------------------------------
 
-	local StartGame = Settings:Add("DMenuButton")
+	local StartGame = Settings:Add( "DMenuButton" )
 	StartGame:Dock( BOTTOM )
 	StartGame:SetFont( "StartNewGame" )
-	StartGame:SetText( "Start Game" )
+	SetLocalizedString( StartGame, "start_game" )
 	StartGame:SetTall( 48 )
 	StartGame.DoClick = function()
 		self:LoadMap()
 	end
 	StartGame:SetSpecial( true )
-	StartGame:DockMargin( 5, 0, 5, 5 )
 
 	--------------------------------- Update Content ---------------------------------
 
@@ -207,9 +493,11 @@ function PANEL:Init()
 end
 
 function PANEL:Paint( w, h )
-	draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 0, 0, 150 ) )
-	if ( self.CurrentCategory ) then
-		if ( !self.Categories[ self.CurrentCategory ] ) then self:SelectCat( "Sandbox" ) return end
+	surface.SetDrawColor( 0, 0, 0, 150 )
+	surface.DrawRect( 0, 0, w, h )
+
+	if ( self.CurrentCategory && IsValid( self.Categories[ self.CurrentCategory ] ) ) then
+		//if ( !self.Categories[ self.CurrentCategory ] ) then self:SelectCat( "Sandbox" ) return end
 		self.Categories[ self.CurrentCategory ].Depressed = true
 	end
 end
@@ -219,26 +507,89 @@ function PANEL:SelectMap( map )
 end
 
 function PANEL:AddCategoryButton( Categories, cat, name, alt )
-	local button = Categories:Add( "DCategoryButton" )
+	local button = Categories:Add( "MenuCategoryButton" )
 	button:Dock( TOP )
-	button:DockMargin( 5, 5, 5, 0 )
+	button:DockMargin( 0, 1, 0, 0 )
 	button:SetText( name )
 	button.DoClick = function()
+		g_CurrentScroll = nil
 		self:SelectCat( cat )
 	end
 	button:SetContentAlignment( 4 )
 	button:SetTextInset( 5, 0 )
-	button:SetCategory( cat, alt )
+	button:SetCategory( cat )
+	button:SetAlt( alt2 )
 
 	self.Categories[ cat ] = button
+	return button
 end
 
 function PANEL:DoSearch( txt )
-	self.SearchText = txt
-	if ( txt:Trim() == "" ) then self.SearchText = nil end
-	SearchText = self.SearchText
+	g_SearchText = txt
+	if ( g_SearchText:Trim() == "" ) then g_SearchText = nil end
 
-	self:SelectCat( self.CurrentCategory )
+	self:SelectCat( self.CurrentCategory ) -- Refreshes the map list
+end
+
+function PANEL:ServerSettings_AddTextEntry( v, parent )
+
+	local DTextEntry = vgui.Create( "MenuSettingsTextEntry", parent )
+	DTextEntry:Dock( TOP )
+	DTextEntry:SetFont( "DermaRobotoDefault" )
+	DTextEntry:SetTall( 22 )
+	DTextEntry:DockMargin( 0, 0, 0, 1 )
+	if ( v.text ) then DTextEntry:SetText( v.text ) end
+	if ( v.name ) then DTextEntry:SetConVar( v.name ) end
+	if ( v.zOrder ) then DTextEntry:SetZPos( v.zOrder + 1 ) end
+	if ( v.help ) then DTextEntry:SetTooltip( v.help ) end
+	if ( v.singleplayer ) then DTextEntry.Singleplayer = true else DTextEntry.Singleplayer = false end
+	return DTextEntry
+
+end
+
+function PANEL:ServerSettings_AddCheckbox( v, parent )
+
+	local CheckBox = vgui.Create( "MenuSettingsCheckbox", parent )
+	CheckBox:Dock( TOP )
+	CheckBox:SetFont( "DermaRobotoDefault" )
+	CheckBox:SetTall( 22 )
+	CheckBox:DockMargin( 0, 0, 0, 1 )
+	if ( v.name ) then CheckBox:SetConVar( v.name ) end
+	if ( v.text ) then CheckBox:SetText( v.text ) end
+	if ( v.zOrder ) then CheckBox:SetZPos( v.zOrder ) end
+	if ( v.help ) then CheckBox:SetTooltip( v.help ) end
+	if ( v.singleplayer ) then CheckBox.Singleplayer = true else CheckBox.Singleplayer = false end
+
+	return CheckBox
+
+end
+
+function PANEL:ServerSettings_AddSlider( v, parent )
+	local Slider = vgui.Create( "MenuSettingsSlider", parent )
+	Slider:Dock( TOP )
+	if ( v.name ) then Slider:SetConVar( v.name ) end
+	if ( v.text ) then Slider:SetText( v.text ) end
+	Slider:SetFont( "DermaRobotoDefault" )
+	Slider:SetTall( 22 )
+	Slider:DockMargin( 0, 0, 0, 1 )
+	if ( v.zOrder ) then Slider:SetZPos( v.zOrder ) end
+	if ( v.help ) then Slider:SetTooltip( v.help ) end
+	if ( v.singleplayer ) then Slider.Singleplayer = true else Slider.Singleplayer = false end
+
+	return Slider
+end
+
+function PANEL:UpdateLanguage()
+	self.SingleMultiPlayer:SetTextGenerated( self.SingleMultiPlayer:GetValue() )
+
+	local invalid = {}
+	for id, t in pairs( LocalizedShit ) do
+		if ( !IsValid( t.panel ) ) then print("invalid", t.panel, id) table.remove( LocalizedShit, id ) continue end -- Not too sure about the removal of the element inside the loop. Is Lua OK with this?
+		t.panel:SetText( language.GetPhrase( t.text ) )
+	end
+
+	// Update Favourites?
+	// Update whatever
 end
 
 function PANEL:Update()
@@ -248,56 +599,44 @@ function PANEL:Update()
 	local Categories = self.CategoriesPanel
 	Categories:Clear()
 
-	self.Categories = {}
-
-	local searchBar = Categories:Add( "DTextEntry" )
-	searchBar:Dock( TOP )
-	searchBar:DockMargin( 5, 5, 5, 0 )
-	searchBar:SetUpdateOnType( true )
-	searchBar.OnValueChange = function() self:DoSearch( searchBar:GetText() ) end
-	searchBar.Paint = function( s, w, h ) // Hack
-		s:GetSkin():PaintTextEntry( s, w, h )
-
-		if ( !s:GetText() || s:GetText():len() < 1 ) then
-			draw.SimpleText( "Search", s:GetFont(), 5,  h / 2, Vector( 1, 1, 1 ) * 128, nil, 1 )
-		end
-	end
+	//self.Categories = {}
 
 	local pergamemode = Categories:Add( "DLabel" )
 	pergamemode:Dock( TOP )
-	pergamemode:SetText( "GAMEMODES" )
+	pergamemode:SetText( "Gamemodes" )
+	pergamemode:SetFont( "StartNewGameFont" )
 	pergamemode:SetContentAlignment( 5 )
-	pergamemode:SetDark( true )
-	pergamemode:DockMargin( 0, 0, 0, -5 ) -- This actually works
+	pergamemode:SetTextColor( HeaderColor )
+	pergamemode:DockMargin( 0, 0, 0, 3 )
 
-	if ( istable( GetMapList() ) ) then
-		for _, cat in SortedPairsByValue( table.GetKeys( GetMapList() ) ) do
-			self:AddCategoryButton( Categories, cat, cat )
+	local mapList = GetMapList()
+	if ( istable( mapList ) ) then
+		local alt = false
+		for _, cat in SortedPairsByValue( table.GetKeys( mapList ) ) do
+			if ( cat == "Favourites" ) then continue end -- We have custom handling of this category
+			self:AddCategoryButton( Categories, cat, cat, alt ) alt = !alt
 		end
 	end
 
 	local games = Categories:Add( "DLabel" )
 	games:Dock( TOP )
-	games:SetText( "GAMES" )
+	games:SetText( "Games" )
+	games:SetFont( "StartNewGameFont" )
 	games:SetContentAlignment( 5 )
-	games:SetDark( true )
-	games:DockMargin( 0, 0, 0, -5 ) -- This actually works
+	games:SetTextColor( HeaderColor )
+	games:DockMargin( 0, 5, 0, 3 )
 
-	for cat, nicename in SortedPairsByValue( g_MapsFromGamesCats ) do
-		for a, b in SortedPairsByValue( g_MapsFromGames[ cat ] ) do // Hack
-			if ( nicename == "Left 4 Dead 2" || nicename == "Portal 2" || nicename == "CS: Global Offensive" ) then
-				gMapIcons[ b ] = matIncompat // INCOMPATIBLE
+	local alt = false
+	for cat, tab in SortedPairs( GetGameMapList() ) do
+		if ( cat == "Left 4 Dead 2" || cat == "Portal 2" || cat == "CS: Global Offensive" ) then
+			for id, map in SortedPairsByValue( tab ) do
+				gMapIcons[ map ] = matIncompat // INCOMPATIBLE
 			end
 		end
-
-		self:AddCategoryButton( Categories, cat, nicename, true )
+		self:AddCategoryButton( Categories, cat, cat, alt ) alt = !alt
 	end
 
-	//Hack, to make the bottom 5 px appear - This really needs to be fixed ( Bottom Dock Padding )
-	local label = vgui.Create( "DLabel", Categories )
-	label:Dock( TOP )
-	label:SetText( "" )
-	label:SetTall( 5 )
+	//for i = 0, 10 do self:AddCategoryButton( Categories, "Filler " .. i, "Filler " .. i, alt ) alt = !alt end
 
 	---------------------------------- Build server settigns ----------------------------------
 
@@ -315,70 +654,54 @@ function PANEL:Update()
 
 			for k, v in pairs( SettingsFile.settings ) do
 				if ( v.type == "CheckBox" ) then
-					local CheckBox = vgui.Create( "DCheckBoxLabel", GamemodeSettings )
-					CheckBox:Dock( TOP )
-					CheckBox:DockMargin( 5, 5, 5, 0 )
-					CheckBox:SetText( "#" .. v.text )
-					CheckBox:SetDark( true )
-					CheckBox:SetChecked( GetConVarNumber( v.name ) == 1 )
-					CheckBox:SetZPos( zOrder )
-					if ( v.help ) then CheckBox:SetTooltip( v.help ) end
+					v.zOrder = zOrder
+					self:ServerSettings_AddCheckbox( v, GamemodeSettings )
 				elseif ( v.type == "Text" ) then
-					local label = vgui.Create( "DLabel", GamemodeSettings )
-					label:Dock( TOP )
-					label:SetText( language.GetPhrase( v.text ) )
-					label:DockMargin( 5, 0, 0, 0 )
-					label:SetDark( true )
-					label:SetZPos( zOrder )
-					zOrder = zOrder + 1
-
-					local DTextEntry = vgui.Create( "DTextEntry", GamemodeSettings )
-					DTextEntry:Dock( TOP )
-					DTextEntry:SetConVar( v.name )
-					DTextEntry:DockMargin( 5, 0, 5, 5 )
-					DTextEntry:SetZPos( zOrder )
-					if ( v.help ) then DTextEntry:SetTooltip( v.help ) end
+					v.zOrder = zOrder
+					self:ServerSettings_AddTextEntry( v, GamemodeSettings )
+					zOrder = zOrder + 1 // Account for the label
 				elseif ( v.type == "Numeric" ) then
-					local DNumSlider = vgui.Create( "DNumSlider", GamemodeSettings )
-					DNumSlider:Dock( TOP )
-					DNumSlider:SetConVar( v.name )
-					DNumSlider:SetText( language.GetPhrase( v.text ) )
-					DNumSlider:SetDecimals( 0 )
-					DNumSlider:SetMinMax( 0, 200 )
-					DNumSlider:DockMargin( 5, 0, 5, 0 )
-					DNumSlider:SetDark( true )
-					DNumSlider:SetZPos( zOrder )
-					if ( v.help ) then DNumSlider:SetTooltip( v.help ) end
+					v.zOrder = zOrder
+					self:ServerSettings_AddSlider( v, GamemodeSettings )
 				end
 
 				zOrder = zOrder + 1
 			end
-
-			//Hack, to make the bottom 5 px appear - This really needs to be fixed ( Bottom Dock Padding )
-			local label = vgui.Create( "DLabel", GamemodeSettings )
-			label:Dock( TOP )
-			label:SetText( "" )
-			label:SetTall( 1 )
 		end
 	end
 
-	--------------------------------- LOAD LAST MAP ---------------------------------
+	--------------------------------- Update Singleplayer / Multiplayer selector ---------------------------------
 
-	if ( self.CurrentMap && self.CurrentCategory ) then
-		self:SelectCat( self.CurrentCategory )
-		self:SelectMap( self.CurrentMap )
-		return
-	end
+	self.SingleMultiPlayer:SetValue( GetConVarNumber( "cl_maxplayers" ) )
+
+	--------------------------------- LOAD LAST MAP ---------------------------------
 
 	local t = string.Explode( ";", cookie.GetString( "lastmap", "" ) )
 
 	local map = t[ 1 ] or "gm_construct"
 	local cat = t[ 2 ] or "Sandbox"
 
-	for category, maps in pairs( GetMapList() ) do
-		if ( table.HasValue( maps, map ) ) then
-			cat = category
+	if ( self.CurrentMap && self.CurrentCategory ) then // We had some map selected, switch back to it!
+		cat = self.CurrentCategory
+		map = self.CurrentMap
+	end
+
+	// The saved category doesn't exist anymore, or it no longer has maps
+	// Try to see if some other category has that map
+	local maps = GetMapsFromCategory( cat )
+	if ( !maps || #maps < 1 ) then
+		for category, maps in pairs( GetMapList() ) do
+			if ( table.HasValue( maps, map ) ) then
+				cat = category
+			end
 		end
+	end
+
+	// No category has that map, means the map doesn't exist. Fallback to sandbox!
+	local maps = GetMapsFromCategory( cat )
+	if ( !maps || #maps < 1 ) then
+		map = "gm_construct"
+		cat = "Sandbox"
 	end
 
 	self:SelectCat( cat )
@@ -387,9 +710,17 @@ function PANEL:Update()
 end
 
 local subCategories = {
+	[ "c1a0c" ] = "c. Unforeseen Consequences",
+	[ "c2a4d" ] = "k. Questionable Ethics",
+	[ "c2a4e" ] = "k. Questionable Ethics",
+	[ "c2a4f" ] = "k. Questionable Ethics",
+	[ "c2a4g" ] = "k. Questionable Ethics",
+	[ "c4a1" ] = "o. Xen",
+	[ "c4a1z" ] = "z. Other",
+	[ "c4a1y" ] = "z. Other",
+}
+local subCategorieyPatterns = {
 	[ "^gm_" ] = "Sandbox",
-	//[ "^gms_" ] = "Garry's Mod Stranded",
-	//[ "^ttt_" ] = "Trouble in Terrorist Town",
 
 	// CS
 	[ "^de_" ] = "Bomb Defuse",
@@ -453,7 +784,7 @@ local subCategories = {
 	//[ "^c5m" ] = "g. Cold Stream",
 
 	// Portal
-	[ "^testchmb_" ] = "a. Test Chambers",
+	[ "^testchmb_a_(%d+)$" ] = "a. Test Chambers",
 	[ "^testchmb_(.*)_advanced$" ] = "c. Advanced Test Chambers",
 	[ "^escape_" ] = "b. GLaDOS Escape",
 
@@ -473,6 +804,7 @@ local subCategories = {
 	[ "^mp_coop_" ] = "k. Portal 2 COOP",
 
 	// Half-Life: Source
+	[ "^t0a0" ] = "_. Hazard Course",
 	[ "^c0a0" ] = "a. Black Mesa Inbound",
 	[ "^c1a0" ] = "b. Anomalous Materials",
 	[ "^c1a1" ] = "c. Unforeseen Consequences",
@@ -483,16 +815,14 @@ local subCategories = {
 	[ "^c2a2" ] = "h. On A Rail",
 	[ "^c2a3" ] = "i. Apprehension",
 	[ "^c2a4" ] = "j. Residue Processing",
-	[ "^c2a5" ] = "k. Questionable Ethics",
-	[ "^c3a1" ] = "l. Surface Tension",
-	[ "^c3a2" ] = "m. \"Forget About Freeman!\"",
+
+	[ "^c2a5" ] = "l. Surface Tension",
+	[ "^c3a1" ] = "m. \"Forget About Freeman!\"",
 	[ "^c3a2" ] = "n. Lambda Core",
-	[ "^c4a1" ] = "o. Xen",
-	[ "^c4a1z" ] = "p. Gonarch's Lair",
-	[ "^c4a2" ] = "r. Interloper",
+	[ "^c4a2" ] = "p. Gonarch's Lair",
+	[ "^c4a1(.+)$" ] = "r. Interloper",
 	[ "^c4a3" ] = "s. Nihilanth",
 	[ "^c5a1" ] = "t. Endgame",
-	[ "^t0a0" ] = "u. Hazard Course",
 
 	// Half-Life 2
 	[ "^d1_trainstation" ] = "a. Point Insertion",
@@ -576,28 +906,31 @@ function PANEL:CacheIcon( map )
 	return mat
 end
 
-function PANEL:SelectCat( cat )
+local border = 4
+local border_w = 5
+local matHover = Material( "gui/sm_hover.png", "nocull" )
+local boxHover = GWEN.CreateTextureBorder( border, border, 64 - border * 2, 64 - border * 2, border_w, border_w, border_w, border_w, matHover )
 
-	local searchText = self.SearchText
+function PANEL:SelectCat( cat )
 
 	if ( self.CurrentCategory && self.Categories[ self.CurrentCategory ] ) then self.Categories[ self.CurrentCategory ].Depressed = false end
 	self.CurrentCategory = cat
 
 	self.CategoryMaps:Clear()
 
-	local mapsListCategories = g_MapsFromGames
-	if ( istable( GetMapList() ) ) then mapsListCategories = table.Merge( mapsListCategories, table.Copy( GetMapList() ) ) end
-	local maps = mapsListCategories[ cat ]
+	local maps = GetMapsFromCategory( cat )
+	if ( !maps || #maps < 1 ) then return end
 
 	local categories = {}
 	for _, map in SortedPairs( maps ) do
-		if ( searchText && !map:lower():find( searchText:lower() ) ) then continue end
+		local c = subCategories[ map:lower() ] or "Other"
 
-		local c = "Other"
-		for pattern, cate in SortedPairs( subCategories ) do
-			if ( subCategories[ map:lower() ] ) then c = subCategories[ map:lower() ] break end
-			if ( string.find( map:lower(), pattern ) ) then
-				c = cate
+		if ( !subCategories[ map:lower() ] ) then
+			for pattern, cate in SortedPairs( subCategorieyPatterns ) do
+				if ( string.find( map:lower(), pattern ) ) then
+					if ( c != "Other" ) then print( "Multiple categories for 1 map!!!", map, c, cate ) end
+					c = cate
+				end
 			end
 		end
 
@@ -612,25 +945,28 @@ function PANEL:SelectCat( cat )
 
 		local label = self.CategoryMaps:Add( "DLabel" )
 		label.OwnLine = true
+		label:SetTextColor( HeaderColor_mid )
 		label:SetText( catText )
 		label:SetFont( "rb655_MapSubCat" )
 		label:SizeToContents()
 		label:SetBright( true )
 
 		for _, map in SortedPairsByValue( ma ) do
+
 			local button = self.CategoryMaps:Add( "DImageButton" )
 			button:SetText( map )
-			//button.m_Image:SetMaterial( matNoIcon )
 
-			if ( !gMapIcons[ map ] ) then
-				gMapIcons[ map ] = self:CacheIcon( map )
-			end
+			// Get rid of the shitty "clicled on" animation
+			//button.OnMousePressed = function( s, mc ) DButton.OnMousePressed( s, mc ) end
+
+			// Handles above stuff too
+			Menu_InstallDButtonScrollProtection( button, 2, true )
+
+			if ( !gMapIcons[ map ] ) then gMapIcons[ map ] = self:CacheIcon( map ) end
 			button.m_Image:SetMaterial( gMapIcons[ map ] )
 
 			if ( cat == "Counter-Strike" || cat == "240maps" ) then // HACK
-				if ( !gCSMaps[ map ] ) then
-					gCSMaps[ map ] = self:CacheIcon( map )
-				end
+				if ( !gCSMaps[ map ] ) then gCSMaps[ map ] = self:CacheIcon( map ) end
 				button.m_Image:SetMaterial( gCSMaps[ map ] )
 			end
 
@@ -641,16 +977,13 @@ function PANEL:SelectCat( cat )
 			button.PaintOver = function( button, w, h )
 
 				if ( button:GetText() == self.CurrentMap ) then
-					local max = 5
-					for i = 0, max - 1 do
-						surface.SetDrawColor( Color( 255, 255, 255, (128 + math.sin( CurTime() * 2 ) * 80 ) * ( (max-(i + 1)) / max ) ))
-						surface.DrawOutlinedRect( i, i, w - i * 2, h - i * 2 )
-					end
+					boxHover( 0, 0, w, h, color_white )
 				end
 
 				if ( button.Hovered ) then return end
 
-				draw.RoundedBox( 0, 0, h - 20, w, 20, Color( 0, 0, 0, 150 ) )
+				surface.SetDrawColor( Color( 0, 0, 0, 150 ) )
+				surface.DrawRect( 0, h - 20, w, 20 )
 
 				surface.SetFont( "rb655_MapList" )
 
@@ -674,20 +1007,13 @@ function PANEL:SelectCat( cat )
 	end
 
 	// Scroll back to the top of the map list
-	self.CategoryMaps:GetParent():GetParent():GetVBar():SetScroll( 0 )
+	self.CategoryMaps:GetParent():GetParent():GetVBar():SetScroll( g_CurrentScroll or 0 )
 
 end
 
 function PANEL:LoadMap()
 
-	local maxplayers = GetConVarNumber( "cl_maxplayers" ) or 1 //self.Settings.PlayerCount:GetValue() or 1
-	local sv_lan = 0
-	if ( self.Settings.SvLan:GetChecked() ) then sv_lan = 1 end
-
-	local p2p_enabled = 0
-	if ( self.Settings.p2p_enabled:GetChecked() ) then p2p_enabled = 1 end
-	local p2p_friendsonly = 0
-	if ( self.Settings.p2p_friendsonly:GetChecked() ) then p2p_friendsonly = 1 end
+	local maxplayers = GetConVarNumber( "cl_maxplayers" ) or 1
 
 	SaveLastMap( self.CurrentMap:Trim(), self.CurrentCategory )
 
@@ -703,12 +1029,9 @@ function PANEL:LoadMap()
 
 	end
 
-	RunConsoleCommand( "sv_lan", sv_lan )
-	RunConsoleCommand( "p2p_enabled", p2p_enabled )
-	RunConsoleCommand( "p2p_friendsonly", p2p_friendsonly )
 	RunConsoleCommand( "maxplayers", maxplayers )
 	RunConsoleCommand( "map", self.CurrentMap:Trim() )
-	RunConsoleCommand( "hostname", self.Settings.ServerName:GetText() )
+	//RunConsoleCommand( "hostname", self.Settings.ServerName.TextEntry:GetText() )
 
 	pnlMainMenu:Back()
 

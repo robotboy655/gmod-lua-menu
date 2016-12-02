@@ -88,14 +88,23 @@ function PANEL:SetAddon( data )
 	end )
 end
 
+local missingMat = Material( "../html/img/addonpreview.png", "nocull smooth" )
+local lastBuild = 0
+local imageCache = {}
 function PANEL:Paint( w, h )
 
 	if ( IsValid( self.DermaCheckbox ) ) then
 		self.DermaCheckbox:SetVisible( self.Hovered || self.DermaCheckbox.Hovered || self:GetSelected() )
 	end
 
-	if ( !self.Image && self.AdditionalData && file.Exists( "cache/workshop/" .. self.AdditionalData.previewid .. ".cache", "GAME" ) ) then
+	if ( self.AdditionalData && imageCache[ self.AdditionalData.previewid ] ) then
+		self.Image = imageCache[ self.AdditionalData.previewid ]
+	end
+
+	if ( !self.Image && self.AdditionalData && file.Exists( "cache/workshop/" .. self.AdditionalData.previewid .. ".cache", "GAME" ) && CurTime() - lastBuild > 0.1 ) then
 		self.Image = AddonMaterial( "cache/workshop/" .. self.AdditionalData.previewid .. ".cache" )
+		imageCache[ self.AdditionalData.previewid ] = self.Image
+		lastBuild = CurTime()
 	end
 
 	if ( self:GetSelected() ) then
@@ -106,15 +115,14 @@ function PANEL:Paint( w, h )
 		draw.RoundedBox( 4, 0, 0, w, h, Color( 0, 0, 0, 255 ) )
 	end
 
-	local imageSize = self:GetTall() - 10
 	if ( self.Image ) then
-		surface.SetDrawColor( color_white )
 		surface.SetMaterial( self.Image )
-		surface.DrawTexturedRect( 5, 5, imageSize, imageSize )
 	else
-		surface.SetMaterial( Material( "../html/img/addonpreview.png", "nocull smooth" ) )
-		surface.DrawTexturedRect( 5, 5, imageSize, imageSize )
+		surface.SetMaterial( missingMat )
 	end
+	local imageSize = self:GetTall() - 10
+	surface.SetDrawColor( color_white )
+	surface.DrawTexturedRect( 5, 5, imageSize, imageSize )
 
 	if ( gDataTable[ self.Addon.wsid ] && gDataTable[ self.Addon.wsid ].VoteData ) then
 		local ratio = gDataTable[ self.Addon.wsid ].VoteData.score
