@@ -177,6 +177,13 @@ local function RefreshMaps( skip )
 		if ( !tab.mounted ) then continue end
 
 		local maps = file.Find( "maps/*.bsp", tab.folder )
+		if ( tab.depot == 4000 ) then
+			local maps2 = file.Find( "maps/*.bsp", "thirdparty" )
+			for id, map in pairs( maps2 ) do table.insert( maps, map ) end
+
+			local maps3 = file.Find( "maps/*.bsp", "DOWNLOAD" )
+			for id, map in pairs( maps3 ) do table.insert( maps, map ) end
+		end
 
 		for k, v in ipairs( maps ) do
 			local name = string.lower( string.gsub( v, "%.bsp$", "" ) )

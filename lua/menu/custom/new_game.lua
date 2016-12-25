@@ -222,7 +222,7 @@ function PANEL:Init()
 
 	local sbar = Scroll:GetVBar()
 	sbar:SetWide( 8 )
-	sbar:SetHideButtons( true )
+	if ( sbar.SetHideButtons ) then sbar:SetHideButtons( true ) end
 
 	// HACK!!!!
 	sbar.OldSetScroll = sbar.SetScroll
