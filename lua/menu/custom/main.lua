@@ -1,6 +1,9 @@
 
 -- Developer stuff
-concommand.Add( "lua", function( ply, cmd, args, str ) RunString( str ) end )
+concommand.Add( "lua", function( ply, cmd, args, str )
+	if ( IsInGame() ) then return end
+	RunString( str )
+end )
 
 local PANEL = {}
 

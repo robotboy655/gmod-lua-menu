@@ -1,9 +1,4 @@
 
-/*
-lua_run for i=0, 64 do for j=0,70 do local a = ents.Create("prop_physics") a:SetPos(Vector(i*70, j*70, 0)) a:SetModel("models/hunter/plates/plate1x1.mdl") a:Spawn() a:PhysicsDestroy() end end
-lua_run Awd = 0 for i=0, 24 do for j=0,24 do local a = ents.Create("prop_physics") a:SetPos(Vector(-1500 + i*128, j*128-1000, -12735)) a:SetModel("models/hunter/plates/plate1x1.mdl") a:Spawn() a:PhysicsDestroy() Awd = (Awd or 0)+1 end end print(Awd)
-*/
-
 ScreenScale = function( size ) return size * ( ScrW() / 640.0 ) end
 
 include( 'getmaps.lua' )

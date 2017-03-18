@@ -20,6 +20,8 @@ function IsMapFavourite( map )
 
 end
 
+local RefreshMaps
+
 function ToggleFavourite( map )
 
 	LoadFavourites()
@@ -163,7 +165,7 @@ local MapList = {}
 local GameMapList = {}
 
 // TODO: convar for hiding bad maps
-local function RefreshMaps( skip )
+function RefreshMaps( skip )
 
 	if ( !skip ) then UpdateMaps() end
 
