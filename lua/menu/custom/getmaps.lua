@@ -3,36 +3,36 @@
 -- Favourites
 --
 
-local MapFavourites
+local MapFavorites
 
-local function LoadFavourites()
+local function LoadFavorites()
 
 	local cookiestr = cookie.GetString( "favmaps" )
-	MapFavourites = MapFavourites || ( cookiestr && string.Explode( ";", cookiestr ) || {} )
+	MapFavorites = MapFavorites || ( cookiestr && string.Explode( ";", cookiestr ) || {} )
 
 end
 
-function IsMapFavourite( map )
+function IsMapFavorite( map )
 
-	LoadFavourites()
+	LoadFavorites()
 
-	return table.HasValue( MapFavourites, map )
+	return table.HasValue( MapFavorites, map )
 
 end
 
 local RefreshMaps
 
-function ToggleFavourite( map )
+function ToggleFavorite( map )
 
-	LoadFavourites()
+	LoadFavorites()
 
-	if ( table.HasValue( MapFavourites, map ) ) then -- is favourite, remove it
-		table.remove( MapFavourites, table.KeysFromValue( MapFavourites, map )[1] )
-	else -- not favourite, add it
-		table.insert( MapFavourites, map )
+	if ( table.HasValue( MapFavorites, map ) ) then -- is favorite, remove it
+		table.remove( MapFavorites, table.KeysFromValue( MapFavorites, map )[1] )
+	else -- not favorite, add it
+		table.insert( MapFavorites, map )
 	end
 
-	cookie.Set( "favmaps", table.concat( MapFavourites, ";" ) )
+	cookie.Set( "favmaps", table.concat( MapFavorites, ";" ) )
 
 	RefreshMaps( true )
 
