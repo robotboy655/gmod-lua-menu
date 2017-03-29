@@ -20,14 +20,12 @@ function IsMapFavourite( map )
 
 end
 
-local RefreshMaps
-
 function ToggleFavourite( map )
 
 	LoadFavourites()
 
 	if ( table.HasValue( MapFavourites, map ) ) then -- is favourite, remove it
-		table.remove( MapFavourites, table.KeysFromValue( MapFavourites, map )[1] )
+		table.remove( MapFavourites, table.KeysFromValue( MapFavourites, map )[ 1 ] )
 	else -- not favourite, add it
 		table.insert( MapFavourites, map )
 	end
@@ -41,7 +39,7 @@ function ToggleFavourite( map )
 end
 
 --
--- Categories
+-- Map Gamemodes
 --
 
 local MapPatterns = {}
@@ -102,7 +100,7 @@ MapNames[ "halls3" ] = "Deathmatch"
 
 local MapGamemodes = {}
 
-local function UpdateMaps()
+local function UpdateGamemodeMaps()
 
 	local GamemodeList = engine.GetGamemodes()
 
@@ -124,31 +122,280 @@ local function UpdateMaps()
 
 end
 
+--
+-- Sub Categories ( For single player games )
+--
+
+local MapSubCategories = {
+	[ "c1a0c" ] = "c. Unforeseen Consequences",
+	[ "c2a4d" ] = "k. Questionable Ethics",
+	[ "c2a4e" ] = "k. Questionable Ethics",
+	[ "c2a4f" ] = "k. Questionable Ethics",
+	[ "c2a4g" ] = "k. Questionable Ethics",
+	[ "c4a1" ] = "o. Xen",
+	[ "c4a1z" ] = "z. Other",
+	[ "c4a1y" ] = "z. Other",
+}
+
+local MapPatternSubCategories = {
+	[ "^gm_" ] = "Sandbox",
+
+	// CS
+	[ "^de_" ] = "Bomb Defuse",
+	[ "^cs_" ] = "Hostage Rescue",
+	[ "^ar_" ] = "Arms Race",
+	[ "^gd_" ] = "Guardian",
+
+	// Random - TODO: These should be replaced by the Gamemodes stuff! 
+	[ "^dm_" ] = "Deathmatch",
+	[ "^mg_" ] = "Minigames",
+	[ "^dr_" ] = "Deathrun",
+	[ "^deathrun_" ] = "Deathrun",
+	[ "^surf_" ] = "Surf",
+	[ "^bhop_" ] = "Bunny Hop",
+	[ "^aim_" ] = "Aim Arena",
+	[ "^awp_" ] = "AWP Arena",
+	[ "^kz_" ] = "Kreedz",
+	[ "^zm_" ] = "Zombie Master",
+	[ "^ze_" ] = "Zombie Escape",
+	[ "^zs_" ] = "Zombie Survival",
+	[ "^fy_" ] = "Fight Yard",
+	[ "^hg_" ] = "Hunger Games",
+	[ "^hns_" ] = "Hide and Seek",
+	[ "^ba_" ] = "Jail Break",
+	[ "jb_" ] = "Jail Break",
+	[ "^pf_" ] = "Parkour Fortress",
+	[ "^dod_" ] = "Day Of Defeat: Source",
+
+	// TF2
+	[ "^arena_" ] = "Arena",
+	[ "^koth_" ] = "King Of The Hill",
+	[ "^sd_" ] = "Special Delivery",
+	[ "^ctf_" ] = "Capture The Flag",
+	[ "^mvm_" ] = "Mann Versus Machine",
+	[ "^pl_" ] = "Payload",
+	[ "^plr_" ] = "Payload Race",
+	[ "^rd_" ] = "Robot Destruction",
+	[ "^pd_" ] = "Player Destruction",
+	[ "^tr_" ] = "Training",
+	[ "^cp_" ] = "Control Point",
+	[ "^trade_" ] = "Trade",
+	[ "^tc_" ] = "Territorial Control",
+	[ "^pass_" ] = "PASS Time",
+
+	// Left 4 Dead 1
+	[ "^l4d_hospital0" ] = "a. No Mercy",
+	[ "^l4d_garage0" ] = "b. Crash Course",
+	[ "^l4d_smalltown0" ] = "c. Death Toll",
+	[ "^l4d_airport0" ] = "d. Dead Air",
+	[ "^l4d_farm0" ] = "b. Blood Harvest",
+	[ "^l4d_vs_" ] = "f. Versus",
+	[ "l4d_sv_lighthouse" ] = "f. The Last Stand",
+
+	// Left 4 Dead 2
+	[ "^c1m" ] = "a. Dead Center",
+	//[ "^c2m" ] = "b. The Passing",
+	[ "^c2m" ] = "c. Dark Carnival",
+	[ "^c3m" ] = "d. Swamp Fever",
+	[ "^c4m" ] = "e. Hard Rain",
+	[ "^c5m" ] = "f. The Parish",
+	//[ "^c5m" ] = "g. Cold Stream",
+
+	// Portal
+	[ "^testchmb_a_(%d+)$" ] = "a. Test Chambers",
+	[ "^testchmb_(.*)_advanced$" ] = "c. Advanced Test Chambers",
+	[ "^escape_" ] = "b. GLaDOS Escape",
+
+	// Portal 2
+	[ "^sp_a1_intro" ] = "a. The Courtesy Call",
+	[ "sp_a1_wakeup" ] = "a. The Courtesy Call",
+	[ "sp_a2_intro" ] = "a. The Courtesy Call",
+
+	[ "sp_a2_laser_intro" ] = "b. The Cold Boot",
+	[ "sp_a2_laser_stairs" ] = "b. The Cold Boot",
+	[ "sp_a2_dual_lasers" ] = "b. The Cold Boot",
+	[ "sp_a2_laser_over_goo" ] = "b. The Cold Boot",
+	[ "sp_a2_catapult_intro" ] = "b. The Cold Boot",
+	[ "sp_a2_trust_fling" ] = "b. The Cold Boot",
+	[ "sp_a2_pit_flings" ] = "b. The Cold Boot",
+	[ "sp_a2_fizzler_intro" ] = "b. The Cold Boot",
+
+	[ "sp_a2_sphere_peek" ] = "c. The Return",
+	[ "sp_a2_ricochet" ] = "c. The Return",
+	[ "sp_a2_bridge_intro" ] = "c. The Return",
+	[ "sp_a2_bridge_the_gap" ] = "c. The Return",
+	[ "sp_a2_turret_intro" ] = "c. The Return",
+	[ "sp_a2_laser_relays" ] = "c. The Return",
+	[ "sp_a2_turret_blocker" ] = "c. The Return",
+	[ "sp_a2_laser_vs_turret" ] = "c. The Return",
+	[ "sp_a2_pull_the_rug" ] = "c. The Return",
+
+	[ "sp_a2_column_blocker" ] = "d. The Surprise",
+	[ "sp_a2_laser_chaining" ] = "d. The Surprise",
+	[ "sp_a2_triple_laser" ] = "d. The Surprise",
+	[ "sp_a2_bts1" ] = "d. The Surprise",
+	[ "sp_a2_bts2" ] = "d. The Surprise",
+
+	[ "sp_a2_bts3" ] = "e. The Escape",
+	[ "sp_a2_bts4" ] = "e. The Escape",
+	[ "sp_a2_bts5" ] = "e. The Escape",
+	[ "sp_a2_bts6" ] = "e. The Escape",
+	[ "sp_a2_core" ] = "e. The Escape",
+
+	[ "^sp_a3_0" ] = "f. The Fall",
+	[ "sp_a3_jump_intro" ] = "f. The Fall",
+	[ "sp_a3_bomb_flings" ] = "f. The Fall",
+	[ "sp_a3_crazy_box" ] = "f. The Fall",
+	[ "sp_a3_transition01" ] = "f. The Fall",
+
+	[ "sp_a3_speed_ramp" ] = "g. The Reunion",
+	[ "sp_a3_speed_flings" ] = "g. The Reunion",
+	[ "sp_a3_portal_intro" ] = "g. The Reunion",
+	[ "sp_a3_end" ] = "g. The Reunion",
+
+	[ "sp_a4_intro" ] = "h. The Itch",
+	[ "sp_a4_tb_intro" ] = "h. The Itch",
+	[ "sp_a4_tb_trust_drop" ] = "h. The Itch",
+	[ "sp_a4_tb_wall_button" ] = "h. The Itch",
+	[ "sp_a4_tb_polarity" ] = "h. The Itch",
+	[ "sp_a4_tb_catch" ] = "h. The Itch",
+	[ "sp_a4_stop_the_box" ] = "h. The Itch",
+	[ "sp_a4_laser_catapult" ] = "h. The Itch",
+	[ "sp_a4_laser_platform" ] = "h. The Itch",
+	[ "sp_a4_speed_tb_catch" ] = "h. The Itch",
+	[ "sp_a4_jump_polarity" ] = "h. The Itch",
+
+	[ "^sp_a4_finale" ] = "i. The Part Where...",
+	[ "sp_a5_credits" ] = "i. The Part Where...",
+
+	[ "e1912" ] = "j. Promotional",
+
+	[ "mp_coop_start" ] = "k. Portal 2 CO-OP Calibration",
+
+	[ "^mp_coop_lobby_" ] = "k. Portal 2 CO-OP Hubs",
+	[ "^mp_coop_" ] = "k. Portal 2 CO-OP",
+
+	// Half-Life: Source
+	[ "^t0a0" ] = "_. Hazard Course",
+	[ "^c0a0" ] = "a. Black Mesa Inbound",
+	[ "^c1a0" ] = "b. Anomalous Materials",
+	[ "^c1a1" ] = "c. Unforeseen Consequences",
+	[ "^c1a2" ] = "d. Office Complex",
+	[ "^c1a3" ] = [[e. "We've Got Hostiles"]],
+	[ "^c1a4" ] = "f. Blast Pit",
+	[ "^c2a1" ] = "g. Power Up",
+	[ "^c2a2" ] = "h. On A Rail",
+	[ "^c2a3" ] = "i. Apprehension",
+	[ "^c2a4" ] = "j. Residue Processing",
+
+	[ "^c2a5" ] = "l. Surface Tension",
+	[ "^c3a1" ] = [[m. "Forget About Freeman!"]],
+	[ "^c3a2" ] = "n. Lambda Core",
+	[ "^c4a2" ] = "p. Gonarch's Lair",
+	[ "^c4a1(.+)$" ] = "r. Interloper",
+	[ "^c4a3" ] = "s. Nihilanth",
+	[ "^c5a1" ] = "t. Endgame",
+
+	// Half-Life 2
+	[ "^d1_trainstation" ] = "a. Point Insertion",
+
+	[ "d1_trainstation_05" ] = [[b. "A Red Letter Day"]],
+	[ "d1_trainstation_06" ] = [[b. "A Red Letter Day"]],
+
+	[ "^d1_canals" ] = "c. Route Kanal",
+
+	[ "d1_canals_06" ] = "d. Water Hazard",
+	[ "d1_canals_07" ] = "d. Water Hazard",
+	[ "d1_canals_08" ] = "d. Water Hazard",
+	[ "d1_canals_09" ] = "d. Water Hazard",
+	[ "d1_canals_1" ] = "d. Water Hazard",
+
+	[ "^d1_eli" ] = "e. Black Mesa East",
+	[ "^d1_town" ] = [[f. "We Don't Go To Ravenholm..."]],
+	[ "^d2_coast_" ] = 'g. Highway 17',
+
+	[ "d2_coast_09" ] = 'h. Sandtraps',
+	[ "^d2_coast_1" ] = 'h. Sandtraps',
+	[ "d2_prison_01" ] = 'h. Sandtraps',
+
+	[ "^d2_prison_0" ] = 'i. Nova Prospekt',
+
+	[ "d2_prison_06" ] = 'j. Entaglement',
+	[ "d2_prison_07" ] = 'j. Entaglement',
+	[ "d2_prison_08" ] = 'j. Entaglement',
+	[ "d3_c17_01" ] = 'j. Entaglement',
+
+	[ "d3_c17_02" ] = 'k. Anticitizen One',
+	[ "^d3_c17_0" ] = 'k. Anticitizen One',
+
+	[ "d3_c17_09" ] = 'l. "Follow Freeman!"',
+	[ "^d3_c17_1" ] = 'l. "Follow Freeman!"',
+
+	[ "^d3_citadel" ] = 'm. Our Benefactors',
+	[ "^d3_breen" ] = 'n. Dark Energy',
+
+	[ "^background" ] = 'Backgrounds',
+	[ "^ep1_background" ] = 'Backgrounds',
+	[ "^ep2_background" ] = 'Backgrounds',
+
+	// Half-Life 2: Episode 1
+	[ "^ep1_citadel_0" ] = "a. Undue Alarm",
+	[ "ep1_citadel_03" ] = "b. Direct Intervention",
+	[ "ep1_citadel_04" ] = "b. Direct Intervention",
+	[ "^ep1_c17_00" ] = "c. Lowlife",
+	[ "^ep1_c17_0" ] = "d. Urban Flight",
+	[ "ep1_c17_05" ] = "e. Exit 17",
+	[ "ep1_c17_06" ] = "e. Exit 17",
+
+	// Half-Life 2: Episode 2
+	[ "^ep2_outland_01" ] = "a. To the White Forest",
+
+	[ "ep2_outland_02" ] = "b. This Vortal Coil",
+	[ "ep2_outland_03" ] = "b. This Vortal Coil",
+	[ "ep2_outland_04" ] = "b. This Vortal Coil",
+
+	[ "ep2_outland_05" ] = "c. Freeman Pontifex",
+	[ "ep2_outland_06" ] = "c. Freeman Pontifex",
+
+	[ "ep2_outland_06a" ] = "d. Riding Shotgun",
+
+	[ "ep2_outland_07" ] = "d. Riding Shotgun",
+	[ "ep2_outland_08" ] = "d. Riding Shotgun",
+
+	[ "ep2_outland_09" ] = "e. Under the Radar",
+	[ "^ep2_outland_10" ] = "e. Under the Radar",
+	[ "^ep2_outland_11" ] = "f. Our Mutual Fiend",
+	[ "ep2_outland_12" ] = "f. Our Mutual Fiend",
+
+	[ "ep2_outland_12a" ] = "g. T-Minus One",
+}
+
+--
+-- Hidden maps
+--
+
 local IgnorePatterns = {
 	"^background",
 	"^devtest",
 	"^ep1_background",
 	"^ep2_background",
 	"^styleguide",
+	"^sdk_",
+	"^test_",
+	"^vst_",
 }
 
 local IgnoreMaps = {
-	-- Prefixes
-	sdk_ = true,
-	test_ = true,
-	vst_ = true,
-
-	-- Maps
 	c4a1y = true,
 	credits = true,
 	d2_coast_02 = true,
 	d3_c17_02_camera = true,
 	ep1_citadel_00_demo = true,
 	intro = true,
-	test = true
+	test = true,
 }
 
--- Hide single player games, their maps have their own category
+-- Hide single player games from gamemode map list, their maps have their own game category
 local IgnoreGames = {
 	[ 220 ] = true, -- HL2
 	[ 280 ] = true, -- HL:S
@@ -161,13 +408,50 @@ local IgnoreGames = {
 	[ 620 ] = true, -- P2
 }
 
+-- Maps from these games cannot be loaded in Garry's Mod
+local IncompatibleGames = {
+	[ 550 ] = true, -- L4D2
+	[ 620 ] = true, -- P2
+	[ 730 ] = true, -- CSGO
+}
+
+--
+-- Map lists
+--
+
 local MapList = {}
 local GameMapList = {}
 
-// TODO: convar for hiding bad maps
-function RefreshMaps( skip )
+-- TODO: Sub Categories should be moved into this file!
+-- TODO: ConVar for hiding bad maps
 
-	if ( !skip ) then UpdateMaps() end
+local function IsUselessMap( map_name )
+	local Ignore = IgnoreMaps[ map_name ]
+	if ( Ignore ) then return true end
+
+	for _, ignore in ipairs( IgnorePatterns ) do
+		if ( string.find( map_name, ignore ) ) then
+			return true
+		end
+	end
+
+	return false
+end
+
+local function AddMapInfo( map_info, cat, cat_name, cat_table )
+	if ( !cat_table[ cat ] ) then cat_table[ cat ] = { name = cat_name, maps = {} } end
+
+	-- I hate this, I hate that CS:GO and CS:S have same map names!
+	for id, t in pairs( cat_table[ cat ].maps ) do
+		if ( t.name == map_info.name ) then return end
+	end
+
+	table.insert( cat_table[ cat ].maps, map_info ) -- TODO: Perhaps make the key the map name?
+end
+
+local function RefreshMaps( skip )
+
+	if ( !skip ) then UpdateGamemodeMaps() end
 
 	MapList = {}
 	GameMapList = {}
@@ -175,66 +459,51 @@ function RefreshMaps( skip )
 	local games = engine.GetGames()
 	table.insert( games, { title = "Garry's Mod", depot = 4000, folder = "MOD", mounted = true } )
 
-	for id, tab in SortedPairsByMemberValue( games, "title" ) do
+	for id, tab in pairs( games ) do
 		if ( !tab.mounted ) then continue end
 
 		local maps = file.Find( "maps/*.bsp", tab.folder )
-		if ( tab.depot == 4000 ) then
-			local maps2 = file.Find( "maps/*.bsp", "thirdparty" )
-			for id, map in pairs( maps2 ) do table.insert( maps, map ) end
-
-			local maps3 = file.Find( "maps/*.bsp", "DOWNLOAD" )
-			for id, map in pairs( maps3 ) do table.insert( maps, map ) end
-		end
 
 		for k, v in ipairs( maps ) do
-			local name = string.lower( string.gsub( v, "%.bsp$", "" ) )
-			local prefix = string.match( name, "^(.-_)" )
-			local Ignore = IgnoreMaps[ name ] or IgnoreMaps[ prefix ]
-
-			-- Don't loop if it's already ignored
-			if ( Ignore ) then continue end
-
-			for _, ignore in ipairs( IgnorePatterns ) do
-				if ( string.find( name, ignore ) ) then
-					Ignore = true
-					break
-				end
-			end
+			local map_name = string.gsub( v, "%.bsp$", "" ):lower()
+			local prefix = string.match( map_name, "^(.-_)" )
 
 			-- Don't add useless maps
-			if ( Ignore ) then continue end
+			if ( IsUselessMap( map_name ) ) then continue end
 
-			if ( !GameMapList[ tab.title ] ) then GameMapList[ tab.title ] = {} end
-			table.insert( GameMapList[ tab.title ], name )
+			-- Map info
+			local map_info = {
+				name = map_name,
+				incompatible = IncompatibleGames[ tab.depot ], -- Ideally this should be replaced with BSP version numbers
+				--useless = IsUselessMap( map_name ) -- Maybe it should be done like this instead?
+			}
 
+			-- Add map to the game list
+			AddMapInfo( map_info, tab.depot, tab.title, GameMapList )
+
+			-- Ignore maps from certain games
 			if ( IgnoreGames[ tab.depot ] ) then continue end
-			//print(tab.depot, tab.title )
 
-			-- Check if the map has a simple name or prefix
-			local Category = MapNames[ name ] or MapNames[ prefix ]
-
-			-- Check if the map has an embedded prefix, or is TTT/Sandbox
+			-- Give the map a category
+			local Category = MapNames[ map_name ] or MapNames[ prefix ]
 			if ( !Category ) then
 				local patterns = table.Merge( table.Copy( MapGamemodes ), MapPatterns )
 				for pattern, category in pairs( patterns ) do
-					if ( string.find( name, pattern ) ) then
+					if ( string.find( map_name, pattern ) ) then
 						Category = category
 					end
 				end
 			end
 
-			-- Throw all uncategorised maps into Other
+			-- Throw all uncategorised maps into "Other"
 			Category = Category or "Other"
 
-			if ( IsMapFavourite( name ) ) then
-				if ( !MapList[ "Favourites" ] ) then MapList[ "Favourites" ] = {} end
-				table.insert( MapList[ "Favourites" ], name )
+			-- Favourite maps
+			if ( IsMapFavourite( map_name ) ) then
+				AddMapInfo( map_info, "Favourites", "Favourites", MapList )
 			end
 
-			if ( !MapList[ Category ] ) then MapList[ Category ] = {} end
-			table.insert( MapList[ Category ], name )
-
+			AddMapInfo( map_info, Category, Category, MapList )
 		end
 	end
 
@@ -243,12 +512,63 @@ end
 hook.Add( "MenuStart", "FindMaps", RefreshMaps )
 hook.Add( "GameContentChanged", "RefreshMaps", RefreshMaps )
 
-function GetMapList()
-	return MapList
+function GetMapCategories( catType )
+	local output = {}
+
+	-- This could be done better, but I will leave it like this for now
+	if ( catType == "game" ) then
+		for cat, tab in pairs( GameMapList ) do
+			if ( !tab || !tab.maps || #tab.maps < 1 ) then continue end
+			output[ cat ] = tab.name
+		end
+	else
+		for cat, tab in pairs( MapList ) do
+			if ( !tab || !tab.maps || #tab.maps < 1 ) then continue end
+			output[ cat ] = tab.name
+		end
+	end
+
+	return output
 end
 
-function GetGameMapList()
-	return GameMapList
+local function map_cat_helper( map, search_t )
+	for cat, tab in pairs( search_t ) do
+		if ( !tab || !tab.maps || #tab.maps < 1 ) then continue end
+
+		for _, map_t in pairs( tab.maps ) do
+			if ( map_t.name == map:lower() ) then
+				return cat
+			end
+		end
+	end
+end
+
+function GetMapCategory( map )
+	local r = map_cat_helper( map, MapList )
+	if ( !r ) then r = map_cat_helper( map, GameMapList ) end
+	return r
+end
+
+function GetMapsFromCategory( cat )
+	if ( !DoesCategoryExist( cat ) ) then return {} end
+
+	local maps = MapList[ cat ] && MapList[ cat ].maps or {}
+	if ( #maps < 1 ) then maps = GameMapList[ tonumber( cat ) ] && GameMapList[ tonumber( cat ) ].maps or {} end
+	return maps
+end
+
+function DoesCategoryExist( cat )
+	if ( !MapList[ cat ] && !GameMapList[ tonumber( cat ) ] ) then return false end
+	return true
+end
+
+function DoesMapExist( map )
+	return file.Exists( "maps/" .. map .. ".bsp", "GAME" )
+end
+
+-- TODO: This needs more work!
+function GetMapSubCategories()
+	return MapSubCategories, MapPatternSubCategories
 end
 
 --
@@ -272,10 +592,14 @@ function LoadLastMap()
 	local map = t[ 1 ] or "gm_flatgrass"
 	local cat = t[ 2 ] or "Sandbox"
 
-	cat = string.gsub( cat, "'", "\\'" )
+	-- Game categories are stored as numbers!
+	cat = tonumber( cat ) or cat
 
-	if ( !file.Exists( "maps/" .. map .. ".bsp", "GAME" ) ) then return end
+	if ( !file.Exists( "maps/" .. map .. ".bsp", "GAME" ) ) then
+		map = "gm_flatgrass"
+		cat = "Sandbox"
+	end
 
-	pnlMainMenu:Call( "SetLastMap('" .. map .. "','" .. cat .. "')" )
+	return map, cat
 
 end
