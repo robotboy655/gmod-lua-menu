@@ -242,19 +242,16 @@ local Grouping = {
 				if ( !gDataTable[ addon.wsid ] ) then
 					table.insert( t.noinfo.addons, addon )
 				else
-					local Ptags = { "effects", "model", "gamemode", "npc", "tool", "vehicle", "weapon" }
+					local Ptags = { servercontent = "Server Content", effects = "Effects", model = "Model", gamemode = "Gamemode", npc = "NPC", tool = "Tool", vehicle = "Vehicle", weapon = "Weapon", map = "Map" }
 					local tags = string.Explode( ",", gDataTable[ addon.wsid ].tags )
 					for _, tag in pairs( tags ) do
-						if ( tag == "Addon" || !table.HasValue( Ptags, tag:lower() ) ) then continue end -- Don't duplicate ALL addons
-						if ( !t[ tag ] ) then
-							t[ tag ] = {
-								title = tag,
-								addons = {}
-							}
-						end
+						if ( tag == "Addon" ) then continue end -- Don't duplicate ALL addons
+						if ( !Ptags[ tag:lower() ] ) then tag = "Other" end
+						tag = Ptags[ tag:lower() ] or tag
+						if ( !t[ tag ] ) then t[ tag ] = { title = tag, addons = {} } end
 
 						table.insert( t[ tag ].addons, addon )
-
+						break
 					end
 				end
 			end
