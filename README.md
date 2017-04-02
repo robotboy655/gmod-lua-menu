@@ -28,7 +28,7 @@ New/Fixed Features
 Installing
 =============
 
-To install this, download the ZIP and extract contents of ```gmod-lua-menu-master``` folder ( folders ```lua``` and ```materials``` ) to your ```SteamApps/common/GarrysMod/garrysmod/``` folder.
+**Make sure you are on the [dev branch](http://wiki.garrysmod.com/page/Dev_Branch)! If not, you will encounter errors!** To install this, download the ZIP and extract contents of ```gmod-lua-menu-master``` folder ( folders ```lua``` and ```materials``` ) to your ```SteamApps/common/GarrysMod/garrysmod/``` folder.
 
 Uninstalling
 =============
