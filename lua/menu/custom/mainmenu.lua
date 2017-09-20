@@ -4,6 +4,7 @@ ScreenScale = function( size ) return size * ( ScrW() / 640.0 ) end
 include( 'getmaps.lua' )
 include( 'addons.lua' )
 include( 'new_game.lua' )
+include( 'saves.lua' )
 include( 'achievements.lua' )
 include( 'main.lua' )
 include( '_errors.lua' )
@@ -158,7 +159,7 @@ end
 
 function PANEL:Paint()
 
-	if ( !IsValid( self.NewGameFrame ) && !IsValid( self.AddonsFrame )&& !IsValid( self.AchievementsFrame ) ) then
+	if ( !IsValid( self.NewGameFrame ) && !IsValid( self.AddonsFrame ) && !IsValid( self.AchievementsFrame ) && !IsValid( self.SavesFrame ) ) then
 		self.BackButton:SetVisible( false )
 	else
 		self.BackButton:SetVisible( true )
@@ -187,6 +188,7 @@ function PANEL:CloseAllMenus()
 	if ( IsValid( self.NewGameFrame ) ) then self.NewGameFrame:Remove() end
 	if ( IsValid( self.AddonsFrame ) ) then self.AddonsFrame:Remove() end
 	if ( IsValid( self.AchievementsFrame ) ) then self.AchievementsFrame:Remove() end
+	if ( IsValid( self.SavesFrame ) ) then self.SavesFrame:Remove() end
 end
 
 function PANEL:Back()
@@ -208,6 +210,14 @@ function PANEL:OpenAddonsMenu( b )
 
 	local frame = vgui.Create( "AddonsPanel", self )
 	self.AddonsFrame = frame
+end
+
+function PANEL:OpenSavesMenu( b )
+	self:CloseAllMenus()
+	self:ClosePopups( b )
+
+	local frame = vgui.Create( "SavesPanel", self )
+	self.SavesFrame = frame
 end
 
 function PANEL:OpenAchievementsMenu( b )
@@ -450,6 +460,7 @@ function LanguageChanged( lang )
 	if ( IsValid( self.AddonsFrame ) ) then self:OpenAddonsMenu() end
 	if ( IsValid( self.MainMenuPanel ) ) then self:OpenMainMenu() end
 	if ( IsValid( self.AchievementsFrame ) ) then self:OpenAchievementsMenu() end
+	if ( IsValid( self.SavesFrame ) ) then self:OpenSavesMenu() end
 
 	self.Languages:SetIcon( "../resource/localization/" .. lang .. ".png" )
 end

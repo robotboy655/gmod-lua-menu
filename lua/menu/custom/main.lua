@@ -106,8 +106,8 @@ function PANEL:Init()
 	Saves:Dock( TOP )
 	Saves:DockMargin( 5, 0, 5, 0 )
 	Saves:SetText( "#saves" )
-	Saves:SetDisabled( true )
 	Saves.DoClick = function()
+		self:GetParent():OpenSavesMenu()
 		//self:GetParent():OpenAddonsMenu()
 	end
 
