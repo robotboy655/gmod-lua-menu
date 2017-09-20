@@ -761,6 +761,10 @@ function PANEL:SelectCat( cat )
 			button.DoClick = function()
 				self:SelectMap( map.name, cat )
 			end
+			button.DoDoubleClick = function()
+				self:SelectMap( map.name, cat )
+				self:LoadMap()
+			end
 			button.PaintOver = function( button, w, h )
 
 				if ( button:GetText() == self.CurrentMap ) then

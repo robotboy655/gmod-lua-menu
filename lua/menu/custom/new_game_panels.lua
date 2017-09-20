@@ -104,7 +104,7 @@ function PANEL:GetMapCount()
 	if ( !self.Category ) then return -1 end
 
 	if ( !self.LastCache || self.LastCache < CurTime() || g_SearchText != self.g_SearchText ) then
-		self.CachedMapCount = #GetMapsFromCategory( self.Category )
+		self.CachedMapCount = #GetMapsFromCategorySearch( self.Category )
 		self.LastCache = CurTime() + 1
 		self.g_SearchText = g_SearchText
 	end
