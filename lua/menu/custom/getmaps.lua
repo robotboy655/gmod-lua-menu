@@ -72,6 +72,7 @@ MapNames[ "zm_" ] = "Zombie Master"
 MapNames[ "zombiesurvival_" ] = "Zombie Survival"
 MapNames[ "zs_" ] = "Zombie Survival"
 MapNames[ "ze_" ] = "Zombie Escape"
+MapNames[ "gd_" ] = "Guardian"
 
 MapNames[ "am_" ] = "Aim Multi (1v1)"
 MapNames[ "de_" ] = "Bomb Defuse"
@@ -95,6 +96,7 @@ MapNames[ "sd_" ] = "Special Delivery"
 MapNames[ "tc_" ] = "Territorial Control"
 MapNames[ "tr_" ] = "Training"
 MapNames[ "dod_" ] = "Day of Defeat"
+MapNames[ "phys_" ] = "Physics Sandbox"
 
 MapNames[ "halls3" ] = "Deathmatch"
 
@@ -127,6 +129,8 @@ end
 --
 
 local MapSubCategories = {
+
+	// HL1:S
 	[ "c1a0c" ] = "c. Unforeseen Consequences",
 	[ "c2a4d" ] = "k. Questionable Ethics",
 	[ "c2a4e" ] = "k. Questionable Ethics",
@@ -135,53 +139,23 @@ local MapSubCategories = {
 	[ "c4a1" ] = "o. Xen",
 	[ "c4a1z" ] = "z. Other",
 	[ "c4a1y" ] = "z. Other",
+
+	// HL2: LC
+	[ "d2_lostcoast" ] = "Lost Coast",
+
+	// L4D
+	[ "l4d_sv_lighthouse" ] = "f. The Last Stand",
+
 }
 
 local MapPatternSubCategories = {
-	[ "^gm_" ] = "Sandbox",
 
-	// CS
-	[ "^de_" ] = "Bomb Defuse",
-	[ "^cs_" ] = "Hostage Rescue",
-	[ "^ar_" ] = "Arms Race",
-	[ "^gd_" ] = "Guardian",
-
-	// Random - TODO: These should be replaced by the Gamemodes stuff! 
-	[ "^dm_" ] = "Deathmatch",
-	[ "^mg_" ] = "Minigames",
-	[ "^dr_" ] = "Deathrun",
-	[ "^deathrun_" ] = "Deathrun",
-	[ "^surf_" ] = "Surf",
-	[ "^bhop_" ] = "Bunny Hop",
-	[ "^aim_" ] = "Aim Arena",
-	[ "^awp_" ] = "AWP Arena",
-	[ "^kz_" ] = "Kreedz",
-	[ "^zm_" ] = "Zombie Master",
-	[ "^ze_" ] = "Zombie Escape",
-	[ "^zs_" ] = "Zombie Survival",
+	// Random, TODO: Move to Gamemode list?
+	[ "^hns_" ] = "Hide and Seek",
+	[ "^pf_" ] = "Parkour Fortress",
 	[ "^fy_" ] = "Fight Yard",
 	[ "^hg_" ] = "Hunger Games",
-	[ "^hns_" ] = "Hide and Seek",
-	[ "^ba_" ] = "Jail Break",
-	[ "jb_" ] = "Jail Break",
-	[ "^pf_" ] = "Parkour Fortress",
-	[ "^dod_" ] = "Day Of Defeat: Source",
-
-	// TF2
-	[ "^arena_" ] = "Arena",
-	[ "^koth_" ] = "King Of The Hill",
-	[ "^sd_" ] = "Special Delivery",
-	[ "^ctf_" ] = "Capture The Flag",
-	[ "^mvm_" ] = "Mann Versus Machine",
-	[ "^pl_" ] = "Payload",
-	[ "^plr_" ] = "Payload Race",
-	[ "^rd_" ] = "Robot Destruction",
-	[ "^pd_" ] = "Player Destruction",
-	[ "^tr_" ] = "Training",
-	[ "^cp_" ] = "Control Point",
 	[ "^trade_" ] = "Trade",
-	[ "^tc_" ] = "Territorial Control",
-	[ "^pass_" ] = "PASS Time",
 
 	// Left 4 Dead 1
 	[ "^l4d_hospital0" ] = "a. No Mercy",
@@ -190,7 +164,6 @@ local MapPatternSubCategories = {
 	[ "^l4d_airport0" ] = "d. Dead Air",
 	[ "^l4d_farm0" ] = "b. Blood Harvest",
 	[ "^l4d_vs_" ] = "f. Versus",
-	[ "l4d_sv_lighthouse" ] = "f. The Last Stand",
 
 	// Left 4 Dead 2
 	[ "^c1m" ] = "a. Dead Center",
@@ -206,7 +179,7 @@ local MapPatternSubCategories = {
 	[ "^testchmb_(.*)_advanced$" ] = "c. Advanced Test Chambers",
 	[ "^escape_" ] = "b. GLaDOS Escape",
 
-	// Portal 2
+	// Portal 2, TODO: Most of these should be moved up
 	[ "^sp_a1_intro" ] = "a. The Courtesy Call",
 	[ "sp_a1_wakeup" ] = "a. The Courtesy Call",
 	[ "sp_a2_intro" ] = "a. The Courtesy Call",
@@ -410,9 +383,9 @@ local IgnoreGames = {
 
 -- Maps from these games cannot be loaded in Garry's Mod
 local IncompatibleGames = {
-	[ 550 ] = true, -- L4D2
-	[ 620 ] = true, -- P2
-	[ 730 ] = true, -- CSGO
+	//[ 550 ] = true, -- L4D2
+	//[ 620 ] = true, -- P2
+	//[ 730 ] = true, -- CSGO
 }
 
 --
@@ -422,7 +395,6 @@ local IncompatibleGames = {
 local MapList = {}
 local GameMapList = {}
 
--- TODO: Sub Categories should be moved into this file!
 -- TODO: ConVar for hiding bad maps
 
 local function IsUselessMap( map_name )
@@ -458,6 +430,7 @@ local function RefreshMaps( skip )
 
 	local games = engine.GetGames()
 	table.insert( games, { title = "Garry's Mod", depot = 4000, folder = "MOD", mounted = true } )
+	table.insert( games, { title = "Addons", depot = 0, folder = "thirdparty", mounted = true } )
 
 	for id, tab in pairs( games ) do
 		if ( !tab.mounted ) then continue end
@@ -566,9 +539,29 @@ function DoesMapExist( map )
 	return file.Exists( "maps/" .. map .. ".bsp", "GAME" )
 end
 
--- TODO: This needs more work!
 function GetMapSubCategories()
-	return MapSubCategories, MapPatternSubCategories
+	local subCats = table.Copy( MapSubCategories )
+	local subCatPatterns = table.Copy( MapPatternSubCategories )
+
+	for pattern, catName in pairs( MapPatterns ) do
+		subCatPatterns[ pattern ] = catName
+	end
+
+	for pattern, catName in pairs( MapGamemodes ) do
+		subCatPatterns[ pattern ] = catName
+	end
+
+	for prefix, catName in pairs( MapNames ) do
+		if ( prefix:EndsWith( "_" ) ) then
+			if ( subCatPatterns[ "^" .. prefix ] ) then print( "Prefix " .. prefix .. " exists in both tables!" ) end
+			subCatPatterns[ "^" .. prefix ] = catName
+		else
+			if ( subCatPatterns[ prefix ] ) then print( "Map " .. prefix .. " exists in both tables!" ) end
+			subCats[ prefix ] = catName
+		end
+	end
+
+	return subCats, subCatPatterns
 end
 
 --
