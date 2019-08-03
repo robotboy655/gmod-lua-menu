@@ -684,12 +684,30 @@ function PANEL:Update()
 
 end
 
+function PANEL:BuildIconList()
+	self.IconListCache = {}
+
+	local files = file.Find( "maps/thumb/*.png", "GAME" )
+	for id, file in pairs( files ) do
+		self.IconListCache[ file:sub( 0, file:len() - 4 ) ] = "maps/thumb/" .. file
+	end
+
+	-- Stupid ass addons that didn't update yet
+	local files2 = file.Find( "maps/*.png", "GAME" )
+	for id, file in pairs( files2 ) do
+		self.IconListCache[ file:sub( 0, file:len() - 4 ) ] =  "maps/" .. file
+	end
+end
+
 function PANEL:CacheIcon( map )
-	map = map:Trim() // Duplicate CS:GO maps have spaces on the end! ( When loaded from the HTML menu )
-	local mat = Material( "maps/thumb/" .. map .. ".png" )
+	if ( !self.IconListCache ) then self:BuildIconList() end
+
+	map = map:Trim() -- Duplicate CS:GO maps have spaces on the end! ( When loaded from the HTML menu )
+	/*local mat = Material( "maps/thumb/" .. map .. ".png" )
 	if ( mat:IsError() ) then mat = Material( "maps/" .. map .. ".png" ) end -- Stupid ass addons that didn't update yet
-	if ( mat:IsError() ) then mat = matNoIcon end
-	return mat
+	if ( mat:IsError() ) then mat = matNoIcon end*/
+	if ( !self.IconListCache[ map ] ) then return matNoIcon end
+	return Material( self.IconListCache[ map ] )
 end
 
 local border = 4

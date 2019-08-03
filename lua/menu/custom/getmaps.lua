@@ -73,6 +73,7 @@ MapNames[ "zombiesurvival_" ] = "Zombie Survival"
 MapNames[ "zs_" ] = "Zombie Survival"
 MapNames[ "ze_" ] = "Zombie Escape"
 MapNames[ "gd_" ] = "Guardian"
+MapNames[ "dz_" ] = "Dark Zone"
 
 MapNames[ "am_" ] = "Aim Multi (1v1)"
 MapNames[ "de_" ] = "Bomb Defuse"
@@ -427,10 +428,21 @@ local function RefreshMaps( skip )
 
 	MapList = {}
 	GameMapList = {}
+	local ExistingMaps = {}
 
 	local games = engine.GetGames()
 	table.insert( games, { title = "Garry's Mod", depot = 4000, folder = "MOD", mounted = true } )
 	table.insert( games, { title = "Addons", depot = 0, folder = "thirdparty", mounted = true } )
+	table.insert( games, { title = "Downloaded Maps", depot = -1, folder = "DOWNLOAD", mounted = true } )
+	table.insert( games, { title = "mount.cfg", depot = -2, folder = "GAME", mounted = true } ) -- Must be last!
+	-- Note: "Games" map categories are bundled by depotID, not folder/title!
+
+	-- Can't do this unfortunately
+	--[[for pathid, path in pairs( util.KeyValuesToTable( file.Read( "cfg/mount.cfg", "MOD" ) ) ) do
+		print( pathid, path )
+		PrintTable( file.Find( "maps/*.bsp", pathid ) )
+		table.insert( games, { title = pathid .. " (mount.cfg)", depot = 0, folder = pathid, mounted = true } )
+	end]]
 
 	for id, tab in pairs( games ) do
 		if ( !tab.mounted ) then continue end
@@ -440,6 +452,12 @@ local function RefreshMaps( skip )
 		for k, v in ipairs( maps ) do
 			local map_name = string.gsub( v, "%.bsp$", "" ):lower()
 			local prefix = string.match( map_name, "^(.-_)" )
+
+			if ( tab.folder == "GAME" ) then
+				if ( ExistingMaps[ map_name ] ) then continue end
+			else
+				ExistingMaps[ map_name ] = true
+			end
 
 			-- Don't add useless maps
 			if ( IsUselessMap( map_name ) ) then continue end
@@ -457,6 +475,11 @@ local function RefreshMaps( skip )
 			-- Ignore maps from certain games
 			if ( IgnoreGames[ tab.depot ] ) then continue end
 
+			-- For a full list of maps we don't want to process already processed maps
+			/*if ( tab.folder == "GAME" ) then
+				if ( ExistingMaps[ map_name ] ) then continue end
+			end*/
+
 			-- Give the map a category
 			local Category = MapNames[ map_name ] or MapNames[ prefix ]
 			if ( !Category ) then
@@ -467,6 +490,7 @@ local function RefreshMaps( skip )
 					end
 				end
 			end
+			
 
 			-- Throw all uncategorised maps into "Other"
 			Category = Category or "Other"
