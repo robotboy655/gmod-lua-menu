@@ -11,7 +11,7 @@ Missing/Broken Features
 =============
 
 * Server browser - This menu uses the default Source Engine server browser
-* Demos and Saves - I never use those so I didn't bother adding them. Who uses them anyway?
+* Limited Demos and Saves functionality - No workshop, sorting or filtering
 * Good looks
 * You can't browse through new/top rated/ect addons in main menu. You should use the Open Workshop button anyway.
 
@@ -19,10 +19,8 @@ New/Fixed Features
 =============
 
 * I think it's faster then the default one
-* Achievement menu
+* Achievements menu
 * More functionality for New Game and Addons menus
-* Server settings in "new game" menu are working properly
-* Caching - map and workshop icons are cached - you only slowly load them once, and then it's fast
 * No HTML
 
 Installing
