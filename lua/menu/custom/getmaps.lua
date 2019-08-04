@@ -73,7 +73,7 @@ MapNames[ "zombiesurvival_" ] = "Zombie Survival"
 MapNames[ "zs_" ] = "Zombie Survival"
 MapNames[ "ze_" ] = "Zombie Escape"
 MapNames[ "gd_" ] = "Guardian"
-MapNames[ "dz_" ] = "Dark Zone"
+MapNames[ "dz_" ] = "Danger Zone"
 
 MapNames[ "am_" ] = "Aim Multi (1v1)"
 MapNames[ "de_" ] = "Bomb Defuse"
@@ -96,10 +96,23 @@ MapNames[ "kz_" ] = "Kreedz Climbing"
 MapNames[ "sd_" ] = "Special Delivery"
 MapNames[ "tc_" ] = "Territorial Control"
 MapNames[ "tr_" ] = "Training"
-MapNames[ "dod_" ] = "Day of Defeat"
-MapNames[ "phys_" ] = "Physics Sandbox"
+MapNames[ "dod_" ] = "Day of Defeat" -- Technically this IS control points
+-- MapNames[ "phys_" ] = "Physics Sandbox" -- Defined by Sandbox gamemode
 
 MapNames[ "halls3" ] = "Deathmatch"
+
+-- HL1: DM
+MapNames[ "boot_camp" ] = "Deathmatch"
+MapNames[ "bounce" ] = "Deathmatch"
+MapNames[ "crossfire" ] = "Deathmatch"
+MapNames[ "datacore" ] = "Deathmatch"
+MapNames[ "frenzy" ] = "Deathmatch"
+MapNames[ "lambda_bunker" ] = "Deathmatch"
+MapNames[ "rapidcore" ] = "Deathmatch"
+MapNames[ "snarkpit" ] = "Deathmatch"
+MapNames[ "stalkyard" ] = "Deathmatch"
+MapNames[ "subtransit" ] = "Deathmatch"
+MapNames[ "undertow" ] = "Deathmatch"
 
 local MapGamemodes = {}
 
@@ -131,7 +144,7 @@ end
 
 local MapSubCategories = {
 
-	// HL1:S
+	-- HL1:S
 	[ "c1a0c" ] = "c. Unforeseen Consequences",
 	[ "c2a4d" ] = "k. Questionable Ethics",
 	[ "c2a4e" ] = "k. Questionable Ethics",
@@ -141,46 +154,54 @@ local MapSubCategories = {
 	[ "c4a1z" ] = "z. Other",
 	[ "c4a1y" ] = "z. Other",
 
-	// HL2: LC
+	-- HL2: LC
 	[ "d2_lostcoast" ] = "Lost Coast",
 
-	// L4D
+	-- L4D
 	[ "l4d_sv_lighthouse" ] = "f. The Last Stand",
 
 }
 
 local MapPatternSubCategories = {
 
-	// Random, TODO: Move to Gamemode list?
+	-- Random, TODO: Move to Gamemode list?
 	[ "^hns_" ] = "Hide and Seek",
 	[ "^pf_" ] = "Parkour Fortress",
 	[ "^fy_" ] = "Fight Yard",
 	[ "^hg_" ] = "Hunger Games",
 	[ "^trade_" ] = "Trade",
+	[ "^35hp" ] = "35HP Knife Only",
 
-	// Left 4 Dead 1
-	[ "^l4d_hospital0" ] = "a. No Mercy",
-	[ "^l4d_garage0" ] = "b. Crash Course",
-	[ "^l4d_smalltown0" ] = "c. Death Toll",
-	[ "^l4d_airport0" ] = "d. Dead Air",
-	[ "^l4d_farm0" ] = "b. Blood Harvest",
-	[ "^l4d_vs_" ] = "f. Versus",
+	-- Left 4 Dead 1
+	[ "^l4d_hospital0" ] = "No Mercy",
+	[ "^l4d_garage0" ] = "Crash Course",
+	[ "^l4d_smalltown0" ] = "Death Toll",
+	[ "^l4d_airport0" ] = "Dead Air",
+	[ "^l4d_farm0" ] = "Blood Harvest",
+	[ "^l4d_river0" ] = "The Sacrifice",
+	[ "^l4d_vs_" ] = "Versus",
 
-	// Left 4 Dead 2
-	[ "^c1m" ] = "a. Dead Center",
-	//[ "^c2m" ] = "b. The Passing",
-	[ "^c2m" ] = "c. Dark Carnival",
-	[ "^c3m" ] = "d. Swamp Fever",
-	[ "^c4m" ] = "e. Hard Rain",
-	[ "^c5m" ] = "f. The Parish",
-	//[ "^c5m" ] = "g. Cold Stream",
+	-- Left 4 Dead 2
+	[ "^c1m" ] = "Dead Center",
+	[ "^c2m" ] = "Dark Carnival",
+	[ "^c3m" ] = "Swamp Fever",
+	[ "^c4m" ] = "Hard Rain",
+	[ "^c5m" ] = "The Parish",
+	[ "^c6m" ] = "The Passing",
+	[ "^c7m" ] = "The Sacrifice (L4D1)",
+	[ "^c8m" ] = "No Mercy (L4D1)",
+	[ "^c9m" ] = "Crash Course (L4D1)",
+	[ "^c10m" ] = "Death Toll (L4D1)",
+	[ "^c11m" ] = "Dead Air (L4D1)",
+	[ "^c12m" ] = "Blood Harvest (L4D1)",
+	[ "^c13m" ] = "Cold Stream",
 
-	// Portal
+	-- Portal
 	[ "^testchmb_a_(%d+)$" ] = "a. Test Chambers",
 	[ "^testchmb_(.*)_advanced$" ] = "c. Advanced Test Chambers",
 	[ "^escape_" ] = "b. GLaDOS Escape",
 
-	// Portal 2, TODO: Most of these should be moved up
+	-- Portal 2, TODO: Most of these should be moved up
 	[ "^sp_a1_intro" ] = "a. The Courtesy Call",
 	[ "sp_a1_wakeup" ] = "a. The Courtesy Call",
 	[ "sp_a2_intro" ] = "a. The Courtesy Call",
@@ -249,7 +270,7 @@ local MapPatternSubCategories = {
 	[ "^mp_coop_lobby_" ] = "k. Portal 2 CO-OP Hubs",
 	[ "^mp_coop_" ] = "k. Portal 2 CO-OP",
 
-	// Half-Life: Source
+	-- Half-Life: Source
 	[ "^t0a0" ] = "_. Hazard Course",
 	[ "^c0a0" ] = "a. Black Mesa Inbound",
 	[ "^c1a0" ] = "b. Anomalous Materials",
@@ -270,39 +291,31 @@ local MapPatternSubCategories = {
 	[ "^c4a3" ] = "s. Nihilanth",
 	[ "^c5a1" ] = "t. Endgame",
 
-	// Half-Life 2
-	[ "^d1_trainstation" ] = "a. Point Insertion",
+	-- Half-Life 2
+	[ "^d1_trainstation_0[1-4]" ] = "a. Point Insertion",
+	[ "^d1_trainstation_0[5-6]" ] = [[b. "A Red Letter Day"]],
 
-	[ "d1_trainstation_05" ] = [[b. "A Red Letter Day"]],
-	[ "d1_trainstation_06" ] = [[b. "A Red Letter Day"]],
+	[ "^d1_canals_0[1-5]" ] = "c. Route Kanal",
 
-	[ "^d1_canals" ] = "c. Route Kanal",
-
-	[ "d1_canals_06" ] = "d. Water Hazard",
-	[ "d1_canals_07" ] = "d. Water Hazard",
-	[ "d1_canals_08" ] = "d. Water Hazard",
-	[ "d1_canals_09" ] = "d. Water Hazard",
-	[ "d1_canals_1" ] = "d. Water Hazard",
+	[ "^d1_canals_0[6-9]" ] = "d. Water Hazard",
+	[ "^d1_canals_1[0-3]" ] = "d. Water Hazard",
 
 	[ "^d1_eli" ] = "e. Black Mesa East",
 	[ "^d1_town" ] = [[f. "We Don't Go To Ravenholm..."]],
-	[ "^d2_coast_" ] = 'g. Highway 17',
+	[ "^d2_coast_0[1-8]" ] = 'g. Highway 17',
 
-	[ "d2_coast_09" ] = 'h. Sandtraps',
+	[ "^d2_coast_09" ] = 'h. Sandtraps',
 	[ "^d2_coast_1" ] = 'h. Sandtraps',
-	[ "d2_prison_01" ] = 'h. Sandtraps',
+	[ "^d2_prison_01" ] = 'h. Sandtraps',
 
-	[ "^d2_prison_0" ] = 'i. Nova Prospekt',
+	[ "^d2_prison_0[2-5]" ] = 'i. Nova Prospekt',
+	[ "^d2_prison_0[6-8]" ] = 'j. Entaglement',
 
-	[ "d2_prison_06" ] = 'j. Entaglement',
-	[ "d2_prison_07" ] = 'j. Entaglement',
-	[ "d2_prison_08" ] = 'j. Entaglement',
-	[ "d3_c17_01" ] = 'j. Entaglement',
+	[ "^d3_c17_01" ] = 'j. Entaglement',
 
-	[ "d3_c17_02" ] = 'k. Anticitizen One',
-	[ "^d3_c17_0" ] = 'k. Anticitizen One',
+	[ "^d3_c17_0[2-8]" ] = 'k. Anticitizen One',
 
-	[ "d3_c17_09" ] = 'l. "Follow Freeman!"',
+	[ "^d3_c17_09" ] = 'l. "Follow Freeman!"',
 	[ "^d3_c17_1" ] = 'l. "Follow Freeman!"',
 
 	[ "^d3_citadel" ] = 'm. Our Benefactors',
@@ -312,36 +325,24 @@ local MapPatternSubCategories = {
 	[ "^ep1_background" ] = 'Backgrounds',
 	[ "^ep2_background" ] = 'Backgrounds',
 
-	// Half-Life 2: Episode 1
-	[ "^ep1_citadel_0" ] = "a. Undue Alarm",
-	[ "ep1_citadel_03" ] = "b. Direct Intervention",
-	[ "ep1_citadel_04" ] = "b. Direct Intervention",
+	-- Half-Life 2: Episode 1
+	[ "^ep1_citadel_0[0-2]" ] = "a. Undue Alarm",
+	[ "^ep1_citadel_0[3-4]" ] = "b. Direct Intervention",
 	[ "^ep1_c17_00" ] = "c. Lowlife",
-	[ "^ep1_c17_0" ] = "d. Urban Flight",
-	[ "ep1_c17_05" ] = "e. Exit 17",
-	[ "ep1_c17_06" ] = "e. Exit 17",
+	[ "^ep1_c17_0[1-2]" ] = "d. Urban Flight",
+	[ "^ep1_c17_0[5-6]" ] = "e. Exit 17",
 
-	// Half-Life 2: Episode 2
+	-- Half-Life 2: Episode 2
 	[ "^ep2_outland_01" ] = "a. To the White Forest",
+	[ "^ep2_outland_0[2-4]" ] = "b. This Vortal Coil",
+	[ "^ep2_outland_0[5-6]$" ] = "c. Freeman Pontifex",
+	[ "^ep2_outland_06a" ] = "d. Riding Shotgun",
+	[ "^ep2_outland_0[7-8]" ] = "d. Riding Shotgun",
 
-	[ "ep2_outland_02" ] = "b. This Vortal Coil",
-	[ "ep2_outland_03" ] = "b. This Vortal Coil",
-	[ "ep2_outland_04" ] = "b. This Vortal Coil",
-
-	[ "ep2_outland_05" ] = "c. Freeman Pontifex",
-	[ "ep2_outland_06" ] = "c. Freeman Pontifex",
-
-	[ "ep2_outland_06a" ] = "d. Riding Shotgun",
-
-	[ "ep2_outland_07" ] = "d. Riding Shotgun",
-	[ "ep2_outland_08" ] = "d. Riding Shotgun",
-
-	[ "ep2_outland_09" ] = "e. Under the Radar",
+	[ "^ep2_outland_09" ] = "e. Under the Radar",
 	[ "^ep2_outland_10" ] = "e. Under the Radar",
-	[ "^ep2_outland_11" ] = "f. Our Mutual Fiend",
-	[ "ep2_outland_12" ] = "f. Our Mutual Fiend",
-
-	[ "ep2_outland_12a" ] = "g. T-Minus One",
+	[ "^ep2_outland_1[1-2]$" ] = "f. Our Mutual Fiend",
+	[ "^ep2_outland_12a" ] = "g. T-Minus One",
 }
 
 --
@@ -384,9 +385,9 @@ local IgnoreGames = {
 
 -- Maps from these games cannot be loaded in Garry's Mod
 local IncompatibleGames = {
-	//[ 550 ] = true, -- L4D2
-	//[ 620 ] = true, -- P2
-	//[ 730 ] = true, -- CSGO
+	--[ 550 ] = true, -- L4D2
+	--[ 620 ] = true, -- P2
+	--[ 730 ] = true, -- CSGO
 }
 
 --
@@ -577,10 +578,10 @@ function GetMapSubCategories()
 
 	for prefix, catName in pairs( MapNames ) do
 		if ( prefix:EndsWith( "_" ) ) then
-			if ( subCatPatterns[ "^" .. prefix ] ) then print( "Prefix " .. prefix .. " exists in both tables!" ) end
+			if ( subCatPatterns[ "^" .. prefix ] ) then print( "Prefix " .. prefix .. " has 2 categories '" .. subCatPatterns[ "^" .. prefix ] .. "' and '" .. catName .. "'!" ) end
 			subCatPatterns[ "^" .. prefix ] = catName
 		else
-			if ( subCatPatterns[ prefix ] ) then print( "Map " .. prefix .. " exists in both tables!" ) end
+			if ( subCatPatterns[ prefix ] ) then print( "Map " .. prefix .. " has 2 categories '" .. subCatPatterns[ prefix ] .. "' and '" .. catName .. "'!" ) end
 			subCats[ prefix ] = catName
 		end
 	end
