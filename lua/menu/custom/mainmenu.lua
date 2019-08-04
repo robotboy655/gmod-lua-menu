@@ -9,7 +9,6 @@ include( 'achievements.lua' )
 include( 'main.lua' )
 include( '_errors.lua' )
 include( '../background.lua' )
-//include( 'enumdump.lua' )
 
 pnlMainMenu = nil
 
@@ -32,7 +31,7 @@ function PANEL:Paint( w, h )
 		local clr = Color( 0, 134, 204 )
 		if ( self.Hovered ) then clr = Color( 34, 168, 238 ) end
 		if ( self.Depressed ) then clr = Color( 0, 134, 204 ) end
-		//draw.RoundedBox( 4, 0, 0, w, h, clr )
+		--draw.RoundedBox( 4, 0, 0, w, h, clr )
 
 		surface.SetDrawColor( clr )
 		surface.DrawRect( 1, 1, w - 2, h - 2 )
@@ -43,7 +42,7 @@ function PANEL:Paint( w, h )
 		surface.DrawTexturedRect( 1, 1, w - 2, h - 2 )
 
 		surface.SetDrawColor( Color( 0, 85, 204 ) )
-		//surface.DrawOutlinedRect( 0, 0, w, h )
+		--surface.DrawOutlinedRect( 0, 0, w, h )
 
 		surface.DrawLine( 1, 0, w-1, 0 ) -- top
 		surface.DrawLine( 0, 1, 0, h - 1 ) -- left
@@ -179,7 +178,7 @@ end
 
 function PANEL:ClosePopups( b )
 	if ( IsValid( self.LanguageList ) ) then self.LanguageList:Remove() end
-	if ( !b && IsValid( self.MountedGamesList ) ) then self.MountedGamesList:Remove() end // The ugly 'b' hack
+	if ( !b && IsValid( self.MountedGamesList ) ) then self.MountedGamesList:Remove() end -- The ugly 'b' hack
 	if ( IsValid( self.GamemodesList ) ) then self.GamemodesList:Remove() end
 end
 
@@ -212,12 +211,13 @@ function PANEL:OpenAddonsMenu( b )
 	self.AddonsFrame = frame
 end
 
-function PANEL:OpenSavesMenu( b )
+function PANEL:OpenCreationMenu( b, typ )
 	self:CloseAllMenus()
 	self:ClosePopups( b )
 
 	local frame = vgui.Create( "SavesPanel", self )
 	self.SavesFrame = frame
+	self.SavesFrame:SetType( typ )
 end
 
 function PANEL:OpenAchievementsMenu( b )
@@ -362,7 +362,7 @@ function PANEL:OpenGamemodesList( pnl )
 		h = h + 45
 	end
 
-	//p:SetWide( w, h )
+	--p:SetWide( w, h )
 
 	p:SetSize( w, math.min( h, ScrH() / 1.5 ) )
 	p:SetPos( math.min( pnl:GetPos() - p:GetWide() / 2 + pnl:GetWide() / 2, ScrW() - p:GetWide() - 5 ), ScrH() - 55 - p:GetTall() )
@@ -387,10 +387,10 @@ function PANEL:RefreshGamemodes( b )
 
 	if ( IsValid( self.NewGameFrame ) ) then self.NewGameFrame:Update() end
 	if ( IsValid( self.AddonsFrame ) ) then self.AddonsFrame:Update() end
-	//if ( IsValid( self.NewGameFrame ) ) then self:OpenNewGameMenu( b ) end
-	//if ( IsValid( self.AddonsFrame ) ) then self:OpenAddonsMenu( b ) end
-	//if ( IsValid( self.MainMenuPanel ) ) then self:OpenMainMenu( b ) end
-	//if ( IsValid( self.AchievementsFrame ) ) then self:OpenAchievementsMenu( b ) end
+	--if ( IsValid( self.NewGameFrame ) ) then self:OpenNewGameMenu( b ) end
+	--if ( IsValid( self.AddonsFrame ) ) then self:OpenAddonsMenu( b ) end
+	--if ( IsValid( self.MainMenuPanel ) ) then self:OpenMainMenu( b ) end
+	--if ( IsValid( self.AchievementsFrame ) ) then self:OpenAchievementsMenu( b ) end
 
 	if ( IsValid( self.MountedGamesList ) ) then self.MountedGamesList:MoveToFront() end
 
@@ -460,7 +460,7 @@ function LanguageChanged( lang )
 	if ( IsValid( self.AddonsFrame ) ) then self:OpenAddonsMenu() end
 	if ( IsValid( self.MainMenuPanel ) ) then self:OpenMainMenu() end
 	if ( IsValid( self.AchievementsFrame ) ) then self:OpenAchievementsMenu() end
-	if ( IsValid( self.SavesFrame ) ) then self:OpenSavesMenu() end
+	if ( IsValid( self.SavesFrame ) ) then self:OpenCreationMenu() end
 
 	self.Languages:SetIcon( "../resource/localization/" .. lang .. ".png" )
 end
@@ -491,7 +491,7 @@ timer.Simple( 0, function()
 	hook.Run( "GameContentChanged" )
 end )
 
-// A hack to bring the console to front when menu_reload is ran
+-- A hack to bring the console to front when menu_reload is ran
 timer.Simple( 1, function()
 	if ( gui.IsConsoleVisible() ) then gui.ShowConsole() end
 end )
