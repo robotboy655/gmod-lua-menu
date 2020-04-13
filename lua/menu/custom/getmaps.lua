@@ -74,6 +74,11 @@ MapNames[ "zs_" ] = "Zombie Survival"
 MapNames[ "ze_" ] = "Zombie Escape"
 MapNames[ "gd_" ] = "Guardian"
 MapNames[ "dz_" ] = "Danger Zone"
+MapNames[ "cm_" ] = "Custom"
+MapNames[ "gt_" ] = "Ghost Town"
+MapNames[ "tp_" ] = "Team Play"
+MapNames[ "vs_" ] = "Versus"
+MapNames[ "coop_" ] = "Cooperative"
 
 MapNames[ "am_" ] = "Aim Multi (1v1)"
 MapNames[ "de_" ] = "Bomb Defuse"
@@ -97,6 +102,8 @@ MapNames[ "sd_" ] = "Special Delivery"
 MapNames[ "tc_" ] = "Territorial Control"
 MapNames[ "tr_" ] = "Training"
 MapNames[ "dod_" ] = "Day of Defeat" -- Technically this IS control points
+MapNames[ "fof_" ] = "Fistful of Frags"
+MapNames[ "bm_" ] = "Black Mesa"
 -- MapNames[ "phys_" ] = "Physics Sandbox" -- Defined by Sandbox gamemode
 
 MapNames[ "halls3" ] = "Deathmatch"
@@ -381,6 +388,9 @@ local IgnoreGames = {
 	[ 500 ] = true, -- L4D
 	[ 550 ] = true, -- L4D2
 	[ 620 ] = true, -- P2
+	[ 251110 ] = true, -- INFRA
+	[ 221910 ] = true, -- Stanley Parable
+	[ 362890 ] = true, -- Black Mesa
 }
 
 -- Maps from these games cannot be loaded in Garry's Mod
