@@ -447,6 +447,10 @@ function PANEL:UpdateBackgroundImages()
 
 end
 
+function PANEL:Call( str )
+	print( "Not Implemented: ", str )
+end
+
 vgui.Register( "MainMenuPanel", PANEL, "EditablePanel" )
 
 --
