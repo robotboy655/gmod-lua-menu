@@ -42,7 +42,7 @@ surface.CreateFont( "rb655_MapList", {
 
 surface.CreateFont( "rb655_MapSubCat", {
 	size = 30,
-	//weight = 900,
+	--weight = 900,
 	font = "Roboto Lt"
 } )
 
@@ -218,7 +218,7 @@ function PANEL:Init()
 	sbar:SetWide( 8 )
 	if ( sbar.SetHideButtons ) then sbar:SetHideButtons( true ) end
 
-	// HACK!!!!
+	-- HACK!!!!
 	sbar.OldSetScroll = sbar.SetScroll
 	function sbar:SetScroll( scroll )
 		g_CurrentScroll = scroll
@@ -275,7 +275,7 @@ function PANEL:Init()
 		if ( self.GamemodeSettings ) then
 			s:DoUpdatePanels( self.GamemodeSettings:GetCanvas() )
 
-			// Hack
+			-- Hack
 			local hasVisibleChildren = false
 			for id, pnl in pairs( self.GamemodeSettings:GetCanvas():GetChildren() ) do
 				if ( pnl:IsVisible() ) then hasVisibleChildren = true break end
@@ -342,8 +342,8 @@ function PANEL:Init()
 
 				surface.SetDrawColor( Color( 34, 170, 34 ) )
 				if ( !buttt.Bottom ) then
-					//surface.DrawLine( 0, 0, 0, h ) -- left
-					//surface.DrawLine( w - 1, 0, w - 1, h ) -- right -- Doesn't show bottom pixel??
+					--surface.DrawLine( 0, 0, 0, h ) -- left
+					--surface.DrawLine( w - 1, 0, w - 1, h ) -- right -- Doesn't show bottom pixel??
 					surface.DrawRect( 0, 0, 1, h )
 					surface.DrawRect( w - 1, 0, 1, h )
 				else
@@ -392,7 +392,7 @@ function PANEL:Init()
 
 		local clr = Color( 118, 214, 118 )
 		if ( s.Hovered ) then clr = Color( 128, 220, 128 ) end
-		//if ( s.Depressed ) then clr = Color( 118, 214, 118 ) end
+		--if ( s.Depressed ) then clr = Color( 118, 214, 118 ) end
 		surface.SetDrawColor( clr )
 		surface.DrawLine( 1, 1, w - 1, 1 )
 
@@ -462,8 +462,8 @@ function PANEL:Init()
 	GamemodeSettings:GetVBar():SetWide( 0 )
 	self.GamemodeSettings = GamemodeSettings
 	function GamemodeSettings:Paint( w, h )
-		//surface.SetDrawColor( 0, 0, 0, 32 )
-		//surface.DrawRect( 0, 0, w, h )
+		--surface.SetDrawColor( 0, 0, 0, 32 )
+		--surface.DrawRect( 0, 0, w, h )
 	end
 	GamemodeSettings.Think = EnableMouseScroll
 	GamemodeSettings.PaintOver = DrawScrollDarkGradients
@@ -491,7 +491,7 @@ function PANEL:Paint( w, h )
 	surface.DrawRect( 0, 0, w, h )
 
 	if ( self.CurrentCategory && IsValid( self.Categories[ self.CurrentCategory ] ) ) then
-		//if ( !self.Categories[ self.CurrentCategory ] ) then self:SelectCat( "Sandbox" ) return end
+		--if ( !self.Categories[ self.CurrentCategory ] ) then self:SelectCat( "Sandbox" ) return end
 		self.Categories[ self.CurrentCategory ].Depressed = true
 	end
 end
@@ -582,8 +582,8 @@ function PANEL:UpdateLanguage()
 		t.panel:SetText( language.GetPhrase( t.text ) )
 	end
 
-	// Update Favourites?
-	// Update whatever
+	-- Update Favourites?
+	-- Update whatever
 end
 
 function PANEL:Update()
@@ -593,7 +593,7 @@ function PANEL:Update()
 	local Categories = self.CategoriesPanel
 	Categories:Clear()
 
-	//self.Categories = {}
+	--self.Categories = {}
 
 	local pergamemode = Categories:Add( "DLabel" )
 	pergamemode:Dock( TOP )
@@ -620,7 +620,7 @@ function PANEL:Update()
 		self:AddCategoryButton( Categories, cat, name )
 	end
 
-	//for i = 0, 10 do self:AddCategoryButton( Categories, "Filler " .. i, "Filler " .. i, i % 2 ) end
+	--for i = 0, 10 do self:AddCategoryButton( Categories, "Filler " .. i, "Filler " .. i, i % 2 ) end
 
 	---------------------------------- Build server settigns ----------------------------------
 
@@ -643,7 +643,7 @@ function PANEL:Update()
 				elseif ( v.type == "Text" ) then
 					v.zOrder = zOrder
 					self:ServerSettings_AddTextEntry( v, GamemodeSettings )
-					zOrder = zOrder + 1 // Account for the label
+					zOrder = zOrder + 1 -- Account for the label
 				elseif ( v.type == "Numeric" ) then
 					v.zOrder = zOrder
 					self:ServerSettings_AddSlider( v, GamemodeSettings )
@@ -664,13 +664,13 @@ function PANEL:Update()
 
 	local map, cat = LoadLastMap()
 
-	if ( self.CurrentMap && self.CurrentCategory ) then // We had some map selected, switch back to it!
+	if ( self.CurrentMap && self.CurrentCategory ) then -- We had some map selected, switch back to it!
 		map = self.CurrentMap
 		cat = self.CurrentCategory
 	end
 
 	if ( !DoesCategoryExist( cat ) ) then
-		// Try to find the category the map is in
+		-- Try to find the category the map is in
 		cat = GetMapCategory( map )
 	end
 
@@ -762,10 +762,10 @@ function PANEL:SelectCat( cat )
 			local button = self.CategoryMaps:Add( "DImageButton" )
 			button:SetText( map.name )
 
-			// Get rid of the shitty "clicled on" animation
-			//button.OnMousePressed = function( s, mc ) DButton.OnMousePressed( s, mc ) end
+			-- Get rid of the shitty "clicled on" animation
+			--button.OnMousePressed = function( s, mc ) DButton.OnMousePressed( s, mc ) end
 
-			// Handles above stuff too
+			-- Handles above stuff too
 			Menu_InstallDButtonScrollProtection( button, 2, true )
 
 			if ( map.incompatible ) then
@@ -815,7 +815,7 @@ function PANEL:SelectCat( cat )
 		end
 	end
 
-	// Scroll back to the top of the map list
+	-- Scroll back to the top of the map list
 	self.CategoryMaps:GetParent():GetParent():GetVBar():SetScroll( g_CurrentScroll or 0 )
 
 end
@@ -840,7 +840,7 @@ function PANEL:LoadMap()
 
 	RunConsoleCommand( "maxplayers", maxplayers )
 	RunConsoleCommand( "map", self.CurrentMap:Trim() )
-	//RunConsoleCommand( "hostname", self.Settings.ServerName.TextEntry:GetText() )
+	--RunConsoleCommand( "hostname", self.Settings.ServerName.TextEntry:GetText() )
 
 	pnlMainMenu:Back()
 
