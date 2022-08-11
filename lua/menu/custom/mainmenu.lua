@@ -59,6 +59,15 @@ function PANEL:Paint( w, h )
 	end
 end
 
+function PANEL:PerformLayout( w, h )
+	if ( IsValid( self.m_Image ) ) then
+		self.m_Image:SetPos( 5, ( self:GetTall() - self.m_Image:GetTall() ) * 0.5 )
+		self:SetTextInset( 10, 0 )
+	end
+	DLabel.PerformLayout( self )
+end
+
+
 vgui.Register( "DMenuButton", PANEL, "DButton" )
 
 local PANEL = {}
@@ -80,74 +89,62 @@ function PANEL:Init()
 	BackButton:Dock( LEFT )
 	BackButton:SetText( "#back_to_main_menu" )
 	BackButton:SetIcon( "icon16/arrow_left.png" )
-	BackButton:SetContentAlignment( 6 )
 	BackButton:SetTextInset( BackButton.m_Image:GetWide() + 20, 0 )
+	BackButton:DockMargin( 5, 5, 5, 5 )
+	BackButton:SetContentAlignment( 6 )
 	BackButton:SizeToContents()
 	BackButton:SetVisible( false )
-	BackButton:DockMargin( 5, 5, 5, 5 )
-	BackButton.DoClick = function()
-		self:Back()
-	end
-	function BackButton:PerformLayout()
-		if ( IsValid( self.m_Image ) ) then
-			self.m_Image:SetPos( 5, ( self:GetTall() - self.m_Image:GetTall() ) * 0.5 )
-			self:SetTextInset( 10, 0 )
-		end
-		DLabel.PerformLayout( self )
-	end
+	BackButton.DoClick = function() self:Back() end
 	self.BackButton = BackButton
+
+
 
 	local Gamemodes = vgui.Create( "DMenuButton", lowerPanel )
 	Gamemodes:Dock( RIGHT )
 	Gamemodes:DockMargin( 5, 5, 5, 5 )
 	Gamemodes:SetContentAlignment( 6 )
-	Gamemodes.DoClick = function()
-		self:OpenGamemodesList( Gamemodes )
-	end
-	function Gamemodes:PerformLayout()
-		if ( IsValid( self.m_Image ) ) then
-			self.m_Image:SetPos( 5, ( self:GetTall() - self.m_Image:GetTall() ) * 0.5 )
-			self:SetTextInset( 10, 0 )
-		end
-		DLabel.PerformLayout( self )
-	end
+	Gamemodes.DoClick = function() self:OpenGamemodesList( Gamemodes ) end
 	self.GamemodeList = Gamemodes
 	self:RefreshGamemodes()
 
 	local MountedGames = vgui.Create( "DMenuButton", lowerPanel )
 	MountedGames:Dock( RIGHT )
 	MountedGames:DockMargin( 5, 5, 0, 5 )
-	MountedGames:SetText( "" )
-	MountedGames:SetWide( 48 )
+	MountedGames:SetContentAlignment( 6 )
+	MountedGames:SetText( "#games" )
+	MountedGames:SetWide( 88 )
 	MountedGames:SetIcon( "../html/img/back_to_game.png" )
-	MountedGames.DoClick = function()
-		self:OpenMountedGamesList( MountedGames )
-	end
-	function MountedGames:PerformLayout()
-		if ( IsValid( self.m_Image ) ) then
-			self.m_Image:SetPos( ( self:GetWide() - self.m_Image:GetWide() ) * 0.5, ( self:GetTall() - self.m_Image:GetTall() ) * 0.5 )
-		end
-		DLabel.PerformLayout( self )
-	end
+	MountedGames.DoClick = function() self:OpenMountedGamesList( MountedGames ) end
 	self.MountedGames = MountedGames
 
 	local Languages = vgui.Create( "DMenuButton", lowerPanel )
 	Languages:Dock( RIGHT )
 	Languages:DockMargin( 5, 5, 0, 5 )
+	Languages:SetContentAlignment( 6 )
 	Languages:SetText( "" )
 	Languages:SetWide( 40 )
 	Languages:SetIcon( "../resource/localization/" .. GetConVarString( "gmod_language" ) .. ".png" )
-	Languages.DoClick = function()
-		self:OpenLanguages( Languages )
-	end
+	Languages.DoClick = function() self:OpenLanguages( Languages ) end
 	function Languages:PerformLayout()
 		if ( IsValid( self.m_Image ) ) then
-			self.m_Image:SetSize( 16, 11 )
 			self.m_Image:SetPos( ( self:GetWide() - self.m_Image:GetWide() ) * 0.5, ( self:GetTall() - self.m_Image:GetTall() ) * 0.5 )
+			self.m_Image:SetSize( 16, 11 )
 		end
 		DLabel.PerformLayout( self )
 	end
 	self.Languages = Languages
+
+	local Problems = vgui.Create( "DMenuButton", lowerPanel )
+	Problems:Dock( RIGHT )
+	Problems:DockMargin( 5, 5, 0, 5 )
+	Problems:SetContentAlignment( 6 )
+	Problems:SetText( "#problems" )
+	Problems:SetWide( 88 )
+	Problems:SetIcon( "../html/img/error.png" )
+	Problems.DoClick = function() OpenProblemsPanel() end
+	self.ProblemsBtn = Problems
+
+
 
 	self:MakePopup()
 	self:SetPopupStayAtBack( true )
@@ -242,8 +239,10 @@ function PANEL:OpenLanguages( pnl )
 	if ( IsValid( self.LanguageList ) ) then self.LanguageList:Remove() return end
 	self:ClosePopups()
 
+	local perRow = 8
+
 	local panel = vgui.Create( "DScrollPanel", self )
-	panel:SetSize( 157, 90 )
+	panel:SetSize( perRow * 16 + ( perRow + 1 ) * 10, 90 )
 	panel:SetPos( pnl:GetPos() - panel:GetWide() / 2 + pnl:GetWide() / 2, ScrH() - 55 - panel:GetTall() )
 	self.LanguageList = panel
 
@@ -253,15 +252,18 @@ function PANEL:OpenLanguages( pnl )
 
 	local p = vgui.Create( "DIconLayout", panel )
 	p:Dock( FILL )
-	p:SetBorder( 5 )
-	p:SetSpaceY( 5 )
-	p:SetSpaceX( 5 )
+	p:SetBorder( 10 )
+	p:SetSpaceY( 10 )
+	p:SetSpaceX( 10 )
 
 	for id, flag in pairs( file.Find( "resource/localization/*.png", "GAME" ) ) do
 		local f = p:Add( "DImageButton" )
 		f:SetImage( "../resource/localization/" .. flag )
 		f:SetSize( 16, 12 )
-		f.DoClick = function() RunConsoleCommand( "gmod_language", string.StripExtension( flag ) ) /*LanguageChanged( string.StripExtension( flag ) )*/ end
+		f.DoClick = function()
+			RunConsoleCommand( "gmod_language", string.StripExtension( flag ) )
+			--LanguageChanged( string.StripExtension( flag ) )
+		end
 	end
 
 end
@@ -282,7 +284,7 @@ function PANEL:OpenMountedGamesList( pnl )
 	function p:Paint( w, h )
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 0, 0, 220 ) )
 	end
-	
+
 	local function add( t )
 		local a = p:Add( "DCheckBoxLabel" )
 		a:SetText( t.title )
@@ -300,7 +302,7 @@ function PANEL:OpenMountedGamesList( pnl )
 	for id, t in SortedPairsByMemberValue( engine.GetGames(), "title" ) do
 		add( t )
 	end
-	/*for id, t in SortedPairsByMemberValue( engine.GetGames(), "title" ) do
+	--[[for id, t in SortedPairsByMemberValue( engine.GetGames(), "title" ) do
 		if ( t.installed && t.owned ) then add( t ) end
 	end
 
@@ -310,7 +312,7 @@ function PANEL:OpenMountedGamesList( pnl )
 
 	for id, t in SortedPairsByMemberValue( engine.GetGames(), "title" ) do
 		if ( !t.installed && !t.owned ) then add( t ) end
-	end*/
+	end]]
 
 end
 
@@ -347,13 +349,6 @@ function PANEL:OpenGamemodesList( pnl )
 		Gamemode.DoClick = function()
 			RunConsoleCommand( "gamemode", t.name )
 			self:ClosePopups()
-		end
-		function Gamemode:PerformLayout()
-			if ( IsValid( self.m_Image ) ) then
-				self.m_Image:SetPos( 5, ( self:GetTall() - self.m_Image:GetTall() ) * 0.5 )
-				self:SetTextInset( 10, 0 )
-			end
-			DLabel.PerformLayout( self )
 		end
 
 		p:AddItem( Gamemode )
@@ -467,6 +462,13 @@ function LanguageChanged( lang )
 	if ( IsValid( self.SavesFrame ) ) then self:OpenCreationMenu() end
 
 	self.Languages:SetIcon( "../resource/localization/" .. lang .. ".png" )
+
+	self.ProblemsBtn:SetText( "#problems" )
+	self.MountedGames:SetText( "#games" )
+
+	self.BackButton:SetTextInset( self.BackButton.m_Image:GetWide() + 20, 0 )
+	self.BackButton:SetText( "#back_to_main_menu" )
+	self.BackButton:SizeToContents()
 end
 
 function UpdateMapList()
@@ -475,10 +477,10 @@ function UpdateMapList()
 	local self = pnlMainMenu
 
 	if ( IsValid( self.NewGameFrame ) ) then self.NewGameFrame:Update() end
-	/*if ( IsValid( self.NewGameFrame ) ) then self:OpenNewGameMenu() end
+	--[[if ( IsValid( self.NewGameFrame ) ) then self:OpenNewGameMenu() end
 	if ( IsValid( self.AddonsFrame ) ) then self:OpenAddonsMenu() end
 	if ( IsValid( self.MainMenuPanel ) ) then self:OpenMainMenu() end
-	if ( IsValid( self.AchievementsFrame ) ) then self:OpenAchievementsMenu() end*/
+	if ( IsValid( self.AchievementsFrame ) ) then self:OpenAchievementsMenu() end]]
 end
 
 hook.Add( "GameContentChanged", "RefreshMainMenu", function()
@@ -500,7 +502,7 @@ timer.Simple( 1, function()
 	if ( gui.IsConsoleVisible() ) then gui.ShowConsole() end
 end )
 
-/*
+--[[
 
 --
 -- Get the player list for this server
@@ -550,4 +552,5 @@ function GetServers( type, id )
 	serverlist.Query( data )
 
 end
-*/
+
+]]
