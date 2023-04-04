@@ -433,7 +433,7 @@ function PANEL:Init()
 	local p2p_enabled = self:ServerSettings_AddCheckbox( {
 		text = "p2p_server",
 		name = "p2p_enabled",
-		help = "Allow people to connect to your Listen Server using Steam P2P netoworking",
+		help = "Allow people to connect to your Listen Server using Steam P2P networking",
 	}, Settings )
 
 	local p2p_friendsonly = self:ServerSettings_AddCheckbox( {
