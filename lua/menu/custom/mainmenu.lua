@@ -22,8 +22,8 @@ local matGradientUp = Material( "gui/gradient_up" )
 function PANEL:Paint( w, h )
 	if ( !self.Special ) then
 		self:SetFGColor( color_black )
-		local clr =  color_white
-		if ( self.Hovered ) then clr =  Color( 255, 255, 220 ) end
+		local clr = color_white
+		if ( self.Hovered ) then clr = Color( 255, 255, 220 ) end
 		if ( self.Depressed ) then self:SetFGColor( color_white ) clr = Color( 35, 150, 255 ) end
 		draw.RoundedBox( 4, 0, 0, w, h, clr )
 	else

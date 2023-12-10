@@ -437,7 +437,7 @@ end
 
 function PANEL:SelectAll()
 	for id, pnl in pairs( self.AddonList:GetChildren() ) do
-		if ( !pnl.GetSelected ) then  continue end
+		if ( !pnl.GetSelected ) then continue end
 		pnl:SetSelected( true )
 	end
 end

@@ -55,10 +55,10 @@ if type(myTable) ~= "table" then error "bad" end
 function Test( myVariable1, myVariable2 )
  if not myVariable2 then return "hax" end
 
- if myTable[myVariable1] then         
+ if myTable[myVariable1] then
   return myTable[myVariable1]
 		end
 
- return myVariable2			
+ return myVariable2
 end
 ```

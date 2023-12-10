@@ -656,7 +656,7 @@ function PANEL:BuildIconList()
 	-- Stupid ass addons that didn't update yet
 	local files2 = file.Find( "maps/*.png", "GAME" )
 	for id, filename in pairs( files2 ) do
-		self.IconListCache[ filename:sub( 0, filename:len() - 4 ) ] =  "maps/" .. filename
+		self.IconListCache[ filename:sub( 0, filename:len() - 4 ) ] = "maps/" .. filename
 	end
 end
 
