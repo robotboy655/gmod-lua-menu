@@ -423,18 +423,21 @@ end
 
 function PANEL:InvertSelection()
 	for id, pnl in pairs( self.AddonList:GetChildren() ) do
+		if ( !pnl.GetSelected ) then continue end
 		pnl:SetSelected( !pnl:GetSelected() )
 	end
 end
 
 function PANEL:DeselectAll()
 	for id, pnl in pairs( self.AddonList:GetChildren() ) do
+		if ( !pnl.GetSelected ) then continue end
 		pnl:SetSelected( false )
 	end
 end
 
 function PANEL:SelectAll()
 	for id, pnl in pairs( self.AddonList:GetChildren() ) do
+		if ( !pnl.GetSelected ) then  continue end
 		pnl:SetSelected( true )
 	end
 end
