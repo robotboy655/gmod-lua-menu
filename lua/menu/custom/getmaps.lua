@@ -81,6 +81,8 @@ MapNames[ "gt_" ] = "Ghost Town"
 MapNames[ "tp_" ] = "Team Play"
 MapNames[ "vs_" ] = "Versus"
 MapNames[ "coop_" ] = "Cooperative"
+MapNames[ "vsh_" ] = "Versus Saxton Hale"
+MapNames[ "zi_" ] = "Zombie Infection"
 
 MapNames[ "am_" ] = "Aim Multi (1v1)"
 MapNames[ "de_" ] = "Bomb Defuse"
