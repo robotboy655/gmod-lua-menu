@@ -1,14 +1,14 @@
 
 ScreenScale = function( size ) return size * ( ScrW() / 640.0 ) end
 
-include( 'getmaps.lua' )
-include( 'addons.lua' )
-include( 'new_game.lua' )
-include( 'saves.lua' )
-include( 'achievements.lua' )
-include( 'main.lua' )
-include( '_errors.lua' )
-include( '../background.lua' )
+include( "getmaps.lua" )
+include( "addons.lua" )
+include( "new_game.lua" )
+include( "saves.lua" )
+include( "achievements.lua" )
+include( "main.lua" )
+include( "_errors.lua" )
+include( "../background.lua" )
 
 pnlMainMenu = nil
 
@@ -51,10 +51,10 @@ function PANEL:Paint( w, h )
 		surface.SetDrawColor( Color( 0, 53, 128 ) )
 		surface.DrawLine( 1, h - 1, w-1, h - 1 ) -- bottom
 
-		local clr = Color( 52, 160, 214 )
-		if ( self.Hovered ) then clr = Color( 79, 187, 241 ) end
-		if ( self.Depressed ) then clr = Color( 52, 160, 214 ) end
-		surface.SetDrawColor( clr )
+		local clr2 = Color( 52, 160, 214 )
+		if ( self.Hovered ) then clr2 = Color( 79, 187, 241 ) end
+		if ( self.Depressed ) then clr2 = Color( 52, 160, 214 ) end
+		surface.SetDrawColor( clr2 )
 		surface.DrawLine( 1, 1, w - 1, 1 )
 	end
 end
@@ -155,7 +155,7 @@ end
 
 function PANEL:Paint()
 
-	if ( !IsValid( self.NewGameFrame ) && !IsValid( self.AddonsFrame ) && !IsValid( self.AchievementsFrame ) && !IsValid( self.SavesFrame ) ) then
+	if ( !IsValid( self.NewGameFrame ) and !IsValid( self.AddonsFrame ) and !IsValid( self.AchievementsFrame ) and !IsValid( self.SavesFrame ) ) then
 		self.BackButton:SetVisible( false )
 	else
 		self.BackButton:SetVisible( true )
@@ -175,7 +175,7 @@ end
 
 function PANEL:ClosePopups( b )
 	if ( IsValid( self.LanguageList ) ) then self.LanguageList:Remove() end
-	if ( !b && IsValid( self.MountedGamesList ) ) then self.MountedGamesList:Remove() end -- The ugly 'b' hack
+	if ( !b and IsValid( self.MountedGamesList ) ) then self.MountedGamesList:Remove() end -- The ugly 'b' hack
 	if ( IsValid( self.GamemodesList ) ) then self.GamemodesList:Remove() end
 end
 
@@ -294,7 +294,7 @@ function PANEL:OpenMountedGamesList( pnl )
 		p:AddItem( a )
 		a:SetChecked( t.mounted )
 		a.OnChange = function( panel ) engine.SetMounted( t.depot, a:GetChecked() ) end
-		if ( !t.owned || !t.installed ) then
+		if ( !t.owned or !t.installed ) then
 			a:SetDisabled( true )
 		end
 	end
@@ -303,15 +303,15 @@ function PANEL:OpenMountedGamesList( pnl )
 		add( t )
 	end
 	--[[for id, t in SortedPairsByMemberValue( engine.GetGames(), "title" ) do
-		if ( t.installed && t.owned ) then add( t ) end
+		if ( t.installed and t.owned ) then add( t ) end
 	end
 
 	for id, t in SortedPairsByMemberValue( engine.GetGames(), "title" ) do
-		if ( !t.installed && t.owned ) then add( t ) end
+		if ( !t.installed and t.owned ) then add( t ) end
 	end
 
 	for id, t in SortedPairsByMemberValue( engine.GetGames(), "title" ) do
-		if ( !t.installed && !t.owned ) then add( t ) end
+		if ( !t.installed and !t.owned ) then add( t ) end
 	end]]
 
 end
@@ -369,7 +369,7 @@ function PANEL:RefreshGamemodes( b )
 		if ( gm.name == engine.ActiveGamemode() ) then self.GamemodeList:SetText( gm.title ) end
 	end
 
-	if ( Material( "../gamemodes/"..engine.ActiveGamemode().."/icon24.png" ):IsError() ) then
+	if ( Material( "../gamemodes/" .. engine.ActiveGamemode() .. "/icon24.png" ):IsError() ) then
 		self.GamemodeList:SetIcon( "../gamemodes/base/icon24.png" )
 	else
 		self.GamemodeList:SetIcon( "../gamemodes/" .. engine.ActiveGamemode() .. "/icon24.png" )
@@ -454,33 +454,33 @@ vgui.Register( "MainMenuPanel", PANEL, "EditablePanel" )
 function LanguageChanged( lang )
 	if ( !IsValid( pnlMainMenu ) ) then return end
 
-	local self = pnlMainMenu
-	if ( IsValid( self.NewGameFrame ) ) then self.NewGameFrame:UpdateLanguage() end
-	if ( IsValid( self.AddonsFrame ) ) then self:OpenAddonsMenu() end
-	if ( IsValid( self.MainMenuPanel ) ) then self:OpenMainMenu() end
-	if ( IsValid( self.AchievementsFrame ) ) then self:OpenAchievementsMenu() end
-	if ( IsValid( self.SavesFrame ) ) then self:OpenCreationMenu() end
+	local pnl = pnlMainMenu
+	if ( IsValid( pnl.NewGameFrame ) ) then pnl.NewGameFrame:UpdateLanguage() end
+	if ( IsValid( pnl.AddonsFrame ) ) then pnl:OpenAddonsMenu() end
+	if ( IsValid( pnl.MainMenuPanel ) ) then pnl:OpenMainMenu() end
+	if ( IsValid( pnl.AchievementsFrame ) ) then pnl:OpenAchievementsMenu() end
+	if ( IsValid( pnl.SavesFrame ) ) then pnl:OpenCreationMenu() end
 
-	self.Languages:SetIcon( "../resource/localization/" .. lang .. ".png" )
+	pnl.Languages:SetIcon( "../resource/localization/" .. lang .. ".png" )
 
-	self.ProblemsBtn:SetText( "#problems" )
-	self.MountedGames:SetText( "#games" )
+	pnl.ProblemsBtn:SetText( "#problems" )
+	pnl.MountedGames:SetText( "#games" )
 
-	self.BackButton:SetTextInset( self.BackButton.m_Image:GetWide() + 20, 0 )
-	self.BackButton:SetText( "#back_to_main_menu" )
-	self.BackButton:SizeToContents()
+	pnl.BackButton:SetTextInset( pnl.BackButton.m_Image:GetWide() + 20, 0 )
+	pnl.BackButton:SetText( "#back_to_main_menu" )
+	pnl.BackButton:SizeToContents()
 end
 
 function UpdateMapList()
 	if ( !IsValid( pnlMainMenu ) ) then return end
 
-	local self = pnlMainMenu
+	local pnl = pnlMainMenu
 
-	if ( IsValid( self.NewGameFrame ) ) then self.NewGameFrame:Update() end
-	--[[if ( IsValid( self.NewGameFrame ) ) then self:OpenNewGameMenu() end
-	if ( IsValid( self.AddonsFrame ) ) then self:OpenAddonsMenu() end
-	if ( IsValid( self.MainMenuPanel ) ) then self:OpenMainMenu() end
-	if ( IsValid( self.AchievementsFrame ) ) then self:OpenAchievementsMenu() end]]
+	if ( IsValid( pnl.NewGameFrame ) ) then pnl.NewGameFrame:Update() end
+	--[[if ( IsValid( pnl.NewGameFrame ) ) then pnl:OpenNewGameMenu() end
+	if ( IsValid( pnl.AddonsFrame ) ) then pnl:OpenAddonsMenu() end
+	if ( IsValid( pnl.MainMenuPanel ) ) then pnl:OpenMainMenu() end
+	if ( IsValid( pnl.AchievementsFrame ) ) then pnl:OpenAchievementsMenu() end]]
 end
 
 hook.Add( "GameContentChanged", "RefreshMainMenu", function()

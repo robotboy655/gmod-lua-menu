@@ -1,4 +1,6 @@
 
+local RefreshMaps
+
 --
 -- Favourites
 --
@@ -8,7 +10,7 @@ local MapFavourites
 local function LoadFavourites()
 
 	local cookiestr = cookie.GetString( "favmaps" )
-	MapFavourites = MapFavourites || ( cookiestr && string.Explode( ";", cookiestr ) || {} )
+	MapFavourites = MapFavourites or ( cookiestr and string.Explode( ";", cookiestr ) or {} )
 
 end
 
@@ -127,12 +129,12 @@ local function UpdateGamemodeMaps()
 
 	local GamemodeList = engine.GetGamemodes()
 
-	for k, gm in ipairs( GamemodeList ) do
+	for id, gm in ipairs( GamemodeList ) do
 
 		local name = gm.title or "Unnammed Gamemode"
 		local maps = string.Split( gm.maps, "|" )
 
-		if ( maps && gm.maps != "" ) then
+		if ( maps and gm.maps != "" ) then
 
 			for k, pattern in ipairs( maps ) do
 				-- When in doubt, just try to match it with string.find
@@ -283,7 +285,7 @@ local MapPatternSubCategories = {
 	[ "^c1a0" ] = "b. Anomalous Materials",
 	[ "^c1a1" ] = "c. Unforeseen Consequences",
 	[ "^c1a2" ] = "d. Office Complex",
-	[ "^c1a3" ] = [[e. "We've Got Hostiles"]],
+	[ "^c1a3" ] = "e. \"We've Got Hostiles\"",
 	[ "^c1a4" ] = "f. Blast Pit",
 	[ "^c2a1" ] = "g. Power Up",
 	[ "^c2a2" ] = "h. On A Rail",
@@ -291,7 +293,7 @@ local MapPatternSubCategories = {
 	[ "^c2a4" ] = "j. Residue Processing",
 
 	[ "^c2a5" ] = "l. Surface Tension",
-	[ "^c3a1" ] = [[m. "Forget About Freeman!"]],
+	[ "^c3a1" ] = "m. \"Forget About Freeman!\"",
 	[ "^c3a2" ] = "n. Lambda Core",
 	[ "^c4a2" ] = "p. Gonarch's Lair",
 	[ "^c4a1(.+)$" ] = "r. Interloper",
@@ -300,7 +302,7 @@ local MapPatternSubCategories = {
 
 	-- Half-Life 2
 	[ "^d1_trainstation_0[1-4]" ] = "a. Point Insertion",
-	[ "^d1_trainstation_0[5-6]" ] = [[b. "A Red Letter Day"]],
+	[ "^d1_trainstation_0[5-6]" ] = "b. \"A Red Letter Day\"",
 
 	[ "^d1_canals_0[1-5]" ] = "c. Route Kanal",
 
@@ -308,29 +310,29 @@ local MapPatternSubCategories = {
 	[ "^d1_canals_1[0-3]" ] = "d. Water Hazard",
 
 	[ "^d1_eli" ] = "e. Black Mesa East",
-	[ "^d1_town" ] = [[f. "We Don't Go To Ravenholm..."]],
-	[ "^d2_coast_0[1-8]" ] = 'g. Highway 17',
+	[ "^d1_town" ] = "f. \"We Don't Go To Ravenholm...\"",
+	[ "^d2_coast_0[1-8]" ] = "g. Highway 17",
 
-	[ "^d2_coast_09" ] = 'h. Sandtraps',
-	[ "^d2_coast_1" ] = 'h. Sandtraps',
-	[ "^d2_prison_01" ] = 'h. Sandtraps',
+	[ "^d2_coast_09" ] = "h. Sandtraps",
+	[ "^d2_coast_1" ] = "h. Sandtraps",
+	[ "^d2_prison_01" ] = "h. Sandtraps",
 
-	[ "^d2_prison_0[2-5]" ] = 'i. Nova Prospekt',
-	[ "^d2_prison_0[6-8]" ] = 'j. Entaglement',
+	[ "^d2_prison_0[2-5]" ] = "i. Nova Prospekt",
+	[ "^d2_prison_0[6-8]" ] = "j. Entaglement",
 
-	[ "^d3_c17_01" ] = 'j. Entaglement',
+	[ "^d3_c17_01" ] = "j. Entaglement",
 
-	[ "^d3_c17_0[2-8]" ] = 'k. Anticitizen One',
+	[ "^d3_c17_0[2-8]" ] = "k. Anticitizen One",
 
-	[ "^d3_c17_09" ] = 'l. "Follow Freeman!"',
-	[ "^d3_c17_1" ] = 'l. "Follow Freeman!"',
+	[ "^d3_c17_09" ] = "l. \"Follow Freeman!\"",
+	[ "^d3_c17_1" ] = "l. \"Follow Freeman!\"",
 
-	[ "^d3_citadel" ] = 'm. Our Benefactors',
-	[ "^d3_breen" ] = 'n. Dark Energy',
+	[ "^d3_citadel" ] = "m. Our Benefactors",
+	[ "^d3_breen" ] = "n. Dark Energy",
 
-	[ "^background" ] = 'Backgrounds',
-	[ "^ep1_background" ] = 'Backgrounds',
-	[ "^ep2_background" ] = 'Backgrounds',
+	[ "^background" ] = "Backgrounds",
+	[ "^ep1_background" ] = "Backgrounds",
+	[ "^ep2_background" ] = "Backgrounds",
 
 	-- Half-Life 2: Episode 1
 	[ "^ep1_citadel_0[0-2]" ] = "a. Undue Alarm",
@@ -433,7 +435,7 @@ local function AddMapInfo( map_info, cat, cat_name, cat_table )
 	table.insert( cat_table[ cat ].maps, map_info ) -- TODO: Perhaps make the key the map name?
 end
 
-local function RefreshMaps( skip )
+RefreshMaps = function( skip )
 
 	if ( !skip ) then UpdateGamemodeMaps() end
 
@@ -487,9 +489,9 @@ local function RefreshMaps( skip )
 			if ( IgnoreGames[ tab.depot ] ) then continue end
 
 			-- For a full list of maps we don't want to process already processed maps
-			/*if ( tab.folder == "GAME" ) then
+			--[[if ( tab.folder == "GAME" ) then
 				if ( ExistingMaps[ map_name ] ) then continue end
-			end*/
+			end]]
 
 			-- Give the map a category
 			local Category = MapNames[ map_name ] or MapNames[ prefix ]
@@ -501,7 +503,6 @@ local function RefreshMaps( skip )
 					end
 				end
 			end
-			
 
 			-- Throw all uncategorised maps into "Other"
 			Category = Category or "Other"
@@ -526,12 +527,12 @@ function GetMapCategories( catType )
 	-- This could be done better, but I will leave it like this for now
 	if ( catType == "game" ) then
 		for cat, tab in pairs( GameMapList ) do
-			if ( !tab || !tab.maps || #tab.maps < 1 ) then continue end
+			if ( !tab or !tab.maps or #tab.maps < 1 ) then continue end
 			output[ cat ] = tab.name
 		end
 	else
 		for cat, tab in pairs( MapList ) do
-			if ( !tab || !tab.maps || #tab.maps < 1 ) then continue end
+			if ( !tab or !tab.maps or #tab.maps < 1 ) then continue end
 			output[ cat ] = tab.name
 		end
 	end
@@ -541,7 +542,7 @@ end
 
 local function map_cat_helper( map, search_t )
 	for cat, tab in pairs( search_t ) do
-		if ( !tab || !tab.maps || #tab.maps < 1 ) then continue end
+		if ( !tab or !tab.maps or #tab.maps < 1 ) then continue end
 
 		for _, map_t in pairs( tab.maps ) do
 			if ( map_t.name == map:lower() ) then
@@ -560,13 +561,13 @@ end
 function GetMapsFromCategory( cat )
 	if ( !DoesCategoryExist( cat ) ) then return {} end
 
-	local maps = MapList[ cat ] && MapList[ cat ].maps or {}
-	if ( #maps < 1 ) then maps = GameMapList[ tonumber( cat ) ] && GameMapList[ tonumber( cat ) ].maps or {} end
+	local maps = MapList[ cat ] and MapList[ cat ].maps or {}
+	if ( #maps < 1 ) then maps = GameMapList[ tonumber( cat ) ] and GameMapList[ tonumber( cat ) ].maps or {} end
 	return maps
 end
 
 function DoesCategoryExist( cat )
-	if ( !MapList[ cat ] && !GameMapList[ tonumber( cat ) ] ) then return false end
+	if ( !MapList[ cat ] and !GameMapList[ tonumber( cat ) ] ) then return false end
 	return true
 end
 

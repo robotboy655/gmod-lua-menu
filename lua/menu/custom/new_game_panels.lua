@@ -7,7 +7,7 @@ function Menu_InstallDButtonScrollProtection( pnl, depth, allowM2 )
 		DLabel.OnMousePressed( self, mc ) -- Should use baseclass here tbh
 
 		-- Only left mouse button can cause the animations and shit
-		if ( mc != MOUSE_LEFT && !allowM2 ) then
+		if ( mc != MOUSE_LEFT and !allowM2 ) then
 			self.Depressed = nil
 		end
 
@@ -21,7 +21,7 @@ function Menu_InstallDButtonScrollProtection( pnl, depth, allowM2 )
 		local parent = self
 		for i = 1, depth do parent = parent:GetParent() end
 		local x, y = parent:GetPos()
-		if ( self.ClickStartY && ( self.Hovered || self.Depressed ) && math.abs( self.ClickStartY - y ) > self:GetTall() / 2 ) then
+		if ( self.ClickStartY and ( self.Hovered or self.Depressed ) and math.abs( self.ClickStartY - y ) > self:GetTall() / 2 ) then
 			self.Depressed = nil -- Disable animations, stop DoClick from working
 			self.ClickStartX, self.ClickStartY = nil
 		end
@@ -37,9 +37,9 @@ end
 -- TODO: Localisation
 local function DrawToolTip( self, w, h )
 	if ( !self:GetTooltip() ) then return end
-	if ( !( self.Hovered || self.IsHovered && self:IsHovered() ) ) then return end
+	if ( !( self.Hovered or self.IsHovered and self:IsHovered() ) ) then return end
 
-	local font = self.GetFont && self:GetFont() or "DermaRobotoDefault"
+	local font = self.GetFont and self:GetFont() or "DermaRobotoDefault"
 	surface.SetFont( font )
 
 	local texts = { tostring( self:GetTooltip() ) }
@@ -63,8 +63,8 @@ local function DrawToolTip( self, w, h )
 				texts[ #texts ] = LastText:sub( 0, LastSpace )
 				table.insert( texts, LastText:sub( LastSpace + 1 ) )
 
-				local txtW, txtH = surface.GetTextSize( texts[ #texts ] )
-				screenX = self:LocalToScreen( -txtW - 25, 0 )
+				local txtW2, txtH2 = surface.GetTextSize( texts[ #texts ] )
+				screenX = self:LocalToScreen( -txtW2 - 25, 0 )
 				break
 			end
 		end
@@ -103,7 +103,7 @@ local PANEL = {}
 function PANEL:GetMapCount()
 	if ( !self.Category ) then return -1 end
 
-	if ( !self.LastCache || self.LastCache < CurTime() || g_SearchText != self.g_SearchText ) then
+	if ( !self.LastCache or self.LastCache < CurTime() or g_SearchText != self.g_SearchText ) then
 		self.CachedMapCount = #GetMapsFromCategorySearch( self.Category )
 		self.LastCache = CurTime() + 1
 		self.g_SearchText = g_SearchText
@@ -124,7 +124,6 @@ function PANEL:SetCategory( cat )
 	self:SetTextInset( 5, 1 )
 end
 
-local width = 50
 function PANEL:Paint( w, h )
 	local count = self:GetMapCount()
 
@@ -145,7 +144,7 @@ function PANEL:Paint( w, h )
 	end
 	self:SetFGColor( clr_t )
 
-	if ( count && count > 0 ) then
+	if ( count and count > 0 ) then
 		surface.SetFont( self:GetFont() )
 		local tW, tH = surface.GetTextSize( tostring( count ) )
 		local bW = math.max( tW, 30 ) + 6
@@ -203,7 +202,7 @@ function PANEL:OnMouseReleased( mcode )
 	self.Depressed = false
 
 	self:SetChecked( !self:GetChecked() )
-	if ( self:GetConVar() ) then RunConsoleCommand( self:GetConVar(), self:GetChecked() && "1" || "0" ) end
+	if ( self:GetConVar() ) then RunConsoleCommand( self:GetConVar(), self:GetChecked() and "1" or "0" ) end
 end
 
 function PANEL:Think()
@@ -216,14 +215,14 @@ function PANEL:Paint( w, h )
 	local x, y = self:LocalCursorPos()
 
 	surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
-	if ( self.Hovered && self:GetWide() - width > x ) then surface.SetDrawColor( Color( 253, 253, 253, 255 ) ) end
+	if ( self.Hovered and self:GetWide() - width > x ) then surface.SetDrawColor( Color( 253, 253, 253, 255 ) ) end
 	surface.DrawRect( 0, 0, w - width - 1, h )
 
 	surface.SetDrawColor( Color( 245, 245, 245, 255 ) )
 	if ( self:GetChecked() ) then surface.SetDrawColor( Color( 240, 255, 240, 200 ) ) end
 
-	if ( self.Hovered && self:GetWide() - width < x ) then surface.SetDrawColor( Color( 230, 230, 230, 255 ) ) end
-	if ( self.Depressed && self:GetWide() - width < x ) then surface.SetDrawColor( Color( 210, 210, 210, 255 ) ) end
+	if ( self.Hovered and self:GetWide() - width < x ) then surface.SetDrawColor( Color( 230, 230, 230, 255 ) ) end
+	if ( self.Depressed and self:GetWide() - width < x ) then surface.SetDrawColor( Color( 210, 210, 210, 255 ) ) end
 
 	surface.DrawRect( w - width, 0, width, h )
 
@@ -277,7 +276,7 @@ function PANEL:Init()
 end
 
 function PANEL:IsHovered()
-	return self.Hovered || self.TextEntry:IsHovered()
+	return self.Hovered or self.TextEntry:IsHovered()
 end
 
 function PANEL:SetFont( font )
@@ -286,7 +285,7 @@ function PANEL:SetFont( font )
 end
 function PANEL:SetMinMax( min, max ) self:SetMin( min ) self:SetMax( max ) end
 function PANEL:Think()
-	if ( !self.TextEntry:IsEditing() && self:GetConVar() && GetConVarNumber( self:GetConVar() ) && GetConVarNumber( self:GetConVar() ) != tonumber( self.TextEntry:GetText() ) ) then
+	if ( !self.TextEntry:IsEditing() and self:GetConVar() and GetConVarNumber( self:GetConVar() ) and GetConVarNumber( self:GetConVar() ) != tonumber( self.TextEntry:GetText() ) ) then
 		self.TextEntry:SetText( GetConVarNumber( self:GetConVar() ) )
 	end
 end
@@ -294,7 +293,7 @@ end
 function PANEL:Paint( w, h )
 	local x, y = self:LocalCursorPos()
 	surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
-	if ( self.Hovered && self:GetWide() - width > x ) then surface.SetDrawColor( Color( 253, 253, 253, 255 ) ) end
+	if ( self.Hovered and self:GetWide() - width > x ) then surface.SetDrawColor( Color( 253, 253, 253, 255 ) ) end
 	surface.DrawRect( 0, 0, w - self.TextEntry:GetWide() - 1, h )
 
 	if ( self:GetText() ) then
@@ -336,7 +335,7 @@ function PANEL:Init()
 end
 
 function PANEL:IsHovered()
-	return self.Hovered || self.TextEntry:IsHovered()
+	return self.Hovered or self.TextEntry:IsHovered()
 end
 
 function PANEL:SetFont( font )
@@ -345,7 +344,7 @@ function PANEL:SetFont( font )
 end
 
 function PANEL:Think()
-	if ( !self.TextEntry:IsEditing() && self:GetConVar() && GetConVarString( self:GetConVar() ) && GetConVarString( self:GetConVar() ) != self.TextEntry:GetText() ) then
+	if ( !self.TextEntry:IsEditing() and self:GetConVar() and GetConVarString( self:GetConVar() ) and GetConVarString( self:GetConVar() ) != self.TextEntry:GetText() ) then
 		self.TextEntry:SetText( GetConVarString( self:GetConVar() ) )
 	end
 end
@@ -353,7 +352,7 @@ end
 function PANEL:Paint( w, h )
 	local x, y = self:LocalCursorPos()
 	surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
-	if ( self.Hovered && self:GetWide() - width > x ) then surface.SetDrawColor( Color( 253, 253, 253, 255 ) ) end
+	if ( self.Hovered and self:GetWide() - width > x ) then surface.SetDrawColor( Color( 253, 253, 253, 255 ) ) end
 	surface.DrawRect( 0, 0, w - self.TextEntry:GetWide() - 1, h )
 
 	if ( self:GetText() ) then
@@ -386,7 +385,7 @@ function PANEL:Paint( w, h )
 
 	self:DrawTextEntryText( self:GetTextColor(), self:GetHighlightColor(), self:GetCursorColor() )
 
-	if ( !self:GetText() || self:GetText():Trim():len() < 1 ) then
+	if ( !self:GetText() or self:GetText():Trim():len() < 1 ) then
 		draw.SimpleText( language.GetPhrase( self:GetPlaceholderText() ), self:GetFont(), 5, h / 2, Vector( 1, 1, 1 ) * 150, nil, 1 )
 	end
 

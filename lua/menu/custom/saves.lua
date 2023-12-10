@@ -28,11 +28,9 @@ function PANEL:UpdateList()
 		f = file.Find( "saves/*.gms", "MOD", "datedesc" )
 	elseif ( self.Type == "demos" ) then
 		f = file.Find( "demos/*.dem", "MOD", "datedesc" )
-	elseif( self.Type == "dupes" ) then
+	elseif ( self.Type == "dupes" ) then
 		f = file.Find( "dupes/*.dupe", "MOD", "datedesc" )
 	end
-
-	local saves = {}
 
 	for k, v in pairs( f ) do
 		local ListItem = List:Add( "DImageButton" )
@@ -53,7 +51,7 @@ function PANEL:UpdateList()
 			elseif ( self.Type == "demos" ) then
 				m:AddOption( "Play", function() RunConsoleCommand( "playdemo", "demos/" .. v ) end )
 			end
-			
+
 			if ( self.Type == "demos" ) then
 				m:AddOption( "Demo To Video", function() RunConsoleCommand( "gm_demo_to_video", "demos/" .. v ) end )
 			end

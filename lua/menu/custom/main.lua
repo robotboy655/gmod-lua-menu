@@ -31,12 +31,12 @@ end
 
 function PANEL:SetDisabled( b )
 	self.Disabled = b
-	self:SetCursor( b && "none" || "hand" )
+	self:SetCursor( b and "none" or "hand" )
 end
 
 function PANEL:Paint()
 	if ( self.Disabled == true ) then self:SetFGColor( Color( 120, 120, 120 ) ) return end
-	self:SetFGColor( self.Hovered && Color( 255, 255, 128 ) || Color( 255, 255, 255 ) )
+	self:SetFGColor( self.Hovered and Color( 255, 255, 128 ) or Color( 255, 255, 255 ) )
 end
 
 function PANEL:OnCursorEntered()
@@ -63,7 +63,7 @@ function PANEL:Init()
 
 	local mainButtons = vgui.Create( "DPanel", self )
 	function mainButtons:Paint( w, h )
-		//draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 0, 0, 200 ) )
+		---draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 0, 0, 200 ) )
 		self:SetPos( ScrW() / 20, math.max( ScrH() / 2 - self:GetTall() / 2, 150 ) )
 	end
 	mainButtons:SetSize( 250, 350 )
@@ -160,11 +160,11 @@ function PANEL:Paint()
 		old = ScrH()
 	end
 
-	if ( !self.Image || self.Image:GetName() != "../gamemodes/" .. engine.ActiveGamemode() .. "/logo" ) then
+	if ( !self.Image or self.Image:GetName() != "../gamemodes/" .. engine.ActiveGamemode() .. "/logo" ) then
 		self.Image = Material( "../gamemodes/" .. engine.ActiveGamemode() .. "/logo.png", "nocull smooth" )
 	end
 
-	if ( self.Image && !self.Image:IsError() ) then
+	if ( self.Image and !self.Image:IsError() ) then
 		surface.SetMaterial( self.Image )
 		local x, y = self.MenuButtons:GetPos()
 		local w, h = self.Image:GetInt( "$realwidth" ), self.Image:GetInt( "$realheight" )

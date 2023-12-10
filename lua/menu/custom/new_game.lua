@@ -3,7 +3,7 @@ include( "new_game_panels.lua" )
 
 CreateConVar( "cl_maxplayers", "1", FCVAR_ARCHIVE )
 
-/*
+--[[
 TODO:
 make sure the text of categories / multiplayer settings does not overflow, especially on lower resolutions
 Fix reloading the panels resetting the scrolling for categories and server settings?
@@ -13,7 +13,7 @@ Auto scroll to select map on first open or something?
 Better map icon visuals?
 Allow people to create their own categories?
 Figure out fonts? The current ones look neat but blurry
-*/
+]]
 
 surface.CreateFont( "StartNewGameFont", {
 	font = "Roboto Lt",
@@ -56,10 +56,10 @@ end
 
 local EnableMouseScrollEnabled = false
 local function EnableMouseScroll( s )
-	local mousePressed = input.IsMouseDown( MOUSE_RIGHT ) || input.IsMouseDown( MOUSE_LEFT )
+	local mousePressed = input.IsMouseDown( MOUSE_RIGHT ) or input.IsMouseDown( MOUSE_LEFT )
 	if ( !mousePressed ) then s.start = nil s.EnableMouseScrollEnabled = false return end
 
-	if ( !s.start && s:IsChildHovered() && !s:GetVBar():IsChildHovered() && !s.EnableMouseScrollEnabled ) then
+	if ( !s.start and s:IsChildHovered() and !s:GetVBar():IsChildHovered() and !s.EnableMouseScrollEnabled ) then
 		s.start = s:GetVBar():GetScroll()
 		local x, y = input.GetCursorPos()
 		s.startY = y
@@ -108,52 +108,16 @@ local g_CurrentScroll
 
 function GetMapsFromCategorySearch( cat )
 	local maps = GetMapsFromCategory( cat )
-	if ( !maps || #maps < 1 ) then return {} end
+	if ( !maps or #maps < 1 ) then return {} end
 
 	local output = {}
 	for _, map in SortedPairs( maps ) do
-		if ( g_SearchText && !map.name:find( g_SearchText:lower() ) ) then continue end
+		if ( g_SearchText and !map.name:find( g_SearchText:lower() ) ) then continue end
 
 		table.insert( output, map )
 	end
 
 	return output
-end
-
--- TODO: Localisation
-local function DrawToolTip( self, w, h )
-	if ( !self:GetTooltip() ) then return end
-	if ( !( self.Hovered || self.IsHovered && self:IsHovered() ) ) then return end
-
-	local font = self.GetFont && self:GetFont() or "DermaRobotoDefault"
-	surface.SetFont( font )
-
-	local tW, tH = surface.GetTextSize( tostring( self:GetTooltip() ) )
-	local x = -tW - 25
-	local screenX = self:LocalToScreen( x, 0 )
-	local texts = { tostring( self:GetTooltip() ) }
-
-	surface.SetDrawColor( Color( 0, 128, 255 ) )
-	if ( screenX < ScrW() / 4 ) then
-		surface.SetDrawColor( Color( 255, 128, 0 ) )
-	end
-
-	DisableClipping( true )
-	draw.NoTexture()
-	surface.DrawPoly( {
-		{ x = -15, y = 0 },
-		{ x = -5, y = h / 2 },
-		{ x = -15, y = h }
-	} )
-
-	surface.SetDrawColor( Color( 0, 128, 255 ) )
-
-	local boxH = math.max( h, ( h - tH ) + tH * #texts )
-	surface.DrawRect( x, 0, -15 - x, boxH )
-	for id, txt in pairs( texts ) do
-		draw.SimpleText( txt, font, x + 5, h / 2 + ( id - 1 ) * tH, color_white, 0, 1 )
-	end
-	DisableClipping( false )
 end
 
 local PANEL = {}
@@ -288,14 +252,14 @@ function PANEL:Init()
 		for id, pnl in pairs( parent:GetChildren() ) do
 			if ( pnl.Singleplayer == nil ) then continue end
 
-			pnl:SetVisible( ( s:GetValue() < 2 ) == pnl.Singleplayer || pnl.Singleplayer )
+			pnl:SetVisible( ( s:GetValue() < 2 ) == pnl.Singleplayer or pnl.Singleplayer )
 			if ( !pnl.OldHeight ) then pnl.OldHeight = pnl:GetTall() end
-			pnl:SetHeight( pnl:IsVisible() && pnl.OldHeight || 0 )
+			pnl:SetHeight( pnl:IsVisible() and pnl.OldHeight or 0 )
 		end
 		parent:InvalidateLayout( true )
 	end
 	SingleMultiPlayer.CloseDropDown = function( s )
-		if ( s.Butts && #s.Butts > 0 ) then
+		if ( s.Butts and #s.Butts > 0 ) then
 			for id, p in pairs( s.Butts ) do p:Remove() end
 			s.Butts = {}
 			return true
@@ -303,7 +267,7 @@ function PANEL:Init()
 	end
 
 	hook.Add( "VGUIMousePressed", "NewGameMenu_FuyckingHack", function( pnl, mc )
-		if ( !IsValid( SingleMultiPlayer ) || !SingleMultiPlayer.Butts || vgui.GetHoveredPanel() == SingleMultiPlayer ) then return end
+		if ( !IsValid( SingleMultiPlayer ) or !SingleMultiPlayer.Butts or vgui.GetHoveredPanel() == SingleMultiPlayer ) then return end
 		for id, p in pairs( SingleMultiPlayer.Butts ) do if ( vgui.GetHoveredPanel() == p ) then return end end
 
 		SingleMultiPlayer:CloseDropDown()
@@ -358,7 +322,7 @@ function PANEL:Init()
 		end
 	end
 	SingleMultiPlayer.Paint = function( s, w, h )
-		local menuOpen = s.Butts && #s.Butts > 0
+		local menuOpen = s.Butts and #s.Butts > 0
 
 		local clr = Color( 82, 204, 82 )
 		if ( s.Hovered ) then clr = Color( 86, 210, 86 ) end
@@ -390,19 +354,19 @@ function PANEL:Init()
 		surface.SetDrawColor( Color( 17, 136, 17 ) )
 		surface.DrawLine( 1, h - 1, w - 1, h - 1 ) -- bottom
 
-		local clr = Color( 118, 214, 118 )
-		if ( s.Hovered ) then clr = Color( 128, 220, 128 ) end
-		--if ( s.Depressed ) then clr = Color( 118, 214, 118 ) end
-		surface.SetDrawColor( clr )
+		local clr2 = Color( 118, 214, 118 )
+		if ( s.Hovered ) then clr2 = Color( 128, 220, 128 ) end
+		--if ( s.Depressed ) then clr2 = Color( 118, 214, 118 ) end
+		surface.SetDrawColor( clr2 )
 		surface.DrawLine( 1, 1, w - 1, 1 )
 
 		local size = 9
 		surface.SetDrawColor( Color( 255, 255, 255 ) )
 		draw.NoTexture()
 		surface.DrawPoly( {
-			{ x = w - ( h / 2 + size / 2 ), y = ( h / 2 - size / 4 ) },
-			{ x = w - ( h / 2 - size / 2 ), y = ( h / 2 - size / 4 ) },
-			{ x = w - ( h / 2 ), y = ( h / 2 + size / 4 ) }
+			{ x = w - ( h / 2 + size / 2 ), y = h / 2 - size / 4 },
+			{ x = w - ( h / 2 - size / 2 ), y = h / 2 - size / 4 },
+			{ x = w - ( h / 2 ), y = h / 2 + size / 4 }
 		} )
 	end
 	self.SingleMultiPlayer = SingleMultiPlayer
@@ -417,7 +381,7 @@ function PANEL:Init()
 	}, Settings )
 	Settings.ServerName = ServerName
 
-	local Password = self:ServerSettings_AddTextEntry( {
+	self:ServerSettings_AddTextEntry( {
 		name = "sv_password",
 		text = "server_password",
 		zOrder = -1,
@@ -490,7 +454,7 @@ function PANEL:Paint( w, h )
 	surface.SetDrawColor( 0, 0, 0, 150 )
 	surface.DrawRect( 0, 0, w, h )
 
-	if ( self.CurrentCategory && IsValid( self.Categories[ self.CurrentCategory ] ) ) then
+	if ( self.CurrentCategory and IsValid( self.Categories[ self.CurrentCategory ] ) ) then
 		--if ( !self.Categories[ self.CurrentCategory ] ) then self:SelectCat( "Sandbox" ) return end
 		self.Categories[ self.CurrentCategory ].Depressed = true
 	end
@@ -576,9 +540,8 @@ end
 function PANEL:UpdateLanguage()
 	self.SingleMultiPlayer:SetTextGenerated( self.SingleMultiPlayer:GetValue() )
 
-	local invalid = {}
 	for id, t in pairs( LocalizedShit ) do
-		if ( !IsValid( t.panel ) ) then print("invalid", t.panel, id) table.remove( LocalizedShit, id ) continue end -- Not too sure about the removal of the element inside the loop. Is Lua OK with this?
+		if ( !IsValid( t.panel ) ) then table.remove( LocalizedShit, id ) continue end -- Not too sure about the removal of the element inside the loop. Is Lua OK with this?
 		t.panel:SetText( language.GetPhrase( t.text ) )
 	end
 
@@ -660,11 +623,9 @@ function PANEL:Update()
 
 	--------------------------------- LOAD LAST MAP ---------------------------------
 
-	local t = string.Explode( ";", cookie.GetString( "lastmap", "" ) )
-
 	local map, cat = LoadLastMap()
 
-	if ( self.CurrentMap && self.CurrentCategory ) then -- We had some map selected, switch back to it!
+	if ( self.CurrentMap and self.CurrentCategory ) then -- We had some map selected, switch back to it!
 		map = self.CurrentMap
 		cat = self.CurrentCategory
 	end
@@ -674,7 +635,7 @@ function PANEL:Update()
 		cat = GetMapCategory( map )
 	end
 
-	if ( !cat || !map ) then
+	if ( !cat or !map ) then
 		map = "gm_flatgrass"
 		cat = "Sandbox"
 	end
@@ -688,14 +649,14 @@ function PANEL:BuildIconList()
 	self.IconListCache = {}
 
 	local files = file.Find( "maps/thumb/*.png", "GAME" )
-	for id, file in pairs( files ) do
-		self.IconListCache[ file:sub( 0, file:len() - 4 ) ] = "maps/thumb/" .. file
+	for id, filename in pairs( files ) do
+		self.IconListCache[ filename:sub( 0, filename:len() - 4 ) ] = "maps/thumb/" .. filename
 	end
 
 	-- Stupid ass addons that didn't update yet
 	local files2 = file.Find( "maps/*.png", "GAME" )
-	for id, file in pairs( files2 ) do
-		self.IconListCache[ file:sub( 0, file:len() - 4 ) ] =  "maps/" .. file
+	for id, filename in pairs( files2 ) do
+		self.IconListCache[ filename:sub( 0, filename:len() - 4 ) ] =  "maps/" .. filename
 	end
 end
 
@@ -703,9 +664,9 @@ function PANEL:CacheIcon( map )
 	if ( !self.IconListCache ) then self:BuildIconList() end
 
 	map = map:Trim() -- Duplicate CS:GO maps have spaces on the end! ( When loaded from the HTML menu )
-	/*local mat = Material( "maps/thumb/" .. map .. ".png" )
+	--[[local mat = Material( "maps/thumb/" .. map .. ".png" )
 	if ( mat:IsError() ) then mat = Material( "maps/" .. map .. ".png" ) end -- Stupid ass addons that didn't update yet
-	if ( mat:IsError() ) then mat = matNoIcon end*/
+	if ( mat:IsError() ) then mat = matNoIcon end]]
 	if ( !self.IconListCache[ map ] ) then return matNoIcon end
 	return Material( self.IconListCache[ map ] )
 end
@@ -717,13 +678,13 @@ local boxHover = GWEN.CreateTextureBorder( border, border, 64 - border * 2, 64 -
 
 function PANEL:SelectCat( cat )
 
-	if ( self.CurrentCategory && self.Categories[ self.CurrentCategory ] ) then self.Categories[ self.CurrentCategory ].Depressed = false end
+	if ( self.CurrentCategory and self.Categories[ self.CurrentCategory ] ) then self.Categories[ self.CurrentCategory ].Depressed = false end
 	self.CurrentCategory = cat
 
 	self.CategoryMaps:Clear()
 
 	local maps = GetMapsFromCategorySearch( cat )
-	if ( !maps || #maps < 1 ) then return end
+	if ( !maps or #maps < 1 ) then return end
 
 	local subCategories, subCategorieyPatterns = GetMapSubCategories()
 
@@ -783,24 +744,24 @@ function PANEL:SelectCat( cat )
 				self:SelectMap( map.name, cat )
 				self:LoadMap()
 			end
-			button.PaintOver = function( button, w, h )
+			button.PaintOver = function( pnl, w, h )
 
-				if ( button:GetText() == self.CurrentMap ) then
+				if ( pnl:GetText() == self.CurrentMap ) then
 					boxHover( 0, 0, w, h, color_white )
 				end
 
-				if ( button.Hovered ) then return end
+				if ( pnl.Hovered ) then return end
 
 				surface.SetDrawColor( Color( 0, 0, 0, 150 ) )
 				surface.DrawRect( 0, h - 20, w, 20 )
 
 				surface.SetFont( "rb655_MapList" )
 
-				local tw = surface.GetTextSize( button:GetText() )
+				local tw = surface.GetTextSize( pnl:GetText() )
 				if ( tw > w ) then
-					draw.SimpleText( button:GetText(), "rb655_MapList", w / 2 - tw / 2 + ( ( w - tw ) * math.sin( CurTime() ) ), h - 16, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+					draw.SimpleText( pnl:GetText(), "rb655_MapList", w / 2 - tw / 2 + ( ( w - tw ) * math.sin( CurTime() ) ), h - 16, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 				else
-					draw.SimpleText( button:GetText(), "rb655_MapList", w / 2 - tw / 2, h - 16, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+					draw.SimpleText( pnl:GetText(), "rb655_MapList", w / 2 - tw / 2, h - 16, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 				end
 
 			end

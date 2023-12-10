@@ -12,7 +12,7 @@ hook.Add( "DrawOverlay", "MenuErrors", function()
 		} )
 	end
 
-	if ( GetConVarNumber( "lookstrafe" ) >=1 || GetConVarNumber( "lookstrafe" ) <= -1 ) then
+	if ( GetConVarNumber( "lookstrafe" ) >= 1 or GetConVarNumber( "lookstrafe" ) <= -1 ) then
 		table.insert( Errors, {
 			last	= SysTime(),
 			text	= "Console varible \"lookstrafe\" is not 0, expect movement oddities!"
@@ -23,7 +23,6 @@ hook.Add( "DrawOverlay", "MenuErrors", function()
 
 	local idealy = 32
 	local height = 30
-	local EndTime = SysTime() - .1
 	local Recent = SysTime() - 0.5
 
 	for k, v in SortedPairsByMemberValue( Errors, "last" ) do

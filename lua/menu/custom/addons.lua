@@ -68,15 +68,15 @@ function PANEL:SetAddon( data )
 	if ( gDataTable[ data.wsid ] ) then self.AdditionalData = gDataTable[ data.wsid ] return end
 
 	steamworks.FileInfo( data.wsid, function( result )
-		steamworks.VoteInfo( data.wsid, function( result )
+		steamworks.VoteInfo( data.wsid, function( votedata )
 			if ( gDataTable[ data.wsid ] ) then
-				gDataTable[ data.wsid ].VoteData = result
+				gDataTable[ data.wsid ].VoteData = votedata
 			end
 		end )
 
 		gDataTable[ data.wsid ] = result
 
-		if ( !file.Exists( 'cache/workshop/' .. result.previewid .. '.cache',"GAME" ) ) then
+		if ( !file.Exists( "cache/workshop/" .. result.previewid .. ".cache","GAME" ) ) then
 			steamworks.Download( result.previewid, false, function( name ) end )
 		end
 
@@ -94,14 +94,14 @@ local imageCache = {}
 function PANEL:Paint( w, h )
 
 	if ( IsValid( self.DermaCheckbox ) ) then
-		self.DermaCheckbox:SetVisible( self.Hovered || self.DermaCheckbox.Hovered || self:GetSelected() )
+		self.DermaCheckbox:SetVisible( self.Hovered or self.DermaCheckbox.Hovered or self:GetSelected() )
 	end
 
-	if ( self.AdditionalData && imageCache[ self.AdditionalData.previewid ] ) then
+	if ( self.AdditionalData and imageCache[ self.AdditionalData.previewid ] ) then
 		self.Image = imageCache[ self.AdditionalData.previewid ]
 	end
 
-	if ( !self.Image && self.AdditionalData && file.Exists( "cache/workshop/" .. self.AdditionalData.previewid .. ".cache", "GAME" ) && CurTime() - lastBuild > 0.1 ) then
+	if ( !self.Image and self.AdditionalData and file.Exists( "cache/workshop/" .. self.AdditionalData.previewid .. ".cache", "GAME" ) and CurTime() - lastBuild > 0.1 ) then
 		self.Image = AddonMaterial( "cache/workshop/" .. self.AdditionalData.previewid .. ".cache" )
 		imageCache[ self.AdditionalData.previewid ] = self.Image
 		lastBuild = CurTime()
@@ -109,7 +109,7 @@ function PANEL:Paint( w, h )
 
 	if ( self:GetSelected() ) then
 		draw.RoundedBox( 4, 0, 0, w, h, Color( 0, 150, 255, 200 ) )
-	elseif ( self.Addon && steamworks.ShouldMountAddon( self.Addon.wsid ) ) then
+	elseif ( self.Addon and steamworks.ShouldMountAddon( self.Addon.wsid ) ) then
 		draw.RoundedBox( 4, 0, 0, w, h, Color( 255, 255, 255, 200 ) )
 	else
 		draw.RoundedBox( 4, 0, 0, w, h, Color( 0, 0, 0, 255 ) )
@@ -124,7 +124,7 @@ function PANEL:Paint( w, h )
 	surface.SetDrawColor( color_white )
 	surface.DrawTexturedRect( 5, 5, imageSize, imageSize )
 
-	if ( gDataTable[ self.Addon.wsid ] && gDataTable[ self.Addon.wsid ].VoteData ) then
+	if ( gDataTable[ self.Addon.wsid ] and gDataTable[ self.Addon.wsid ].VoteData ) then
 		local ratio = gDataTable[ self.Addon.wsid ].VoteData.score
 		local w = math.floor( ( self:GetWide() - 10 ) * ratio )
 
@@ -137,11 +137,11 @@ function PANEL:Paint( w, h )
 		end
 	end
 
-	/*if ( self.Addon && !steamworks.ShouldMountAddon( self.Addon.wsid ) ) then
+	--[[if ( self.Addon and !steamworks.ShouldMountAddon( self.Addon.wsid ) ) then
 		draw.RoundedBox( 4, 0, 0, w, h, Color( 0, 0, 0, 180 ) )
-	end*/
+	end]]
 
-	if ( self.Addon && self.Hovered ) then
+	if ( self.Addon and self.Hovered ) then
 		draw.RoundedBox( 0, 5, h - 25, w - 10, 15, Color( 0, 0, 0, 180 ) )
 		draw.SimpleText( self.Addon.title, "Default", 8, h - 24, Color( 255, 255, 255 ) )
 	end
@@ -151,29 +151,6 @@ end
 vgui.Register( "MenuAddon", PANEL, "Panel" )
 
 --------------------------------------------------------------------------------------------------------------------------------
-
-/*
-disabled	=	true
-fileid	=	37500202565065109
-id	=	460887847
-installed	=	true
-owner	=	76561197971870930
-ownername	=	Jerry
-previewid	=	37500202565065231
-previewsize	=	223128
-size	=	678048
-tags	=	Addon,map
-title	=	PHYS_Tower
-updated	=	1434256768
-VoteData:
-		down	=	137
-		score	=	0.80042690038681
-		total	=	837
-		up	=	700
-banned	=	false
-created	=	1357573632
-description	=
-*/
 
 local AddonFilters = {
 	none = {
@@ -259,7 +236,7 @@ local Grouping = {
 			return t
 		end
 	},
-	/*models = {
+	--[[models = {
 		label = "Models",
 		func = function( addons )
 			local t = {
@@ -283,11 +260,11 @@ local Grouping = {
 
 			return t
 		end
-	}*/ -- Disabled models are reported as "no models" :(
+	}]] -- Disabled models are reported as "no models" :(
 }
 
 local BackgroundColor = Color( 200, 200, 200, 128 )
-local BackgroundColor2 = Color( 200, 200, 200, 255 )//Color( 0, 0, 0, 100 )
+local BackgroundColor2 = Color( 200, 200, 200, 255 ) --Color( 0, 0, 0, 100 )
 
 local PANEL = {}
 
@@ -300,7 +277,7 @@ function PANEL:Init()
 	Categories:Dock( LEFT )
 	Categories:SetWide( 200 )
 
-	// ------------------------------------------------------------------------- //
+	--[[ ------------------------------------------------------------------------- ]]
 
 	local Groups = vgui.Create( "DComboBox", Categories )
 	Groups:Dock( TOP )
@@ -318,7 +295,7 @@ function PANEL:Init()
 	Filters.OnSelect = function( index, value, data ) self:RefreshAddons() end
 	self.Filters = Filters
 
-	// ------------------------------------------------------------------------- //
+	--[[ ------------------------------------------------------------------------- ]]
 
 	local ToggleMounted = vgui.Create( "DButton", Categories )
 	ToggleMounted:Dock( TOP )
@@ -344,7 +321,7 @@ function PANEL:Init()
 	DisableSelection.DoClick = function() self:DisableSelected() end
 	self.DisableSelection = DisableSelection
 
-	----
+	--[[ ------------------------------------------------------------------------- ]]
 
 	local SelectAll = vgui.Create( "DButton", Categories )
 	SelectAll:Dock( TOP )
@@ -369,7 +346,7 @@ function PANEL:Init()
 	InvertAll:DockMargin( 0, 0, 0, 40 )
 	InvertAll.DoClick = function() self:InvertSelection() end
 
-	// ------------------------------------------------------------------------- //
+	--[[ ------------------------------------------------------------------------- ]]
 
 	local OpenWorkshop = vgui.Create( "DButton", Categories )
 	OpenWorkshop:Dock( TOP )
@@ -407,14 +384,14 @@ function PANEL:Think()
 	local onlyEnabled = true
 	local onlyDisabled = true
 	for id, pnl in pairs( self.AddonList:GetChildren() ) do
-		if ( pnl.GetSelected && pnl:GetSelected() ) then anySelected = true end
-		if ( pnl.GetSelected && !pnl:GetSelected() ) then allSelected = false end
-		if ( pnl.Addon && !steamworks.ShouldMountAddon( pnl.Addon.wsid ) ) then onlyEnabled = false end
-		if ( pnl.Addon && steamworks.ShouldMountAddon( pnl.Addon.wsid ) ) then onlyDisabled = false end
+		if ( pnl.GetSelected and pnl:GetSelected() ) then anySelected = true end
+		if ( pnl.GetSelected and !pnl:GetSelected() ) then allSelected = false end
+		if ( pnl.Addon and !steamworks.ShouldMountAddon( pnl.Addon.wsid ) ) then onlyEnabled = false end
+		if ( pnl.Addon and steamworks.ShouldMountAddon( pnl.Addon.wsid ) ) then onlyDisabled = false end
 	end
 	self.ToggleMounted:SetDisabled( !anySelected )
-	self.EnableSelection:SetDisabled( !anySelected || onlyEnabled )
-	self.DisableSelection:SetDisabled( !anySelected || onlyDisabled )
+	self.EnableSelection:SetDisabled( !anySelected or onlyEnabled )
+	self.DisableSelection:SetDisabled( !anySelected or onlyDisabled )
 
 	self.SelectAllButton:SetDisabled( allSelected )
 	self.DeselectAllButton:SetDisabled( !anySelected )
@@ -422,7 +399,7 @@ end
 
 function PANEL:ToggleSelected()
 	for id, pnl in pairs( self.AddonList:GetChildren() ) do
-		if ( !pnl.GetSelected || !pnl:GetSelected() ) then continue end
+		if ( !pnl.GetSelected or !pnl:GetSelected() ) then continue end
 		steamworks.SetShouldMountAddon( pnl.Addon.wsid, !steamworks.ShouldMountAddon( pnl.Addon.wsid ) )
 	end
 	steamworks.ApplyAddons()
@@ -430,7 +407,7 @@ end
 
 function PANEL:DisableSelected()
 	for id, pnl in pairs( self.AddonList:GetChildren() ) do
-		if ( !pnl.GetSelected || !pnl:GetSelected() ) then continue end
+		if ( !pnl.GetSelected or !pnl:GetSelected() ) then continue end
 		steamworks.SetShouldMountAddon( pnl.Addon.wsid, false )
 	end
 	steamworks.ApplyAddons()
@@ -438,27 +415,27 @@ end
 
 function PANEL:EnableSelected()
 	for id, pnl in pairs( self.AddonList:GetChildren() ) do
-		if ( !pnl.GetSelected || !pnl:GetSelected() ) then continue end
+		if ( !pnl.GetSelected or !pnl:GetSelected() ) then continue end
 		steamworks.SetShouldMountAddon( pnl.Addon.wsid, true )
 	end
 	steamworks.ApplyAddons()
 end
 
 function PANEL:InvertSelection()
-	for id, line in pairs( self.AddonList:GetChildren() ) do
-		line:SetSelected( !line:GetSelected() )
+	for id, pnl in pairs( self.AddonList:GetChildren() ) do
+		pnl:SetSelected( !pnl:GetSelected() )
 	end
 end
 
 function PANEL:DeselectAll()
-	for id, line in pairs( self.AddonList:GetChildren() ) do
-		line:SetSelected( false )
+	for id, pnl in pairs( self.AddonList:GetChildren() ) do
+		pnl:SetSelected( false )
 	end
 end
 
 function PANEL:SelectAll()
-	for id, line in pairs( self.AddonList:GetChildren() ) do
-		line:SetSelected( true )
+	for id, pnl in pairs( self.AddonList:GetChildren() ) do
+		pnl:SetSelected( true )
 	end
 end
 
