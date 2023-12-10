@@ -388,7 +388,7 @@ function PANEL:Init()
 		help = "The password for your server that other people have to enter before they can join your server"
 	}, Settings )
 
-	local SvLan = self:ServerSettings_AddCheckbox( {
+	local sv_lan = self:ServerSettings_AddCheckbox( {
 		text = "lan_server",
 		name = "sv_lan",
 		help = "Only people on your Local Area Network can connect to the server",
@@ -405,6 +405,24 @@ function PANEL:Init()
 		name = "p2p_friendsonly",
 		help = "Only allow people on your friends list to join your P2P server",
 	}, Settings )
+
+	sv_lan.OnValueChanged = function( pnl, checked )
+		if ( checked ) then
+			p2p_enabled:SetChecked( false )
+			p2p_friendsonly:SetChecked( false )
+		end
+	end
+	p2p_enabled.OnValueChanged = function( pnl, checked )
+		if ( checked ) then
+			sv_lan:SetChecked( false )
+		end
+	end
+	p2p_friendsonly.OnValueChanged = function( pnl, checked )
+		if ( checked ) then
+			sv_lan:SetChecked( false )
+			p2p_enabled:SetChecked( true )
+		end
+	end
 
 	--------------------------------- MIDDLE CONTENT - LABEL ---------------------------------
 

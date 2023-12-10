@@ -181,6 +181,8 @@ AccessorFunc( PANEL, "m_sToolTip", "Tooltip", FORCE_STRING )
 function PANEL:Init()
 	self:SetMouseInputEnabled( true )
 	self:SetChecked( false )
+
+	self.ThinkBlock = 0 -- HACK
 end
 
 local width = 40
@@ -202,13 +204,24 @@ function PANEL:OnMouseReleased( mcode )
 	self.Depressed = false
 
 	self:SetChecked( !self:GetChecked() )
-	if ( self:GetConVar() ) then RunConsoleCommand( self:GetConVar(), self:GetChecked() and "1" or "0" ) end
 end
 
 function PANEL:Think()
-	if ( self:GetConVar() ) then
+	if ( self:GetConVar() and self.ThinkBlock < CurTime() ) then
 		if ( GetConVarNumber( self:GetConVar() ) > 0 ) then self:SetChecked( true ) else self:SetChecked( false ) end
 	end
+end
+
+function PANEL:SetChecked( b )
+	if ( self.m_bChecked == b ) then return end
+
+	self.m_bChecked = b
+	if ( self:GetConVar() ) then
+		RunConsoleCommand( self:GetConVar(), self:GetChecked() and "1" or "0" )
+		self.ThinkBlock = CurTime() + 1 -- HACK: we gotta let the command buffer to go through..
+	end
+
+	if ( self.OnValueChanged ) then self:OnValueChanged( b ) end
 end
 
 function PANEL:Paint( w, h )
