@@ -170,7 +170,6 @@ vgui.Register( "MenuCategoryButton", PANEL, "DButton" )
 ---------------------------------------------------------------------------------------------------------------------------------------------
 
 local PANEL = {}
-local checkboxMat = Material( "gui/check.png" )
 
 AccessorFunc( PANEL, "m_bChecked", "Checked", FORCE_BOOL )
 AccessorFunc( PANEL, "m_sConVar", "ConVar", FORCE_STRING )
@@ -187,7 +186,7 @@ end
 
 local width = 40
 function PANEL:OnMousePressed( mcode )
-	if ( mcode != 107 ) then return end
+	if ( mcode != MOUSE_LEFT ) then return end
 
 	local x, y = self:LocalCursorPos()
 	if ( self:GetWide() - width > x ) then return end
@@ -196,7 +195,7 @@ function PANEL:OnMousePressed( mcode )
 end
 
 function PANEL:OnMouseReleased( mcode )
-	if ( mcode != 107 ) then return end
+	if ( mcode != MOUSE_LEFT ) then return end
 
 	local x, y = self:LocalCursorPos()
 	if ( self:GetWide() - width > x ) then return end
@@ -224,6 +223,7 @@ function PANEL:SetChecked( b )
 	if ( self.OnValueChanged ) then self:OnValueChanged( b ) end
 end
 
+local checkboxMat = Material( "gui/check.png" )
 function PANEL:Paint( w, h )
 	local x, y = self:LocalCursorPos()
 

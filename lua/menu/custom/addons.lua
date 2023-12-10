@@ -126,14 +126,14 @@ function PANEL:Paint( w, h )
 
 	if ( gDataTable[ self.Addon.wsid ] and gDataTable[ self.Addon.wsid ].VoteData ) then
 		local ratio = gDataTable[ self.Addon.wsid ].VoteData.score
-		local w = math.floor( ( self:GetWide() - 10 ) * ratio )
+		local x = math.floor( ( self:GetWide() - 10 ) * ratio )
 
 		for i = -5, -1 do
 			surface.SetDrawColor( Color( 255, 0, 0, 128 ) )
-			surface.DrawLine( 5 + w, self:GetTall() - 5 + i, 4 + ( self:GetWide() - 10 ), self:GetTall() - 5 + i )
+			surface.DrawLine( 5 + x, self:GetTall() - 5 + i, 4 + ( self:GetWide() - 10 ), self:GetTall() - 5 + i )
 
 			surface.SetDrawColor( Color( 0, 255, 0, 128 ) )
-			surface.DrawLine( 5, self:GetTall() - 5 + i, 5 + w, self:GetTall() - 5 + i )
+			surface.DrawLine( 5, self:GetTall() - 5 + i, 5 + x, self:GetTall() - 5 + i )
 		end
 	end
 
@@ -450,16 +450,16 @@ function PANEL:RefreshAddons()
 
 	self.AddonList:Clear()
 
-	local group = self.Groups:GetOptionData( self.Groups:GetSelectedID() )
+	local grp = self.Groups:GetOptionData( self.Groups:GetSelectedID() )
 	local filter = self.Filters:GetOptionData( self.Filters:GetSelectedID() )
 
-	local addons = Grouping[ group ].func( engine.GetAddons() )
+	local addons = Grouping[ grp ].func( engine.GetAddons() )
 
 	for id, group in SortedPairsByMemberValue( addons, "title" ) do
 		if ( #group.addons < 1 ) then continue end
 
 		local addns = {}
-		for id, mod in pairs( group.addons ) do
+		for k, mod in pairs( group.addons ) do
 			if ( !AddonFilters[ filter ].func( mod ) ) then continue end
 			table.insert( addns, mod )
 		end
@@ -475,7 +475,7 @@ function PANEL:RefreshAddons()
 			pnl:SizeToContents()
 		end
 
-		for id, mod in SortedPairsByMemberValue( addns, "title" ) do
+		for k, mod in SortedPairsByMemberValue( addns, "title" ) do
 
 			local pnl = self.AddonList:Add( "MenuAddon" )
 			pnl.panel = self

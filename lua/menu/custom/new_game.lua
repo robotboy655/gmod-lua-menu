@@ -54,7 +54,6 @@ local function DrawHUDBox( x, y, w, h, mat, clr )
 	surface.DrawTexturedRectUV( x, y, w, h, 0, 0, w / 128, h / 128 )
 end
 
-local EnableMouseScrollEnabled = false
 local function EnableMouseScroll( s )
 	local mousePressed = input.IsMouseDown( MOUSE_RIGHT ) or input.IsMouseDown( MOUSE_LEFT )
 	if ( !mousePressed ) then s.start = nil s.EnableMouseScrollEnabled = false return end
