@@ -3,10 +3,10 @@ include( "mount/mount.lua" )
 include( "getmaps.lua" )
 include( "loading.lua" )
 
-// To uninstall, change the 1 to 0 below
+-- To uninstall, change the 1 to 0 below
 local useNewMenu = 1
 
-// Do not touch anything below
+-- Do not touch anything below
 if ( useNewMenu == 1 ) then
 	include( "custom/mainmenu.lua" )
 else
