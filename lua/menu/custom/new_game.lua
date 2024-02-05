@@ -102,16 +102,15 @@ end
 local HeaderColor = color_black
 local HeaderColor_mid = HeaderColor
 
-local g_SearchText
 local g_CurrentScroll
 
-function GetMapsFromCategorySearch( cat )
+function GetMapsFromCategorySearch( cat, searchText )
 	local maps = GetMapsFromCategory( cat )
 	if ( !maps or #maps < 1 ) then return {} end
 
 	local output = {}
 	for _, map in SortedPairs( maps ) do
-		if ( g_SearchText and !map.name:find( g_SearchText:lower() ) ) then continue end
+		if ( searchText and !map.name:find( searchText:lower() ) ) then continue end
 
 		table.insert( output, map )
 	end
@@ -129,7 +128,7 @@ local matNoIcon = Material( "gui/noicon.png", "nocull smooth" )
 function PANEL:Init()
 
 	g_CurrentScroll = nil
-	g_SearchText = nil
+	self.SearchText = nil
 
 	self:Dock( FILL )
 
@@ -481,27 +480,28 @@ function PANEL:SelectMap( map )
 	self.CurrentMap = map
 end
 
-function PANEL:AddCategoryButton( Categories, cat, name, alt )
-	local button = Categories:Add( "MenuCategoryButton" )
+function PANEL:AddCategoryButton( parent, catClass, name )
+	local button = parent:Add( "MenuCategoryButton" )
 	button:Dock( TOP )
 	button:DockMargin( 0, 1, 0, 0 )
 	button:SetText( name )
 	button.DoClick = function()
 		g_CurrentScroll = nil
-		self:SelectCat( cat )
+		self:SelectCat( catClass )
 	end
 	button:SetContentAlignment( 4 )
 	button:SetTextInset( 5, 0 )
-	button:SetCategory( cat )
-	button:SetAlt( alt2 )
+	button:SetCategory( catClass )
+	--button:SetAlt( alt )
+	button.NewGameMenu = self
 
-	self.Categories[ cat ] = button
+	self.Categories[ catClass ] = button
 	return button
 end
 
 function PANEL:DoSearch( txt )
-	g_SearchText = txt
-	if ( g_SearchText:Trim() == "" ) then g_SearchText = nil end
+	self.SearchText = txt
+	if ( self.SearchText:Trim() == "" ) then self.SearchText = nil end
 
 	self:SelectCat( self.CurrentCategory ) -- Refreshes the map list
 end
@@ -700,7 +700,7 @@ function PANEL:SelectCat( cat )
 
 	self.CategoryMaps:Clear()
 
-	local maps = GetMapsFromCategorySearch( cat )
+	local maps = GetMapsFromCategorySearch( cat, self.SearchText )
 	if ( !maps or #maps < 1 ) then return end
 
 	local subCategories, subCategorieyPatterns = GetMapSubCategories()
@@ -755,10 +755,10 @@ function PANEL:SelectCat( cat )
 
 			button:SetSize( 128, 128 )
 			button.DoClick = function()
-				self:SelectMap( map.name, cat )
+				self:SelectMap( map.name )
 			end
 			button.DoDoubleClick = function()
-				self:SelectMap( map.name, cat )
+				self:SelectMap( map.name )
 				self:LoadMap()
 			end
 			button.PaintOver = function( pnl, w, h )

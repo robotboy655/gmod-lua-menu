@@ -274,7 +274,7 @@ function PANEL:OpenMountedGamesList( pnl )
 	self:ClosePopups()
 
 	local p = vgui.Create( "DPanelList", self )
-	p:EnableVerticalScrollbar( true )
+	p:EnableVerticalScrollbar()
 	p:SetSize( 276, 256 )
 	p:SetPos( math.min( pnl:GetPos() - p:GetWide() / 2 + pnl:GetWide() / 2, ScrW() - p:GetWide() - 5 ), ScrH() - 55 - p:GetTall() )
 	p:SetSpacing( 5 )
@@ -321,7 +321,7 @@ function PANEL:OpenGamemodesList( pnl )
 	self:ClosePopups()
 
 	local p = vgui.Create( "DPanelList", self )
-	p:EnableVerticalScrollbar( true )
+	p:EnableVerticalScrollbar()
 	p:SetSpacing( 5 )
 	p:SetPadding( 5 )
 	self.GamemodesList = p

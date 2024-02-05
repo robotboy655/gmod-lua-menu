@@ -23,12 +23,12 @@ function Menu_InstallDButtonScrollProtection( pnl, depth, allowM2 )
 		local x, y = parent:GetPos()
 		if ( self.ClickStartY and ( self.Hovered or self.Depressed ) and math.abs( self.ClickStartY - y ) > self:GetTall() / 2 ) then
 			self.Depressed = nil -- Disable animations, stop DoClick from working
-			self.ClickStartX, self.ClickStartY = nil
+			self.ClickStartX, self.ClickStartY = nil, nil
 		end
 	end
 
 	function pnl:OnMouseReleased( mc )
-		self.ClickStartX, self.ClickStartY = nil
+		self.ClickStartX, self.ClickStartY = nil, nil
 
 		DLabel.OnMouseReleased( self, mc ) -- Should use baseclass here tbh
 	end
@@ -103,18 +103,18 @@ local PANEL = {}
 function PANEL:GetMapCount()
 	if ( !self.Category ) then return -1 end
 
-	if ( !self.LastCache or self.LastCache < CurTime() or g_SearchText != self.g_SearchText ) then
-		self.CachedMapCount = #GetMapsFromCategorySearch( self.Category )
+	if ( !self.LastCache or self.LastCache < CurTime() or self.NewGameMenu.SearchText != self.SearchText ) then
+		self.CachedMapCount = #GetMapsFromCategorySearch( self.Category, self.NewGameMenu.SearchText )
 		self.LastCache = CurTime() + 1
-		self.g_SearchText = g_SearchText
+		self.SearchText = self.NewGameMenu.SearchText
 	end
 
 	return self.CachedMapCount
 end
 
-function PANEL:SetAlt( b )
+--[[function PANEL:SetAlt( b )
 	self.Alt = b
-end
+end]]
 
 Menu_InstallDButtonScrollProtection( PANEL )
 
@@ -130,9 +130,9 @@ function PANEL:Paint( w, h )
 	local clr = Color( 255, 255, 255 )
 	local clr2 = Color( 245, 245, 245 )
 	local clr_t = Color( 85, 85, 85 )
-	if ( self.Alt ) then
+	--[[if ( self.Alt ) then
 		clr = Color( 253, 253, 253 )
-	end
+	end]]
 	if ( self.Hovered ) then
 		clr2 = Color( 230, 230, 230 )
 		clr = Color( 240, 240, 240 )

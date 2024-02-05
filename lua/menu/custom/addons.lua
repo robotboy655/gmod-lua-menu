@@ -68,11 +68,6 @@ function PANEL:SetAddon( data )
 	if ( gDataTable[ data.wsid ] ) then self.AdditionalData = gDataTable[ data.wsid ] return end
 
 	steamworks.FileInfo( data.wsid, function( result )
-		steamworks.VoteInfo( data.wsid, function( votedata )
-			if ( gDataTable[ data.wsid ] ) then
-				gDataTable[ data.wsid ].VoteData = votedata
-			end
-		end )
 
 		gDataTable[ data.wsid ] = result
 
@@ -124,8 +119,8 @@ function PANEL:Paint( w, h )
 	surface.SetDrawColor( color_white )
 	surface.DrawTexturedRect( 5, 5, imageSize, imageSize )
 
-	if ( gDataTable[ self.Addon.wsid ] and gDataTable[ self.Addon.wsid ].VoteData ) then
-		local ratio = gDataTable[ self.Addon.wsid ].VoteData.score
+	if ( gDataTable[ self.Addon.wsid ] ) then
+		local ratio = gDataTable[ self.Addon.wsid ].score
 		local x = math.floor( ( self:GetWide() - 10 ) * ratio )
 
 		for i = -5, -1 do

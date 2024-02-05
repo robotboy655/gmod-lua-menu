@@ -92,7 +92,7 @@ function PANEL:Init()
 	ach_list:SetSpacing( 5 )
 	ach_list:SetPadding( 5 )
 	ach_list:EnableHorizontal( false )
-	ach_list:EnableVerticalScrollbar( true )
+	ach_list:EnableVerticalScrollbar()
 	function ach_list:Paint()
 		draw.RoundedBox( 4, 0, 0, self:GetWide(), self:GetTall(), Color( 16, 16, 16, 255 ) )
 	end
