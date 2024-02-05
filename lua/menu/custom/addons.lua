@@ -71,7 +71,7 @@ function PANEL:SetAddon( data )
 
 		gDataTable[ data.wsid ] = result
 
-		if ( !file.Exists( "cache/workshop/" .. result.previewid .. ".cache","GAME" ) ) then
+		if ( !file.Exists( "cache/workshop/" .. result.previewid .. ".cache", "MOD" ) ) then
 			steamworks.Download( result.previewid, false, function( name ) end )
 		end
 
@@ -96,7 +96,7 @@ function PANEL:Paint( w, h )
 		self.Image = imageCache[ self.AdditionalData.previewid ]
 	end
 
-	if ( !self.Image and self.AdditionalData and file.Exists( "cache/workshop/" .. self.AdditionalData.previewid .. ".cache", "GAME" ) and CurTime() - lastBuild > 0.1 ) then
+	if ( !self.Image and self.AdditionalData and file.Exists( "cache/workshop/" .. self.AdditionalData.previewid .. ".cache", "MOD" ) and CurTime() - lastBuild > 0.1 ) then
 		self.Image = AddonMaterial( "cache/workshop/" .. self.AdditionalData.previewid .. ".cache" )
 		imageCache[ self.AdditionalData.previewid ] = self.Image
 		lastBuild = CurTime()

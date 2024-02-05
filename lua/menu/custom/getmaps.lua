@@ -626,7 +626,7 @@ function LoadLastMap()
 	-- Game categories are stored as numbers!
 	cat = tonumber( cat ) or cat
 
-	if ( !file.Exists( "maps/" .. map .. ".bsp", "GAME" ) ) then
+	if ( !DoesMapExist( map ) ) then
 		map = "gm_flatgrass"
 		cat = "Sandbox"
 	end
