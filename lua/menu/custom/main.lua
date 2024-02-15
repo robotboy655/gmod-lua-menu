@@ -74,7 +74,7 @@ function PANEL:Init()
 	Resume:DockMargin( 5, 5, 5, 20 )
 	Resume:SetText( "#resume_game" )
 	Resume.DoClick = function()
-		RunGameUICommand( "engine gameui_hide" )
+		gui.HideGameUI()
 	end
 	self.Resume = Resume
 
@@ -139,7 +139,7 @@ function PANEL:Init()
 	Disconnect:SetText( "#disconnect" )
 	Disconnect:DockMargin( 5, 5, 5, 0 )
 	Disconnect.DoClick = function()
-		RunGameUICommand( "engine disconnect" )
+		RunGameUICommand( "Disconnect" )
 	end
 	self.Disconnect = Disconnect
 
