@@ -406,6 +406,11 @@ function PANEL:RefreshContent()
 
 end
 
+function PANEL:SetProblemCount( problems, severity )
+	
+	-- The lua menu doesn't have a problems menu. This function is only here to shut any errors up.
+end
+
 function PANEL:ScreenshotScan( folder )
 
 	local bReturn = false
