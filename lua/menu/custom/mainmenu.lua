@@ -9,6 +9,7 @@ include( "achievements.lua" )
 include( "main.lua" )
 include( "_errors.lua" )
 include( "../background.lua" )
+include( "../crosshair_setup.lua" )
 
 pnlMainMenu = nil
 
