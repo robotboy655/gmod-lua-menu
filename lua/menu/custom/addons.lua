@@ -36,14 +36,14 @@ function PANEL:OnMouseReleased( mousecode )
 			m:AddSpacer()
 		end
 
-		m:AddOption( "Open Workshop Page", function() steamworks.ViewFile( self.Addon.wsid ) end )
+		m:AddOption( "Open Workshop Page", function() if ( self.Addon ) then return end steamworks.ViewFile( self.Addon.wsid ) end )
 		m:AddSpacer()
 		if ( steamworks.ShouldMountAddon( self.Addon.wsid ) ) then
-			m:AddOption( "Disable", function() steamworks.SetShouldMountAddon( self.Addon.wsid, false ) steamworks.ApplyAddons() end )
+			m:AddOption( "Disable", function() if ( self.Addon ) then return end steamworks.SetShouldMountAddon( self.Addon.wsid, false ) steamworks.ApplyAddons() end )
 		else
-			m:AddOption( "Enable", function() steamworks.SetShouldMountAddon( self.Addon.wsid, true ) steamworks.ApplyAddons() end )
+			m:AddOption( "Enable", function() if ( self.Addon ) then return end steamworks.SetShouldMountAddon( self.Addon.wsid, true ) steamworks.ApplyAddons() end )
 		end
-		m:AddOption( "Uninstall", function() steamworks.Unsubscribe( self.Addon.wsid ) steamworks.ApplyAddons() end ) -- Do we need ApplyAddons here?
+		m:AddOption( "Uninstall", function() if ( self.Addon ) then return end steamworks.Unsubscribe( self.Addon.wsid ) steamworks.ApplyAddons() end ) -- Do we need ApplyAddons here?
 		m:AddSpacer()
 		m:AddOption( "Cancel", function() end )
 		m:Open()
