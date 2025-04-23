@@ -785,7 +785,8 @@ function PANEL:SelectCat( cat )
 
 			button.DoRightClick = function()
 				local m = DermaMenu()
-				m:AddOption( "Toggle Favourite", function() ToggleFavourite( map.name ) end )
+				m:AddOption( "Toggle Favourite", function() ToggleFavourite( map.name ) end ):SetIcon( IsMapFavourite( map.name ) and "icon16/heart_delete.png" or "icon16/heart_add.png" )
+				m:AddOption( "Copy to Clipboard", function() SetClipboardText( map.name ) end ):SetIcon( "icon16/page_copy.png" )
 				m:AddOption( "Cancel", function() end )
 				m:Open()
 			end
