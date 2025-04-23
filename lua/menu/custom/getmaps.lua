@@ -573,6 +573,8 @@ RefreshMaps = function( skip )
 		end
 	end
 
+	UpdateMapList()
+
 end
 
 hook.Add( "MenuStart", "FindMaps", RefreshMaps )
