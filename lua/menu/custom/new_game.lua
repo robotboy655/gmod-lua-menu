@@ -812,7 +812,7 @@ function PANEL:LoadMap()
 	if ( maxplayers > 0 ) then
 
 		RunConsoleCommand( "sv_cheats", "0" )
-		RunConsoleCommand( "commentary", "0" )
+		--RunConsoleCommand( "commentary", "0" )
 
 	end
 
