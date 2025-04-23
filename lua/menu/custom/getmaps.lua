@@ -99,13 +99,14 @@ MapNames[ "mvm_" ] = "Mann Versus Machine"
 MapNames[ "pass_" ] = "PASS time"
 MapNames[ "pl_" ] = "Payload"
 MapNames[ "plr_" ] = "Payload Race"
+MapNames[ "tow_" ] = "Tug of War"
 MapNames[ "pd_" ] = "Player Destruction"
 MapNames[ "rd_" ] = "Robot Destruction"
 MapNames[ "kz_" ] = "Kreedz Climbing"
 MapNames[ "sd_" ] = "Special Delivery"
 MapNames[ "tc_" ] = "Territorial Control"
 MapNames[ "tr_" ] = "Training"
-MapNames[ "dod_" ] = "Day of Defeat" -- Technically this IS control points
+MapNames[ "dod_" ] = "Control Point"
 MapNames[ "fof_" ] = "Fistful of Frags"
 MapNames[ "bm_" ] = "Black Mesa"
 -- MapNames[ "phys_" ] = "Physics Sandbox" -- Defined by Sandbox gamemode
@@ -162,11 +163,11 @@ local MapSubCategories = {
 	[ "c2a4f" ] = "k. Questionable Ethics",
 	[ "c2a4g" ] = "k. Questionable Ethics",
 	[ "c4a1" ] = "o. Xen",
-	[ "c4a1z" ] = "z. Other",
-	[ "c4a1y" ] = "z. Other",
+	[ "c4a1z" ] = "z. Unreleased Content", -- Not part of the campagn
+	[ "c4a1y" ] = "z. Unreleased Content",
 
 	-- HL2: LC
-	[ "d2_lostcoast" ] = "Lost Coast",
+	[ "d2_lostcoast" ] = "h. Lost Coast",
 
 	-- L4D
 	[ "l4d_sv_lighthouse" ] = "f. The Last Stand",
@@ -183,6 +184,9 @@ local MapPatternSubCategories = {
 	[ "^trade_" ] = "Trade",
 	[ "^35hp" ] = "35HP Knife Only",
 
+	-- Alien Swarm
+	[ "^asi[-]jac" ] = "Jacob's Rest",
+
 	-- Left 4 Dead 1
 	[ "^l4d_hospital0" ] = "No Mercy",
 	[ "^l4d_garage0" ] = "Crash Course",
@@ -190,7 +194,12 @@ local MapPatternSubCategories = {
 	[ "^l4d_airport0" ] = "Dead Air",
 	[ "^l4d_farm0" ] = "Blood Harvest",
 	[ "^l4d_river0" ] = "The Sacrifice",
-	[ "^l4d_vs_" ] = "Versus",
+	[ "^l4d_vs_hospital0" ] = "No Mercy (Versus)",
+	[ "^l4d_vs_garage0" ] = "Crash Course (Versus)",
+	[ "^l4d_vs_smalltown0" ] = "Death Toll (Versus)",
+	[ "^l4d_vs_airport0" ] = "Dead Air (Versus)",
+	[ "^l4d_vs_farm0" ] = "Blood Harvest (Versus)",
+	[ "^l4d_vs_river0" ] = "The Sacrifice (Versus)",
 
 	-- Left 4 Dead 2
 	[ "^c1m" ] = "Dead Center",
@@ -206,6 +215,7 @@ local MapPatternSubCategories = {
 	[ "^c11m" ] = "Dead Air (L4D1)",
 	[ "^c12m" ] = "Blood Harvest (L4D1)",
 	[ "^c13m" ] = "Cold Stream",
+	[ "^c14m" ] = "The Last Stand",
 
 	-- Portal
 	[ "^testchmb_a_(%d+)$" ] = "a. Test Chambers",
@@ -213,7 +223,7 @@ local MapPatternSubCategories = {
 	[ "^escape_" ] = "b. GLaDOS Escape",
 
 	-- Portal 2, TODO: Most of these should be moved up
-	[ "^sp_a1_intro" ] = "a. The Courtesy Call",
+	[ "sp_a1_intro" ] = "a. The Courtesy Call",
 	[ "sp_a1_wakeup" ] = "a. The Courtesy Call",
 	[ "sp_a2_intro" ] = "a. The Courtesy Call",
 
@@ -248,7 +258,7 @@ local MapPatternSubCategories = {
 	[ "sp_a2_bts6" ] = "e. The Escape",
 	[ "sp_a2_core" ] = "e. The Escape",
 
-	[ "^sp_a3_0" ] = "f. The Fall",
+	[ "sp_a3_0" ] = "f. The Fall",
 	[ "sp_a3_jump_intro" ] = "f. The Fall",
 	[ "sp_a3_bomb_flings" ] = "f. The Fall",
 	[ "sp_a3_crazy_box" ] = "f. The Fall",
@@ -271,15 +281,55 @@ local MapPatternSubCategories = {
 	[ "sp_a4_speed_tb_catch" ] = "h. The Itch",
 	[ "sp_a4_jump_polarity" ] = "h. The Itch",
 
-	[ "^sp_a4_finale" ] = "i. The Part Where...",
+	[ "sp_a4_finale" ] = "i. The Part Where...",
 	[ "sp_a5_credits" ] = "i. The Part Where...",
 
 	[ "e1912" ] = "j. Promotional",
 
-	[ "mp_coop_start" ] = "k. Portal 2 CO-OP Calibration",
+	[ "mp_coop_start" ] = "k. Coop Calibration & Hubs",
+	[ "mp_coop_lobby_" ] = "k. Coop Calibration & Hubs",
 
-	[ "^mp_coop_lobby_" ] = "k. Portal 2 CO-OP Hubs",
-	[ "^mp_coop_" ] = "k. Portal 2 CO-OP",
+	[ "mp_coop_doors" ] = "l. Coop Course 1: Team Building",
+	[ "mp_coop_race_2" ] = "l. Coop Course 1: Team Building",
+	[ "mp_coop_laser_2" ] = "l. Coop Course 1: Team Building",
+	[ "mp_coop_rat_maze" ] = "l. Coop Course 1: Team Building",
+	[ "mp_coop_laser_crusher" ] = "l. Coop Course 1: Team Building",
+	[ "mp_coop_teambts" ] = "l. Coop Course 1: Team Building",
+
+	[ "mp_coop_fling_3" ] = "m. Coop Course 2: Mass and Velocity",
+	[ "mp_coop_infinifling_train" ] = "m. Coop Course 2: Mass and Velocity",
+	[ "mp_coop_come_along" ] = "m. Coop Course 2: Mass and Velocity",
+	[ "mp_coop_fling_1" ] = "m. Coop Course 2: Mass and Velocity",
+	[ "mp_coop_catapult_1" ] = "m. Coop Course 2: Mass and Velocity",
+	[ "mp_coop_multifling_1" ] = "m. Coop Course 2: Mass and Velocity",
+	[ "mp_coop_fling_crushers" ] = "m. Coop Course 2: Mass and Velocity",
+	[ "mp_coop_fan" ] = "m. Coop Course 2: Mass and Velocity",
+
+	[ "^mp_coop_wall" ] = "n. Coop Course 3: Hard-Light Surfaces",
+	[ "mp_coop_catapult_wall_intro" ] = "n. Coop Course 3: Hard-Light Surfaces",
+	[ "mp_coop_catapult_2" ] = "n. Coop Course 3: Hard-Light Surfaces",
+	[ "^mp_coop_turret_" ] = "n. Coop Course 3: Hard-Light Surfaces",
+
+	[ "^mp_coop_tbeam_" ] = "o. Coop Course 4: Excursion Funnels",
+
+	[ "mp_coop_paint_come_along" ] = "p. Coop Course 5: Mobility Gels",
+	[ "mp_coop_paint_redirect" ] = "p. Coop Course 5: Mobility Gels",
+	[ "mp_coop_paint_bridge" ] = "p. Coop Course 5: Mobility Gels",
+	[ "mp_coop_paint_walljumps" ] = "p. Coop Course 5: Mobility Gels",
+	[ "mp_coop_paint_speed_fling" ] = "p. Coop Course 5: Mobility Gels",
+	[ "mp_coop_paint_red_racer" ] = "p. Coop Course 5: Mobility Gels",
+	[ "mp_coop_paint_speed_catch" ] = "p. Coop Course 5: Mobility Gels",
+	[ "mp_coop_paint_longjump_intro" ] = "p. Coop Course 5: Mobility Gels",
+
+	[ "^mp_coop_separation_1" ] = "q. Additional Coop Course: Art Therapy",
+	[ "^mp_coop_tripleaxis" ] = "q. Additional Coop Course: Art Therapy",
+	[ "^mp_coop_catapult_catch" ] = "q. Additional Coop Course: Art Therapy",
+	[ "^mp_coop_2paints_1bridge" ] = "q. Additional Coop Course: Art Therapy",
+	[ "^mp_coop_paint_conversion" ] = "q. Additional Coop Course: Art Therapy",
+	[ "^mp_coop_bridge_catch" ] = "q. Additional Coop Course: Art Therapy",
+	[ "^mp_coop_laser_tbeam" ] = "q. Additional Coop Course: Art Therapy",
+	[ "^mp_coop_paint_rat_maze" ] = "q. Additional Coop Course: Art Therapy",
+	[ "^mp_coop_paint_crazy_box" ] = "q. Additional Coop Course: Art Therapy",
 
 	-- Half-Life: Source
 	[ "^t0a0" ] = "_. Hazard Course",
@@ -332,28 +382,31 @@ local MapPatternSubCategories = {
 	[ "^d3_citadel" ] = "m. Our Benefactors",
 	[ "^d3_breen" ] = "n. Dark Energy",
 
-	[ "^background" ] = "Backgrounds",
-	[ "^ep1_background" ] = "Backgrounds",
-	[ "^ep2_background" ] = "Backgrounds",
-
 	-- Half-Life 2: Episode 1
-	[ "^ep1_citadel_0[0-2]" ] = "a. Undue Alarm",
-	[ "^ep1_citadel_0[3-4]" ] = "b. Direct Intervention",
-	[ "^ep1_c17_00" ] = "c. Lowlife",
-	[ "^ep1_c17_0[1-2]" ] = "d. Urban Flight",
-	[ "^ep1_c17_0[5-6]" ] = "e. Exit 17",
+	[ "^ep1_citadel_0[0-2]" ] = "o. Undue Alarm",
+	[ "^ep1_citadel_0[3-4]" ] = "p. Direct Intervention",
+	[ "^ep1_c17_00" ] = "q. Lowlife",
+	[ "^ep1_c17_0[1-2]" ] = "r. Urban Flight",
+	[ "^ep1_c17_0[5-6]" ] = "s. Exit 17",
 
 	-- Half-Life 2: Episode 2
-	[ "^ep2_outland_01" ] = "a. To the White Forest",
-	[ "^ep2_outland_0[2-4]" ] = "b. This Vortal Coil",
-	[ "^ep2_outland_0[5-6]$" ] = "c. Freeman Pontifex",
-	[ "^ep2_outland_06a" ] = "d. Riding Shotgun",
-	[ "^ep2_outland_0[7-8]" ] = "d. Riding Shotgun",
+	[ "^ep2_outland_01" ] = "t. To the White Forest",
+	[ "^ep2_outland_0[2-4]" ] = "u. This Vortal Coil",
+	[ "^ep2_outland_0[5-6]$" ] = "v. Freeman Pontifex",
+	[ "^ep2_outland_06a" ] = "w. Riding Shotgun",
+	[ "^ep2_outland_0[7-8]" ] = "w. Riding Shotgun",
 
-	[ "^ep2_outland_09" ] = "e. Under the Radar",
-	[ "^ep2_outland_10" ] = "e. Under the Radar",
-	[ "^ep2_outland_1[1-2]$" ] = "f. Our Mutual Fiend",
-	[ "^ep2_outland_12a" ] = "g. T-Minus One",
+	[ "^ep2_outland_09" ] = "x. Under the Radar",
+	[ "^ep2_outland_10" ] = "x. Under the Radar",
+	[ "^ep2_outland_1[1-2]$" ] = "y. Our Mutual Fiend",
+	[ "^ep2_outland_11a" ] = "y. Our Mutual Fiend",
+	[ "^ep2_outland_11b" ] = "y. Our Mutual Fiend",
+	[ "^ep2_outland_12a" ] = "z. T-Minus One",
+
+	-- Half-Life 2 backgrounds
+	[ "^background" ] = "z. Backgrounds",
+	[ "^ep1_background" ] = "z. Backgrounds",
+	[ "^ep2_background" ] = "z. Backgrounds",
 }
 
 --
@@ -362,21 +415,22 @@ local MapPatternSubCategories = {
 
 local IgnorePatterns = {
 	"^background",
-	"^devtest",
 	"^ep1_background",
 	"^ep2_background",
+	"^devtest",
+	"^test_",
 	"^styleguide",
 	"^sdk_",
-	"^test_",
 	"^vst_",
 }
 
 local IgnoreMaps = {
-	c4a1y = true,
+	c4a1y = true, -- Doesn't load
 	credits = true,
-	d2_coast_02 = true,
+	d2_coast_02 = true, -- Doesn't load
 	d3_c17_02_camera = true,
 	ep1_citadel_00_demo = true,
+	c5m1_waterfront_sndscape = true,
 	intro = true,
 	test = true,
 }
@@ -392,6 +446,7 @@ local IgnoreGames = {
 	[ 500 ] = true, -- L4D
 	[ 550 ] = true, -- L4D2
 	[ 620 ] = true, -- P2
+	[ 630 ] = true, -- Alien Swarm
 	[ 251110 ] = true, -- INFRA
 	[ 221910 ] = true, -- Stanley Parable
 	[ 362890 ] = true, -- Black Mesa
