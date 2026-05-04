@@ -1,7 +1,6 @@
 
 include( "mount/mount.lua" )
 include( "getmaps.lua" )
-include( "loading.lua" )
 
 -- To uninstall, change the 1 to 0 below
 local useNewMenu = 1
@@ -11,6 +10,7 @@ if ( useNewMenu == 1 ) then
 	include( "custom/mainmenu.lua" )
 else
 	include( "mainmenu.lua" )
+    include( "loading.lua" )
 end
 
 include( "video.lua" )
