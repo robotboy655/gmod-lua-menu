@@ -210,7 +210,6 @@ function GameDetails( servername, serverurl, mapname, maxplayers, maxplayers_vis
 	infoGameMode    = gamemode
     
 	for k, v in pairs( engine.GetGamemodes() ) do
-        print(infoGameMode, v.name, v.title)
 		if ( infoGameMode == v.name ) then
 			infoGameMode = v.title
 			break
