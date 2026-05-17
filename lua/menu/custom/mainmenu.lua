@@ -1,6 +1,7 @@
 
 ScreenScale = function( size ) return size * ( ScrW() / 640.0 ) end
 
+include( "loading.lua" )
 include( "getmaps.lua" )
 include( "addons.lua" )
 include( "new_game.lua" )

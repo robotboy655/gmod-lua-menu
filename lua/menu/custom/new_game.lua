@@ -662,30 +662,30 @@ function PANEL:Update()
 
 end
 
-function PANEL:BuildIconList()
-	self.IconListCache = {}
+g_IconListCache = nil
+function BuildMapIconList()
+	g_IconListCache = {}
 
 	local files = file.Find( "maps/thumb/*.png", "GAME" )
 	for id, filename in pairs( files ) do
-		self.IconListCache[ filename:sub( 0, filename:len() - 4 ) ] = "maps/thumb/" .. filename
+		g_IconListCache[ filename:sub( 0, filename:len() - 4 ) ] = "maps/thumb/" .. filename
 	end
 
 	-- Stupid ass addons that didn't update yet
 	local files2 = file.Find( "maps/*.png", "GAME" )
 	for id, filename in pairs( files2 ) do
-		self.IconListCache[ filename:sub( 0, filename:len() - 4 ) ] = "maps/" .. filename
+		g_IconListCache[ filename:sub( 0, filename:len() - 4 ) ] = "maps/" .. filename
 	end
 end
-
-function PANEL:CacheIcon( map )
-	if ( !self.IconListCache ) then self:BuildIconList() end
+function GetMapIconMaterial( map )
+	if ( !g_IconListCache ) then BuildMapIconList() end
 
 	map = map:Trim() -- Duplicate CS:GO maps have spaces on the end! ( When loaded from the HTML menu )
 	--[[local mat = Material( "maps/thumb/" .. map .. ".png" )
 	if ( mat:IsError() ) then mat = Material( "maps/" .. map .. ".png" ) end -- Stupid ass addons that didn't update yet
 	if ( mat:IsError() ) then mat = matNoIcon end]]
-	if ( !self.IconListCache[ map ] ) then return matNoIcon end
-	return Material( self.IconListCache[ map ] )
+	if ( !g_IconListCache[ map ] ) then return matNoIcon end
+	return Material( g_IconListCache[ map ] )
 end
 
 local border = 4
@@ -749,7 +749,7 @@ function PANEL:SelectCat( cat )
 			if ( map.incompatible ) then
 				button.m_Image:SetMaterial( matIncompat )
 			else
-				if ( !gMapIcons[ map.name ] ) then gMapIcons[ map.name ] = self:CacheIcon( map.name ) end
+				if ( !gMapIcons[ map.name ] ) then gMapIcons[ map.name ] = GetMapIconMaterial( map.name ) end
 				button.m_Image:SetMaterial( gMapIcons[ map.name ] )
 			end
 
