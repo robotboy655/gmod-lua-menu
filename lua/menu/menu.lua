@@ -9,8 +9,8 @@ local useNewMenu = 1
 if ( useNewMenu == 1 ) then
 	include( "custom/mainmenu.lua" )
 else
-	include( "mainmenu.lua" )
     include( "loading.lua" )
+	include( "mainmenu.lua" )
 end
 
 include( "video.lua" )
