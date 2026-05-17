@@ -505,7 +505,7 @@ timer.Simple( 0, function()
 end )
 
 -- A hack to bring the console to front when menu_reload is ran
-timer.Simple( 1, function()
+timer.Simple( 0.2, function()
 	if ( gui.IsConsoleVisible() ) then gui.ShowConsole() end
 end )
 
