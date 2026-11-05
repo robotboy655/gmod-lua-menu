@@ -72,7 +72,7 @@ local function DrawToolTip( self, w, h )
 
 	DisableClipping( true )
 	draw.NoTexture()
-	surface.SetDrawColor( Color( 0, 128, 255 ) )
+	surface.SetDrawColor( 0, 128, 255 )
 	surface.DrawPoly( {
 		{ x = -15, y = 0 },
 		{ x = -5, y = h / 2 },
@@ -99,6 +99,24 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------
 
 local PANEL = {}
+
+-- ColorStates acts as a 'cache', and we use these exact instances of Color within Paint(), instead of constructing new
+-- instances every time Paint() is called (every frame).
+-- The table's keys represent state, among other things.
+-- I believe it's per-instance of MenuCategoryButton, so the Color initializers below will be called for each new
+-- MenuCategoryButton, but that's much, MUCH better than it being called for every Paint()!
+PANEL.ColorStates = {
+	[ "defaultCategory" ] = Color( 255, 255, 255 ), -- BG color for the category name
+	[ "defaultCounter" ] = Color( 245, 245, 245 ), -- BG color for the counter portion
+
+	[ "hoveredCategory" ] = Color( 240, 240, 240 ),
+	[ "hoveredCounter" ] = Color( 230, 230, 230 ),
+
+	[ "depressedCategory" ] = Color( 35, 150, 255 ),
+	[ "depressedCounter" ] = Color( 26, 112, 191 ),
+
+	[ "text" ] = Color( 85, 85, 85 ),
+}
 
 function PANEL:GetMapCount()
 	if ( !self.Category ) then return -1 end
@@ -127,20 +145,20 @@ end
 function PANEL:Paint( w, h )
 	local count = self:GetMapCount()
 
-	local clr = Color( 255, 255, 255 )
-	local clr2 = Color( 245, 245, 245 )
-	local clr_t = Color( 85, 85, 85 )
+	local clr = self.ColorStates[ "defaultCategory" ]
+	local clr2 = self.ColorStates[ "defaultCounter" ]
+	local clr_t = self.ColorStates[ "text" ]
 	--[[if ( self.Alt ) then
 		clr = Color( 253, 253, 253 )
 	end]]
 	if ( self.Hovered ) then
-		clr2 = Color( 230, 230, 230 )
-		clr = Color( 240, 240, 240 )
+		clr2 = self.ColorStates[ "hoveredCounter" ]
+		clr = self.ColorStates[ "hoveredCategory" ]
 	end
 	if ( self.Depressed ) then
 		clr_t = color_white
-		clr = Color( 35, 150, 255 )
-		clr2 = Color( 26, 112, 191 )
+		clr = self.ColorStates[ "depressedCategory" ]
+		clr2 = self.ColorStates[ "depressedCounter" ]
 	end
 	self:SetFGColor( clr_t )
 
@@ -170,6 +188,22 @@ vgui.Register( "MenuCategoryButton", PANEL, "DButton" )
 ---------------------------------------------------------------------------------------------------------------------------------------------
 
 local PANEL = {}
+
+-- See MenuCategoryButton for ramblings about this table
+PANEL.ColorStates = {
+	-- BG colors of the setting descriptor (default is white)
+	[ "hoveredDescriptor" ] = Color( 253, 253, 253 ),
+
+	-- BG colors of the check "box"
+	[ "defaultCheckbox" ] = Color( 245, 245, 245 ),
+	[ "checkedCheckbox" ] = Color( 240, 255, 240, 200 ),
+	[ "hoveredCheckbox" ] = Color( 230, 230, 230 ), -- Applies to checked and unchecked states
+	[ "depressedCheckbox" ] = Color ( 210, 210, 210 ), -- Applies to checked and unchecked states
+
+	-- Color states of the check
+	[ "unchecked" ] = Color( 0, 0, 0, 10 ),
+	[ "checked" ] = Color( 0, 200, 0 ),
+}
 
 AccessorFunc( PANEL, "m_bChecked", "Checked", FORCE_BOOL )
 AccessorFunc( PANEL, "m_sConVar", "ConVar", FORCE_STRING )
@@ -227,23 +261,27 @@ local checkboxMat = Material( "gui/check.png" )
 function PANEL:Paint( w, h )
 	local x, y = self:LocalCursorPos()
 
-	surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
-	if ( self.Hovered and self:GetWide() - width > x ) then surface.SetDrawColor( Color( 253, 253, 253, 255 ) ) end
+	-- Drawing the setting descriptor background
+	surface.SetDrawColor( color_white )
+	if ( self.Hovered and self:GetWide() - width > x ) then surface.SetDrawColor( self.ColorStates[ "hoveredDescriptor" ] ) end
 	surface.DrawRect( 0, 0, w - width - 1, h )
 
-	surface.SetDrawColor( Color( 245, 245, 245, 255 ) )
-	if ( self:GetChecked() ) then surface.SetDrawColor( Color( 240, 255, 240, 200 ) ) end
+	-- Drawing the checkbox background
+	surface.SetDrawColor( self.ColorStates[ "defaultCheckbox" ] )
+	if ( self:GetChecked() ) then surface.SetDrawColor( self.ColorStates[ "checkedCheckbox" ] ) end
 
-	if ( self.Hovered and self:GetWide() - width < x ) then surface.SetDrawColor( Color( 230, 230, 230, 255 ) ) end
-	if ( self.Depressed and self:GetWide() - width < x ) then surface.SetDrawColor( Color( 210, 210, 210, 255 ) ) end
+	if ( self.Hovered and self:GetWide() - width < x ) then surface.SetDrawColor( self.ColorStates[ "hoveredCheckbox" ] ) end
+	if ( self.Depressed and self:GetWide() - width < x ) then surface.SetDrawColor( self.ColorStates[ "depressedCheckbox" ] ) end
 
 	surface.DrawRect( w - width, 0, width, h )
 
-	surface.SetDrawColor( Color( 0, 0, 0, 10 ) )
-	if ( self:GetChecked() ) then surface.SetDrawColor( Color( 0, 200, 0, 255 ) ) end
+	-- Drawing the check
+	surface.SetDrawColor( self.ColorStates[ "unchecked" ] )
+	if ( self:GetChecked() ) then surface.SetDrawColor( self.ColorStates[ "checked" ] ) end
 	surface.SetMaterial( checkboxMat )
 	surface.DrawTexturedRect( w - width / 2- h / 2, 0, h, h )
 
+	-- Drawing the descriptor text
 	if ( self:GetText() ) then
 		draw.SimpleText( language.GetPhrase( self:GetText() ), self:GetFont(), 5, h / 2, color_black, 0, 1 )
 	end
@@ -258,6 +296,16 @@ vgui.Register( "MenuSettingsCheckbox", PANEL, "Panel" )
 ---------------------------------------------------------------------------------------------------------------------------------------------
 
 local PANEL = {}
+
+-- See MenuCategoryButton for ramblings about this table
+PANEL.ColorStates = {
+	-- BG colors of the setting descriptor (default is white)
+	[ "hoveredDescriptor" ] = Color( 253, 253, 253 ),
+
+	-- BG colors of the textbox
+	[ "defaultTextbox" ] = Color( 245, 245, 245 ),
+	[ "hoveredTextbox" ] = Color( 230, 230, 230 ),
+}
 
 AccessorFunc( PANEL, "m_sConVar", "ConVar", FORCE_STRING )
 AccessorFunc( PANEL, "m_sText", "Text", FORCE_STRING )
@@ -278,10 +326,11 @@ function PANEL:Init()
 	self.TextEntry.OnValueChange = function( s )
 		if ( self:GetConVar() ) then RunConsoleCommand( self:GetConVar(), s:GetText() ) end
 	end
+	self.TextEntry.m_defaultBackground = self.ColorStates[ "defaultTextbox" ]
+	self.TextEntry.m_hoveredBackground = self.ColorStates[ "hoveredTextbox" ]
 	function self.TextEntry:Paint( w, h )
-
-		surface.SetDrawColor( Color( 245, 245, 245, 255 ) )
-		if ( self.Hovered ) then surface.SetDrawColor( Color( 230, 230, 230, 255 ) ) end
+		surface.SetDrawColor( self.m_defaultBackground )
+		if ( self.Hovered ) then surface.SetDrawColor( self.m_hoveredBackground ) end
 		surface.DrawRect( 0, 0, w, h )
 
 		self:DrawTextEntryText( self:GetTextColor(), self:GetHighlightColor(), self:GetCursorColor() )
@@ -305,8 +354,8 @@ end
 
 function PANEL:Paint( w, h )
 	local x, y = self:LocalCursorPos()
-	surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
-	if ( self.Hovered and self:GetWide() - width > x ) then surface.SetDrawColor( Color( 253, 253, 253, 255 ) ) end
+	surface.SetDrawColor( color_white )
+	if ( self.Hovered and self:GetWide() - width > x ) then surface.SetDrawColor( self.ColorStates[ "hoveredDescriptor" ] ) end
 	surface.DrawRect( 0, 0, w - self.TextEntry:GetWide() - 1, h )
 
 	if ( self:GetText() ) then
@@ -324,6 +373,16 @@ vgui.Register( "MenuSettingsSlider", PANEL, "Panel" )
 
 local PANEL = {}
 
+-- See MenuCategoryButton for ramblings about this table
+PANEL.ColorStates = {
+	-- BG colors of the setting descriptor (default is white)
+	[ "hoveredDescriptor" ] = Color( 253, 253, 253 ),
+
+	-- BG colors of the textbox
+	[ "defaultTextbox" ] = Color( 245, 245, 245 ),
+	[ "hoveredTextbox" ] = Color( 230, 230, 230 ),
+}
+
 AccessorFunc( PANEL, "m_sConVar", "ConVar", FORCE_STRING )
 AccessorFunc( PANEL, "m_sText", "Text", FORCE_STRING )
 AccessorFunc( PANEL, "m_sFont", "Font", FORCE_STRING )
@@ -338,9 +397,11 @@ function PANEL:Init()
 	self.TextEntry.OnValueChange = function( s )
 		if ( self:GetConVar() ) then RunConsoleCommand( self:GetConVar(), s:GetText() ) end
 	end
+	self.TextEntry.m_defaultBackground = self.ColorStates[ "defaultTextbox" ]
+	self.TextEntry.m_hoveredBackground = self.ColorStates[ "hoveredTextbox" ]
 	function self.TextEntry:Paint( w, h )
-		surface.SetDrawColor( Color( 245, 245, 245, 255 ) )
-		if ( self.Hovered ) then surface.SetDrawColor( Color( 230, 230, 230, 255 ) ) end
+		surface.SetDrawColor( self.m_defaultBackground )
+		if ( self.Hovered ) then surface.SetDrawColor( self.m_hoveredBackground ) end
 		surface.DrawRect( 0, 0, w, h )
 
 		self:DrawTextEntryText( self:GetTextColor(), self:GetHighlightColor(), self:GetCursorColor() )
@@ -364,8 +425,8 @@ end
 
 function PANEL:Paint( w, h )
 	local x, y = self:LocalCursorPos()
-	surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
-	if ( self.Hovered and self:GetWide() - width > x ) then surface.SetDrawColor( Color( 253, 253, 253, 255 ) ) end
+	surface.SetDrawColor( color_white )
+	if ( self.Hovered and self:GetWide() - width > x ) then surface.SetDrawColor( self.ColorStates[ "hoveredDescriptor" ] ) end
 	surface.DrawRect( 0, 0, w - self.TextEntry:GetWide() - 1, h )
 
 	if ( self:GetText() ) then
@@ -384,22 +445,32 @@ vgui.Register( "MenuSettingsTextEntry", PANEL, "Panel" )
 
 local PANEL = {}
 
+-- See MenuCategoryButton for ramblings about this table
+PANEL.ColorStates = {
+	[ "highlight" ] = Color( 35, 150, 255 ), -- Color of text selection; Don't really need to cache this one, but for the sake of consistency...
+
+	[ "placeholderText" ] = Color( 150, 150, 150 ),
+
+	[ "defaultTextbox" ] = Color( 245, 245, 245 ),
+	[ "hoveredTextbox" ] = Color( 230, 230, 230 ),
+}
+
 AccessorFunc( PANEL, "m_sPlaceholder", "PlaceholderText", FORCE_STRING )
 AccessorFunc( PANEL, "m_sToolTip", "Tooltip", FORCE_STRING )
 
 function PANEL:Init()
-	self:SetHighlightColor( Color( 35, 150, 255 ) )
+	self:SetHighlightColor( self.ColorStates[ "highlight" ] )
 end
 
 function PANEL:Paint( w, h )
-	surface.SetDrawColor( Color( 245, 245, 245, 255 ) )
-	if ( self.Hovered ) then surface.SetDrawColor( Color( 230, 230, 230, 255 ) ) end
+	surface.SetDrawColor( self.ColorStates[ "defaultTextbox" ] )
+	if ( self.Hovered ) then surface.SetDrawColor( self.ColorStates[ "hoveredTextbox" ] ) end
 	surface.DrawRect( 0, 0, w, h )
 
 	self:DrawTextEntryText( self:GetTextColor(), self:GetHighlightColor(), self:GetCursorColor() )
 
 	if ( !self:GetText() or self:GetText():Trim():len() < 1 ) then
-		draw.SimpleText( language.GetPhrase( self:GetPlaceholderText() ), self:GetFont(), 5, h / 2, Vector( 1, 1, 1 ) * 150, nil, 1 )
+		draw.SimpleText( language.GetPhrase( self:GetPlaceholderText() ), self:GetFont(), 5, h / 2, self.ColorStates[ "placeholderText" ], nil, 1 )
 	end
 
 	DrawToolTip( self, w, h )
